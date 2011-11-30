@@ -18,5 +18,3 @@ BlueFire OS - Version 00 - From boot sector to shell.
 	  	BlueFire OS - 00.00.09 ->  
 	  	BlueFire OS - 00.00.10 -> 
 	  	BlueFire OS - 00.00.11 ->
-	  	BlueFire OS - 00.00.12 ->
-	  	BlueFire OS - 00.00.13 ->
