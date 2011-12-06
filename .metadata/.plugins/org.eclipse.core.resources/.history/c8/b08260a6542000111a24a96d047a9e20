@@ -96,8 +96,8 @@ main:
 	; disable interrupts for the final time. We cant start them
 	; again until the kernel has set up a interupt table
 	cli
-	lgdt 	[gdtr]        	; load GDT into GDTR
-	sti		;TODO <-check out
+	lgdt 	[toc]        ; load GDT into GDTR
+	sti		;temp
 
 end:
 	jmp 	end				;stop here for now

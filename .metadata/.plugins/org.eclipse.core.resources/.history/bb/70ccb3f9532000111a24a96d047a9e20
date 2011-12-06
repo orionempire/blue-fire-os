@@ -26,14 +26,9 @@ cst_msg_loading 			DB 0x0D, 0x0A, "Loading Stage 2...", 0x0D, 0x0A, 0x00
 
 
 ;***********************************************************
-; Global Descriptor Register (GDR)
-;***********************************************************
-gdtr:
-	dw end_of_gdt - gdt_data - 1 	; limit (Size of GDT)
-	dd gdt_data 			; base of GDT
-;***********************************************************
 ; Global Descriptor Table (GDT)
 ;***********************************************************
+
 gdt_data:
 ; Dummy descriptor			; 0x00
 	DW 0					; Limit low (bytes 15:0)
@@ -47,18 +42,21 @@ gdt_data:
 	DW 0xFFFF           	; Limit (bytes 15:0)
 	DW 0                	; Base  (bytes 15:0)
 	DB 0                	; Base  (bytes 23:16)
-	DB 0b10011010        	; access  = Present, Ring 0, 1, Executable, Direction, Readable, Unaccessed (1,00,1,1110 -> 9A)
+	DB 0b10011010        	; access  = Present, Ring 0, 1, Executable, Direction, Readable, unaccessed (1,00,1,1110 -> 9A)
 	DB 0b11001111        	; granularity = 4KB Granularity, 32bit segment size, reserved, reserved (AVL), Limit (bytes 19:16) (1,1,0,0,1111 - > CF)
 	DB 0                	; Base  (bytes 31:24)
 
-; boot data:	        	; data descriptor
+; kernel data:	        	; data descriptor
 	DW 0xFFFF           	; Limit (bytes 15:0)
 	DW 0                	; Base  (bytes 15:0)
 	DB 0                	; Base  (bytes 23:16)
-	DB 0b10010010        	; access  = Present, Ring 0, 1, Not Executable, No Direction, Readable, Unaccessed (1,00,1,0010 -> 92)
-	DB 0b11001111        	; granularity = 4KB Granularity, 32bit segment size, reserved, reserved (AVL), Limit (bytes 19:16) (1,1,0,0,1111 - > CF)
+	DB 0b10010010        	; access  = Present, Ring 0, 1, Executable, Direction, Readable, unaccessed (1,00,1,0010 -> 92)
+	DB 0b11001111        	; granularity
 	DB 0                	; Base  (bytes 31:24)
 end_of_gdt:
+toc:
+	dw end_of_gdt - gdt_data - 1 	; limit (Size of GDT)
+	dd gdt_data 			; base of GDT
 
 main:
 	cli						; clear interrupts
@@ -89,15 +87,6 @@ main:
 ;***********************************************************
 	mov		si, cst_msg_loading
 	call	print
-
-;***********************************************************
-;		Load Descriptor table
-;***********************************************************
-	; disable interrupts for the final time. We cant start them
-	; again until the kernel has set up a interupt table
-	cli
-	lgdt 	[gdtr]        	; load GDT into GDTR
-	sti		;TODO <-check out
 
 end:
 	jmp 	end				;stop here for now

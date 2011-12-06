@@ -90,15 +90,6 @@ main:
 	mov		si, cst_msg_loading
 	call	print
 
-;***********************************************************
-;		Load Descriptor table
-;***********************************************************
-	; disable interrupts for the final time. We cant start them
-	; again until the kernel has set up a interupt table
-	cli
-	lgdt 	[gdtr]        	; load GDT into GDTR
-	sti		;TODO <-check out
-
 end:
 	jmp 	end				;stop here for now
 

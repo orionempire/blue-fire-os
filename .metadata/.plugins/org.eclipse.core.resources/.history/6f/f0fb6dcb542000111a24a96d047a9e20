@@ -97,7 +97,7 @@ main:
 	; again until the kernel has set up a interupt table
 	cli
 	lgdt 	[gdtr]        	; load GDT into GDTR
-	sti		;TODO <-check out
+	sti		;temp
 
 end:
 	jmp 	end				;stop here for now

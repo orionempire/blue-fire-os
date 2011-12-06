@@ -26,39 +26,53 @@ cst_msg_loading 			DB 0x0D, 0x0A, "Loading Stage 2...", 0x0D, 0x0A, 0x00
 
 
 ;***********************************************************
-; Global Descriptor Register (GDR)
-;***********************************************************
-gdtr:
-	dw end_of_gdt - gdt_data - 1 	; limit (Size of GDT)
-	dd gdt_data 			; base of GDT
-;***********************************************************
 ; Global Descriptor Table (GDT)
 ;***********************************************************
+
 gdt_data:
 ; Dummy descriptor			; 0x00
-	DW 0					; Limit low (bytes 15:0)
-	DW 0					; Base low (bytes 15:0)
-	DB 0					; Base middle (bytes 23:16)
-	DB 0					; Access byte (descriptor type)
-	DB 0					; Flags, Limit middle (bytes 19:16)
-	DB 0					; Base high (bytes 31:24)
+	dw 0					; Limit 15:0
+	dw 0					; Base 15:0
+	db 0					; Base 23:16
+	db 0					; Access byte (descriptor type)
+	db 0					; Limits 19:16, Flags
+	db 0					; Base 31:24
 
-; boot code:				; code descriptor
-	DW 0xFFFF           	; Limit (bytes 15:0)
-	DW 0                	; Base  (bytes 15:0)
-	DB 0                	; Base  (bytes 23:16)
-	DB 0b10011010        	; access  = Present, Ring 0, 1, Executable, Direction, Readable, Unaccessed (1,00,1,1110 -> 9A)
-	DB 0b11001111        	; granularity = 4KB Granularity, 32bit segment size, reserved, reserved (AVL), Limit (bytes 19:16) (1,1,0,0,1111 - > CF)
-	DB 0                	; Base  (bytes 31:24)
+; kernel code:				; code descriptor
+	dw 0FFFFh           	; limit low
+	dw 0                	; base low
+	db 0                	; base middle
+	db 10011010b        	; access
+	db 11001111b        	; granularity
+	db 0                	; base high
 
-; boot data:	        	; data descriptor
-	DW 0xFFFF           	; Limit (bytes 15:0)
-	DW 0                	; Base  (bytes 15:0)
-	DB 0                	; Base  (bytes 23:16)
-	DB 0b10010010        	; access  = Present, Ring 0, 1, Not Executable, No Direction, Readable, Unaccessed (1,00,1,0010 -> 92)
-	DB 0b11001111        	; granularity = 4KB Granularity, 32bit segment size, reserved, reserved (AVL), Limit (bytes 19:16) (1,1,0,0,1111 - > CF)
-	DB 0                	; Base  (bytes 31:24)
+; kernel data:	        	; data descriptor
+	dw 0FFFFh           	; limit low (Same as code)
+	dw 0                	; base low
+	db 0                	; base middle
+	db 10010010b        	; access
+	db 11001111b        	; granularity
+	db 0                	; base high
+
+; user code:	        	; code descriptor
+	dw 0FFFFh           	; limit low
+	dw 0                	; base low
+	db 0                	; base middle
+	db 11111010b        	; access
+	db 11001111b        	; granularity
+	db 0                	; base high
+
+; user data:	         	; data descriptor
+	dw 0FFFFh           	; limit low (Same as code)
+	dw 0                	; base low
+	db 0                	; base middle
+	db 11110010b        	; access
+	db 11001111b        	; granularity
+	db 0                	; base high
 end_of_gdt:
+toc:
+	dw end_of_gdt - gdt_data - 1 	; limit (Size of GDT)
+	dd gdt_data 			; base of GDT
 
 main:
 	cli						; clear interrupts
@@ -89,15 +103,6 @@ main:
 ;***********************************************************
 	mov		si, cst_msg_loading
 	call	print
-
-;***********************************************************
-;		Load Descriptor table
-;***********************************************************
-	; disable interrupts for the final time. We cant start them
-	; again until the kernel has set up a interupt table
-	cli
-	lgdt 	[gdtr]        	; load GDT into GDTR
-	sti		;TODO <-check out
 
 end:
 	jmp 	end				;stop here for now
