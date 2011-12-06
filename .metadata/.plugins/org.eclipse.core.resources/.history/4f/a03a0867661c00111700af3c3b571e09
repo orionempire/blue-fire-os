@@ -30,13 +30,8 @@ cst_msg_loading 			DB 0x0D, 0x0A, "Loading Stage 2...", 0x0D, 0x0A, 0x00
 ;***********************************************************
 
 gdt_data:
-; Dummy descriptor			; 0x00
-	dw 0					; Limit 15:0
-	dw 0					; Base 15:0
-	db 0					; Base 23:16
-	db 0					; Access byte (descriptor type)
-	db 0					; Limits 19:16, Flags
-	db 0					; Base 31:24
+	dd 0               		; null descriptor
+	dd 0
 
 ; kernel code:				; code descriptor
 	dw 0FFFFh           	; limit low
