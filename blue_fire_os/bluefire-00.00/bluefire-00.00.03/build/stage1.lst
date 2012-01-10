@@ -35,8 +35,8 @@
     35 00000000 EB3D                    start: jmp main			; Jump to first bytes of executable code.
     36                                  
     37                                  ; 0x0A ascii for next line.  0x0D cursor to the beggining of the line.
-    38 00000002 0D0A4C6F6164696E67-     cst_msg_loading 			DB 0x0D, 0x0A, "Loading Stage 2...", 0x0D, 0x0A, 0x00
-    39 0000000B 20537461676520322E-
+    38 00000002 0D0A4C6F6164696E67-     cst_msg_loading 			DB 0x0D, 0x0A, "Loading Stage 1...", 0x0D, 0x0A, 0x00
+    39 0000000B 20537461676520312E-
     40 00000014 2E2E0D0A00         
     41                                  ; print one dot for every disk sector we load
     42 00000019 2E00                    cst_msg_progress 			DB ".", 0x00
@@ -139,100 +139,102 @@
    139                                  ;	read_sectors:
    140                                  ;	-> AX 		=> Starting Sector
    141                                  ;	-> CX 		=> Amount of sectors to read
-   142                                  ;	-> ES:BX 	=> Buffer to read to
-   143                                  ;***********************************************************
-   144                                  read_sectors:
-   145                                  	.read_sectors_start:
-   146 0000008A BF0500                  		mov		di,0x0005						; Five retries in case of error
-   147                                  	.sector_loop:
-   148 0000008D 50                      		push 	ax								; Save the registers that we are going to use.
-   149 0000008E 53                      		push 	bx
-   150 0000008F 51                      		push 	cx
-   151 00000090 E83600                  		call LBACHS								; Calculate what the starting sector is
-   152 00000093 B402                    		mov     ah, 0x02						; 02 Bios read sector function
-   153 00000095 B001                    		mov     al, 0x01 						; Read one sector at a time
-   154 00000097 8A2E[3E00]              		mov     ch, BYTE [calculated_cylinder]	; cylinder as returned by LBACHS
-   155 0000009B 8A0E[3C00]                      mov     cl, BYTE [calculated_sector]	; sector as returned by LBACHS
-   156 0000009F 8A36[3D00]                      mov     dh, BYTE [calculated_head]		; head as returned by LBACHS
-   157 000000A3 8A16[3500]                      mov     dl, BYTE [cst_drive_number]		; drive is always 0
-   158 000000A7 CD13                    		int     0x13							; invoke BIOS 0x13 AH=0x02
-   159 000000A9 730D                    		jnc     .success                        ; test carry flag against a read error
-   160 000000AB 31C0                    		xor     ax, ax							; 0 is BIOS reset disk
-   161 000000AD CD13                    		int     0x13							; invoke BIOS 0x13 AH=0x00
-   162 000000AF 4F                      		dec     di								; decrement error counter
-   163 000000B0 59                      		pop     cx
-   164 000000B1 5B                      		pop     bx
-   165 000000B2 58                      		pop     ax
-   166 000000B3 75D8                    		jnz     .sector_loop 					; if less the 5 tries, attempt to read again
-   167                                  		;int     0x18							; Else, 0x18 is a bios reset TODO -> replace
-   168 000000B5 E8BAFF                  		call 	fatal_failure
-   169                                  	.success:
-   170 000000B8 BE[1900]                		mov     si, cst_msg_progress
-   171 000000BB E8C0FF                  		call    print
-   172 000000BE 59                      		pop     cx
-   173 000000BF 5B                      		pop     bx
-   174 000000C0 58                      		pop     ax
-   175 000000C1 031E[3A00]              		add     bx, WORD [cst_bytes_per_sector] ; queue next buffer
-   176 000000C5 40                      		inc     ax                              ; queue next sector
-   177 000000C6 E2C2                    		loop    .read_sectors_start             ; Decreases CX and jums if not zero.
-   178 000000C8 C3                      		ret
-   179                                  
-   180                                  ;***********************************************************
-   181                                  ; 	LBACHS
-   182                                  ;	Convert LBA to CHS
-   183                                  ; 	AX -> LBA Address to convert
-   184                                  ;
-   185                                  ;	Returns <-
-   186                                  ; 		calculated_sector 	= (logical sector mod sectors per track) + 1
-   187                                  ; 		calculated_head   	= (logical sector / sectors per track) MOD number of heads
-   188                                  ; 		calculated_cylinder = logical sector / (sectors per track * number of heads)
-   189                                  ;
-   190                                  ;***********************************************************
-   191                                  LBACHS:
-   192 000000C9 31D2                        xor     dx, dx                              ; Zero out dx
-   193 000000CB F736[3800]                  div     WORD [cst_sectors_per_track]		; Calculate sector against DX:AX store quotient->AX remainder->DX
-   194 000000CF FEC2                        inc     dl                                  ; Adjust for sector 0
-   195 000000D1 8816[3C00]                  mov     BYTE [calculated_sector], dl		; Store the result.
-   196 000000D5 31D2                        xor     dx, dx                              ; Zero out dx
-   197 000000D7 F736[3600]                  div     WORD [cst_heads_per_cylinder]		; calculate sector against DX:AX store quotient->AX remainder->DX
-   198 000000DB 8816[3D00]                  mov     BYTE [calculated_head], dl			; Store the result.
-   199 000000DF A2[3E00]                    mov     BYTE [calculated_cylinder], al		; Store the result.
-   200 000000E2 C3                      	ret
-   201                                  
-   202                                  ;$ represents the current line of the program, $$ represents the first line of the program.
-   203 000000E3 90<rept>                TIMES 510-($-$$) DB 0x90
-   204                                  
-   205                                  ; An idiom to fill the rest of the fill the upto 512 with no ops (90) and then 0xAA55
-   206                                  ; in little endian format 0xAA55 is 0b1010101001010101 which is about as good a sentinel
-   207                                  ; as you are going to get in binary.
-   208 000001FE 55AA                    DW 0xAA55
-   209                                  
-   210                                  ; --------- Used BIOS functions ---------
-   211                                  ; INT 13h AH=00h: Reset Disk Drive
-   212                                  ;	Parameters:
-   213                                  ;		AH 	00h
-   214                                  ;		DL 	Drive
-   215                                  ;	Results:
-   216                                  ;		CF 	Set on error
-   217                                  ;
-   218                                  ; INT 13h AH=02h: Read Sectors From Drive
-   219                                  ;	Parameters:
-   220                                  ;		AH 	02h
-   221                                  ;		AL 	Sectors To Read Count
-   222                                  ;		CH 	Track
-   223                                  ;		CL 	Sector
-   224                                  ;		DH 	Head
-   225                                  ;		DL 	Drive
-   226                                  ;		ES:BX 	Buffer Address Pointer
-   227                                  ;	Results:
-   228                                  ;		CF 	Set On Error, Clear If No Error
-   229                                  ;		AH 	Return Code
-   230                                  ;		AL 	Actual Sectors Read Count
-   231                                  ;
-   232                                  ; INT 16h AH=00h: Read Character
-   233                                  ;	Results:
-   234                                  ;		Will wait for keypress on keyboard
-   235                                  ;
-   236                                  ; INT 19h AH=00h: After POST this interrupt is used by BIOS to load the operating system.
-   237                                  ;	Results:
-   238                                  ;		Computer will reboot.
+   142                                  ;			The buffer is segment limited so
+   143                                  ;			must be less then or equal to 128 or will return random result
+   144                                  ;	-> ES:BX 	=> Buffer to read to
+   145                                  ;***********************************************************
+   146                                  read_sectors:
+   147                                  	.read_sectors_start:
+   148 0000008A BF0500                  		mov		di,0x0005						; Five retries in case of error
+   149                                  	.sector_loop:
+   150 0000008D 50                      		push 	ax								; Save the registers that we are going to use.
+   151 0000008E 53                      		push 	bx
+   152 0000008F 51                      		push 	cx
+   153 00000090 E83600                  		call LBACHS								; Calculate what the starting sector is
+   154 00000093 B402                    		mov     ah, 0x02						; 02 Bios read sector function
+   155 00000095 B001                    		mov     al, 0x01 						; Read one sector at a time
+   156 00000097 8A2E[3E00]              		mov     ch, BYTE [calculated_cylinder]	; cylinder as returned by LBACHS
+   157 0000009B 8A0E[3C00]                      mov     cl, BYTE [calculated_sector]	; sector as returned by LBACHS
+   158 0000009F 8A36[3D00]                      mov     dh, BYTE [calculated_head]		; head as returned by LBACHS
+   159 000000A3 8A16[3500]                      mov     dl, BYTE [cst_drive_number]		; drive is always 0
+   160 000000A7 CD13                    		int     0x13							; invoke BIOS 0x13 AH=0x02
+   161 000000A9 730D                    		jnc     .success                        ; test carry flag against a read error
+   162 000000AB 31C0                    		xor     ax, ax							; 0 is BIOS reset disk
+   163 000000AD CD13                    		int     0x13							; invoke BIOS 0x13 AH=0x00
+   164 000000AF 4F                      		dec     di								; decrement error counter
+   165 000000B0 59                      		pop     cx
+   166 000000B1 5B                      		pop     bx
+   167 000000B2 58                      		pop     ax
+   168 000000B3 75D8                    		jnz     .sector_loop 					; if less the 5 tries, attempt to read again
+   169                                  		;int     0x18							; Else, 0x18 is a bios reset TODO -> replace
+   170 000000B5 E8BAFF                  		call 	fatal_failure
+   171                                  	.success:
+   172 000000B8 BE[1900]                		mov     si, cst_msg_progress
+   173 000000BB E8C0FF                  		call    print
+   174 000000BE 59                      		pop     cx
+   175 000000BF 5B                      		pop     bx
+   176 000000C0 58                      		pop     ax
+   177 000000C1 031E[3A00]              		add     bx, WORD [cst_bytes_per_sector] ; queue next buffer
+   178 000000C5 40                      		inc     ax                              ; queue next sector
+   179 000000C6 E2C2                    		loop    .read_sectors_start             ; Decreases CX and jums if not zero.
+   180 000000C8 C3                      		ret
+   181                                  
+   182                                  ;***********************************************************
+   183                                  ; 	LBACHS
+   184                                  ;	Convert LBA to CHS
+   185                                  ; 	AX -> LBA Address to convert
+   186                                  ;
+   187                                  ;	Returns <-
+   188                                  ; 		calculated_sector 	= (logical sector mod sectors per track) + 1
+   189                                  ; 		calculated_head   	= (logical sector / sectors per track) MOD number of heads
+   190                                  ; 		calculated_cylinder = logical sector / (sectors per track * number of heads)
+   191                                  ;
+   192                                  ;***********************************************************
+   193                                  LBACHS:
+   194 000000C9 31D2                        xor     dx, dx                              ; Zero out dx
+   195 000000CB F736[3800]                  div     WORD [cst_sectors_per_track]		; Calculate sector against DX:AX store quotient->AX remainder->DX
+   196 000000CF FEC2                        inc     dl                                  ; Adjust for sector 0
+   197 000000D1 8816[3C00]                  mov     BYTE [calculated_sector], dl		; Store the result.
+   198 000000D5 31D2                        xor     dx, dx                              ; Zero out dx
+   199 000000D7 F736[3600]                  div     WORD [cst_heads_per_cylinder]		; calculate sector against DX:AX store quotient->AX remainder->DX
+   200 000000DB 8816[3D00]                  mov     BYTE [calculated_head], dl			; Store the result.
+   201 000000DF A2[3E00]                    mov     BYTE [calculated_cylinder], al		; Store the result.
+   202 000000E2 C3                      	ret
+   203                                  
+   204                                  ;$ represents the current line of the program, $$ represents the first line of the program.
+   205 000000E3 90<rept>                TIMES 510-($-$$) DB 0x90
+   206                                  
+   207                                  ; An idiom to fill the rest of the fill the upto 512 with no ops (90) and then 0xAA55
+   208                                  ; in little endian format 0xAA55 is 0b1010101001010101 which is about as good a sentinel
+   209                                  ; as you are going to get in binary.
+   210 000001FE 55AA                    DW 0xAA55
+   211                                  
+   212                                  ; --------- Used BIOS functions ---------
+   213                                  ; INT 13h AH=00h: Reset Disk Drive
+   214                                  ;	Parameters:
+   215                                  ;		AH 	00h
+   216                                  ;		DL 	Drive
+   217                                  ;	Results:
+   218                                  ;		CF 	Set on error
+   219                                  ;
+   220                                  ; INT 13h AH=02h: Read Sectors From Drive
+   221                                  ;	Parameters:
+   222                                  ;		AH 	02h
+   223                                  ;		AL 	Sectors To Read Count
+   224                                  ;		CH 	Track
+   225                                  ;		CL 	Sector
+   226                                  ;		DH 	Head
+   227                                  ;		DL 	Drive
+   228                                  ;		ES:BX 	Buffer Address Pointer
+   229                                  ;	Results:
+   230                                  ;		CF 	Set On Error, Clear If No Error
+   231                                  ;		AH 	Return Code
+   232                                  ;		AL 	Actual Sectors Read Count
+   233                                  ;
+   234                                  ; INT 16h AH=00h: Read Character
+   235                                  ;	Results:
+   236                                  ;		Will wait for keypress on keyboard
+   237                                  ;
+   238                                  ; INT 19h AH=00h: After POST this interrupt is used by BIOS to load the operating system.
+   239                                  ;	Results:
+   240                                  ;		Computer will reboot.

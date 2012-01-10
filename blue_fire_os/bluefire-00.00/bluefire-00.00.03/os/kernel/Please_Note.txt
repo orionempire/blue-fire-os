@@ -1,0 +1,3 @@
+To add a folder hierarchy here you must also add it to the default make file
+
+EX: to to add a folder goo to the folder drivers you would have to add drivers/goo/c.* to SOURCES+=$( 

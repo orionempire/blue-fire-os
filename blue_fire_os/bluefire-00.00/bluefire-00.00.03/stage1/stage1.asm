@@ -35,7 +35,7 @@ org 0
 start: jmp main			; Jump to first bytes of executable code.
 
 ; 0x0A ascii for next line.  0x0D cursor to the beggining of the line.
-cst_msg_loading 			DB 0x0D, 0x0A, "Loading Stage 2...", 0x0D, 0x0A, 0x00
+cst_msg_loading 			DB 0x0D, 0x0A, "Loading Stage 1...", 0x0D, 0x0A, 0x00
 ; print one dot for every disk sector we load
 cst_msg_progress 			DB ".", 0x00
 ; Fatal
@@ -135,6 +135,8 @@ end_print:
 ;	read_sectors:
 ;	-> AX 		=> Starting Sector
 ;	-> CX 		=> Amount of sectors to read
+;			The buffer is segment limited so
+;			must be less then or equal to 128 or will return random result
 ;	-> ES:BX 	=> Buffer to read to
 ;***********************************************************
 read_sectors:

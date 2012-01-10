@@ -4,6 +4,8 @@
 ;	Author: David Davidson
 ;	Name: stage2.asm
 ;	Last update: 2011-11-20
+;	Purpose: Enable A20 Line, Load GDT, enable protect mode, enable paging.
+;		Load a kernel to physical memory location 0x100000
 ;***********************************************************
 
 ;***********************************************************
@@ -18,12 +20,18 @@ bits 16
 ;	to 0 and have all addresses in the code prefix with 0x8000
 ;***********************************************************
 org 0x8000
-
 start:	jmp main	;jump over to first byte of executable code
 
+%include "load_kernel.asm"
+
+; ------ Mesages ------
 ;0x0A ascii for next line.  0x0D cursor to the beggining of the line.
 cst_msg_loading 			DB 0x0D, 0x0A, "Loading Stage 2...", 0x0D, 0x0A, 0x00
-
+cst_msg_unreal	 			DB 0x0D, 0x0A, "Welocme to unreal mode...", 0x0D, 0x0A, 0x00
+; print one dot for every disk sector we load
+cst_msg_progress 			DB ".", 0x00
+; Fatal
+cst_msg_fatal_failure  		DB 0x0D, 0x0A, "Fatal Failure.....", 0x0A, 0x00
 
 ;***********************************************************
 ; Global Descriptor Register (GDR)
@@ -42,7 +50,6 @@ gdt_data:
 	DB 0					; Access byte (descriptor type)
 	DB 0					; Flags, Limit middle (bytes 19:16)
 	DB 0					; Base high (bytes 31:24)
-
 ; boot code:				; code descriptor
 	DW 0xFFFF           	; Limit (bytes 15:0)
 	DW 0                	; Base  (bytes 15:0)
@@ -50,7 +57,6 @@ gdt_data:
 	DB 0b10011010        	; access  = Present, Ring 0, 1, Executable, Direction, Readable, Unaccessed (1,00,1,1110 -> 9A)
 	DB 0b11001111        	; granularity = 4KB Granularity, 32bit segment size, reserved, reserved (AVL), Limit (bytes 19:16) (1,1,0,0,1111 - > CF)
 	DB 0                	; Base  (bytes 31:24)
-
 ; boot data:	        	; data descriptor
 	DW 0xFFFF           	; Limit (bytes 15:0)
 	DW 0                	; Base  (bytes 15:0)
@@ -72,17 +78,13 @@ main:
 	xor		ax, ax			; null segments
 	mov		ds, ax
 	mov		es, ax
+	mov		fs, ax
+	mov		gs, ax
 
 	mov 	ax, 0x9000
 	mov		ss, ax
 	mov		sp, 0xFFFF
 	sti						; restore interupts we need them before we can make any bios call
-
-;***********************************************************
-;	Enable the A20 line
-;	Allows more than 1MB to be accessed
-;***********************************************************
-	call enable_a20_keyboard_out
 
 ;***********************************************************
 ;	Display welcome message
@@ -91,16 +93,36 @@ main:
 	call	print
 
 ;***********************************************************
-;		Load Descriptor table
+;	Allow more than 1MB to be accessed
+;	Enable the A20 line
+;	Enable Unreal mode
+;
 ;***********************************************************
-	; disable interrupts for the final time. We cant start them
-	; again until the kernel has set up a interupt table
-	cli
-	lgdt 	[gdtr]        	; load GDT into GDTR
-	sti		;TODO <-check out
+	call 	enable_a20_keyboard_out
+	call 	enable_unreal_mode
+	mov		si, cst_msg_unreal
+	call	print
+
+
+;***********************************************************
+;	Load the kernel into memory
+;
+;***********************************************************
+	; load the the kernel into memory
+	call 	load_kernel
 
 end:
 	jmp 	end				;stop here for now
+
+;***********************************************************
+;		Halt Execution
+;***********************************************************
+fatal_failure:
+	mov		si, cst_msg_fatal_failure
+	call print
+	mov		ah,	0x00	; Both bios call use paramater 0
+	int		0x16		; BIOS 0x16 AH=0x00 -> await keypress
+	int		0x19		; BIOS 0x19 AH=0x00 ->warm boot computer
 
 
 ;***********************************************************
@@ -150,11 +172,36 @@ enable_a20_keyboard_out:
 	out     0x60,al			; write out data back to the output port
 
 	call 	wait_for_clear_input
-	mov     al,0xAE		; enable the keyboard
+	mov     al,0xAE			; enable the keyboard
 	out     0x64,al
 
 	call 	wait_for_clear_input
 	popa
+	sti
+	ret
+
+;***********************************************************
+;	note- we must set es and ds so that the later copy above 1mb works
+;***********************************************************
+enable_unreal_mode:
+	cli
+	push 	ds
+	push	es
+
+	lgdt 	[gdtr]        	; load GDT into GDTR
+	mov  	eax, cr0		; switch to pmode by
+	or 		al,1			; set pmode bit
+	mov  	cr0, eax
+
+	mov  	bx, 0x10		; select descriptor 2
+	mov  	ds, bx			; 10h = 1 0000b
+	mov  	es, bx			; 10h = 1 0000b
+
+	and 	al,0xFE			; back to realmode
+	mov  	cr0, eax		; by toggling bit again
+
+	pop		es
+	pop 	ds				; get back old segment
 	sti
 	ret
 
@@ -169,3 +216,5 @@ wait_for_clear_output:	;wait for a clear output buffer
 	test    al,1
 	jz      wait_for_clear_output
 	ret
+
+
