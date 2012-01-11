@@ -1,0 +1,22 @@
+Real Mode
+
+Unreal Mode
+
+Protect Mode
+
+
+
+Segementation
+
+Segment register basics
+Most memory accesses implicitly or explicitly use a segment register.
+	- To fetch instructions the CPU unconditionally uses the CS register.
+    - For most data accesses the CPU uses the DS register by default.
+    - When implicitly using DI or EDI in a string instruction, the CPU unconditionally uses the ES register.
+    - When implicitly using SP or ESP as a stack pointer the CPU unconditionally uses the SS register.
+    - When using BP, EBP, or ESP explicitly as a base register the CPU uses the SS register by default. 
+
+	In the cases in which DS or SS would be used by default, the choice of segment register may be overridden by a segment prefix.
+
+	The CPU first computes an offset. In 16-bit addressing the CPU truncates the offset to the low 16 bits. The CPU then adds the offset to the segment-base provided by the selected segment register. This yields the linear address that will be accessed. 
+Paging

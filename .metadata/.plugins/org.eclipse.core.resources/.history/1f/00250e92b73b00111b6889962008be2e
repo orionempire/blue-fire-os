@@ -1,0 +1,23 @@
+;**********************************************************
+;	bluefire-os
+;	Version: 00.00.03
+;	Author: David Davidson
+;	Name: enable_paging.asm
+;	Last update: 2012-01-10
+;	Purpose:
+;	Usage: Must be in real mode.
+;***********************************************************
+
+; Tell assembler to generate 32 bit byte code. Any code in this
+; Module must be called after in real mode.
+[BITS 32]
+
+; Paging constants
+%define	P_PRESENT 	0x01
+%define P_WRITE		0x02
+%define P_USER		0x04
+%define PAGE_SIZE	0x1000
+
+%define K_PDE		0x1000	; Page directory
+%define K_PTE		0x2000	; Kernel page table #0 (4MB)
+%define I_PTE		0x3000	; First 4MB Identity-map page table

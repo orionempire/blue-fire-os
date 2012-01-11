@@ -5,7 +5,7 @@
 # Purpose		: Master build script
 # Build Platform: Fedora 14 running in Virtual Box 4
 # PreReq		: None
-# Output		: blue_fire_master.img that can be mounted as a floppy in Bochs (or any vm platform)
+# Output		: blue_fire_master.img that can be mounted as a floppy in Bochs (or any vm platform) on a machine with 128 MB Ram
 
 # --- Build the binaries ---
 echo "Compiling binaries...."
@@ -13,7 +13,6 @@ nasm stage1/stage1.asm -o stage1/stage1.bin -l build/stage1.lst
 nasm stage2/stage2.asm -i stage2/ -o stage2/stage2.bin -l build/stage2.lst
 # debug
 make -C os
-# dd if=/dev/urandom of=build/bf_kernel32.bin bs=512 count=2000 
 
 # --- Build the disk ---
 # create the final image filled with zeroes
@@ -41,5 +40,4 @@ echo "Cleaning Up....."
 rm -f stage1/stage1.bin
 rm -f stage2/stage2.bin
 losetup -d /dev/loop0
-
 

@@ -34,6 +34,7 @@ var_current_disk_sector			DW 800
 var_current_buffer_segment		DW 0
 ; Running counter of how many groups of disk sectors are left to load.
 var_sector_groups_left_to_load	DW 0x10
+;var_sector_groups_left_to_load	DW 0x2
 
 
 load_kernel:
@@ -47,6 +48,7 @@ load_kernel:
 		; Load a group of 125 disk sectors to lower memory
 		; --------------------------------------------------
 
+; TODO -> document memory map
 		; use 1000:0000(0x10000) as the low memory buffer
 		mov		ax, 0x1000
 		mov		es, ax

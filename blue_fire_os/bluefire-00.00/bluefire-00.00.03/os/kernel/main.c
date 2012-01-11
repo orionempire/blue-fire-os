@@ -13,9 +13,29 @@
 // Declared in assembly/test.s
 extern void infinity();
 
-void k_main() {
+void k_main(int system_memory_amount) {
 	init_video();
 
+	int var = 0;
+	volatile char *video=(volatile char*)0xB8000;
+	const char *string = "Hello_World_From_Kernel_Land";
+
+	//Clear screen
+	for (var = 0; var < 4000; var++){
+		*video=0;
+		video++;
+	}
+
+	// Print message in windows 95 nostalgic white on blue. Can't handle spaces.
+	video=(volatile char*)0xB8000;
+	while(*string!=0)
+	{
+		*video=*string;
+		string++;
+		video++;
+		*video=0x1F;
+		video++;
+	}
+
 	infinity();
-	while(1);
 }

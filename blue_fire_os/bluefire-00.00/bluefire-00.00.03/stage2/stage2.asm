@@ -33,6 +33,9 @@ cst_msg_progress 			DB ".", 0x00
 ; Fatal
 cst_msg_fatal_failure  		DB 0x0D, 0x0A, "Fatal Failure.....", 0x0A, 0x00
 
+;-------variables--------
+; Currently set to 128 MB. If system memory changes it must be hard coded here
+var_system_memory_amount	DD	0x8000000
 ;***********************************************************
 ; Global Descriptor Register (GDR)
 ;***********************************************************
@@ -106,20 +109,23 @@ main:
 
 ;***********************************************************
 ;	Load the kernel into memory
-;
+;	Ensure that floppy motor is off
 ;***********************************************************
 	; load the the kernel into memory
 	call 	load_kernel
+	call 	turn_off_floppy_motor
 
-end:
-	jmp 	end				;stop here for now
+	;interrupts will not be enabled again until protect mode
+	cli
+	call	enable_protect_mode
+	jmp		0x8:protect_mode_start		; jump to end of code using Descripter Table Addressing
 
 ;***********************************************************
 ;		Halt Execution
 ;***********************************************************
 fatal_failure:
 	mov		si, cst_msg_fatal_failure
-	call print
+	call 	print
 	mov		ah,	0x00	; Both bios call use paramater 0
 	int		0x16		; BIOS 0x16 AH=0x00 -> await keypress
 	int		0x19		; BIOS 0x19 AH=0x00 ->warm boot computer
@@ -182,6 +188,8 @@ enable_a20_keyboard_out:
 
 ;***********************************************************
 ;	note- we must set es and ds so that the later copy above 1mb works
+;	cached descriptors will persist even after the original descriptor is
+;	restored.
 ;***********************************************************
 enable_unreal_mode:
 	cli
@@ -205,6 +213,12 @@ enable_unreal_mode:
 	sti
 	ret
 
+enable_protect_mode:
+	mov	eax, cr0		; set bit 0 in cr0--enter pmode
+	or	eax, 1
+	mov	cr0, eax
+	ret
+
 wait_for_clear_input:	;wait for a clear input buffer
 	in      al,0x64
 	test    al,2
@@ -217,4 +231,51 @@ wait_for_clear_output:	;wait for a clear output buffer
 	jz      wait_for_clear_output
 	ret
 
+;***********************************************************
+; Turn off flopy motor
+;***********************************************************
+turn_off_floppy_motor:
+	mov	dx, 0x03F2
+	mov	al, 0x0C
+	out	dx, al
+	ret
+
+;***********************************************************
+; Protect Mode starts here
+;***********************************************************
+bits 32
+
+%include "enable_paging.asm"
+
+protect_mode_start:
+;***********************************************************
+;   Set segment registers
+;***********************************************************
+	mov	ax, 0x10	; set data segments to data selector
+	mov	ds, ax
+	mov	ss, ax
+	mov	es, ax
+	mov	esp, 9FFFFh		; Reset the stack, same place, new address mode
+
+	call setup_and_enable_paging
+
+;***********************************************************
+;   Execute Kernel
+;***********************************************************
+	; Pass amount of system memory hard coded for now but
+	; will be calulated later.
+	push DWORD [var_system_memory_amount]
+	; we have to save the address in case the kernel
+	; executes a ret with the proper stack
+	push fatal_bootstrap_return
+	; jump to our kernel! It should be at 0xC0000000
+	jmp	0x8:0xC0000000
+
+;***********************************************************
+;	If we make it here then kernel returned with out permission
+;   Stop execution and halt
+;***********************************************************
+fatal_bootstrap_return:
+	cli
+	hlt
 
