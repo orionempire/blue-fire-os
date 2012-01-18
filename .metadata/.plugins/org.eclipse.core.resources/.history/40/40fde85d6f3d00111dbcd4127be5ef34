@@ -1,0 +1,52 @@
+/**************************************************************************
+ *	bluefire-os
+ *	Version: 00.00.04
+ *	Author: David Davidson
+ *	Name: console.c
+ *	Created: Jan 11, 2012
+ *	Purpose:
+ *  Usage:
+***************************************************************************/
+#include <common_include.h>
+
+static console_t vir_cons[K_TOT_VIR_CONS+1];
+
+// The first 4 MB of memory where Identity Mapped by the boot loader so address 0xB8000 works.
+// If this changes then kernel paging has to be activated first.
+void initialize_boot_console() {
+	vir_cons[0].vid_buffer = (u16int *)0xB8000;
+	vir_cons[0].cursor_x = 0;
+	vir_cons[0].cursor_y = 0;
+	vir_cons[0].cur_color = DEFAULT_COLOR;
+
+	// Clear the screen.
+	video_clrscr( (console_t *)(&vir_cons[0]) );
+}
+
+
+s32int kprintf(const char *fmt, ...) {
+	s08int kprintf_buf[1024];
+	va_list args;
+	u32int i;
+
+	va_start( args, fmt );
+	vsnprintf( kprintf_buf, sizeof(kprintf_buf), fmt, args );
+	va_end( args );
+
+	for( i = 0; i < 1024; i++ )	{
+		if( !kprintf_buf[i] ) break;
+		kputchar( kprintf_buf[i] );
+	}
+
+	return( i );
+}
+
+// Get and return the sepecified console structure.
+// returns NULL if console c does not exists.
+console_t *get_console_addr(s32int c) {
+	if ( (c >= 0) && ( c <= K_TOT_VIR_CONS) ) {
+		return( (console_t *)(&vir_cons[c]) );
+	}
+
+	return((console_t *)NULL);
+}

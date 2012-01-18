@@ -1,0 +1,15 @@
+/**************************************************************************
+ *	bluefire-os
+ *	Version: 00.00.04
+ *	Author: David Davidson
+ *	Name: mem.h
+ *	Created: Jan 12, 2012
+ *	Purpose:
+ *  Usage:
+***************************************************************************/
+#ifndef MEM_H_
+#define MEM_H_
+
+void memset16(void *dest_ptr, u16int val, u32int count);
+
+#endif /* MEM_H_ */

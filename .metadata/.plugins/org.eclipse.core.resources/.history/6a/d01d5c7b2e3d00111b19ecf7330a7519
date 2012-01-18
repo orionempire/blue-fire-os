@@ -1,0 +1,37 @@
+/**************************************************************************
+ *	bluefire-os
+ *	Version: 00.00.04
+ *	Author: David Davidson
+ *	Name: video.c
+ *	Created: Dec 14, 2011
+ *	Purpose:
+ *  Usage:
+***************************************************************************/
+#include <common_include.h>
+
+// Default Video width (columns).
+u16int	crt_width = 80;
+// Default Video height (rows).
+u16int	crt_height = 25;
+
+void initialize_video() {
+	// Set the size of the screen.
+	crt_width = 80;
+	crt_height = 25;
+}
+
+void video_clrscr( console_t *console ) {
+	u32int flags;
+
+	disable_interrupts(flags);
+
+	memset16((u16int *)(console->vid_buffer ), BLANK, crt_width*crt_height*2);
+	console->cursor_x = 0;
+	console->cursor_y = 0;
+
+	// Update the cursor position only for current console.
+	if( console==get_console_addr(0) )
+		move_cur( console->cursor_x, console->cursor_y);
+
+	enable_interrupts(flags);
+}

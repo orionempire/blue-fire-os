@@ -1,0 +1,17 @@
+/**************************************************************************
+ *	bluefire-os
+ *	Version: 00.00.00
+ *	Author: David Davidson
+ *	Name: mem.c
+ *	Created: Jan 12, 2012
+ *	Purpose:
+ *  Usage:
+***************************************************************************/
+#include <common_include.h>
+
+// sets all of destination specified to val 16 bits at a time
+void memset16(void *dest_ptr, u16int val, u32int count) {
+	__asm__ __volatile__ (	"cld\n"
+				"rep stosw": :"D"(dest_ptr), "c"(count), "a"(val));
+	__asm__("": : :"%edi", "%ecx");
+}

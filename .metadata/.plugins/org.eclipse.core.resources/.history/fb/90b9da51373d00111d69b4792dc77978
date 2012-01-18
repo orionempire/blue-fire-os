@@ -1,0 +1,24 @@
+/**************************************************************************
+ *	bluefire-os
+ *	Version: 00.00.04
+ *	Author: David Davidson
+ *	Name: main.c
+ *	Created: Dec 7, 2011
+ *	Purpose:
+ *  Usage:
+***************************************************************************/
+#include <common_include.h>
+
+// Declared in assembly/test.s
+//extern void infinity();
+
+void k_main(u32int system_memory_amount) {
+
+	initialize_video();
+
+	initialize_boot_console();
+
+	//memset16((u16int *)0x6000, 0x00, 1);
+
+	while(1);
+}

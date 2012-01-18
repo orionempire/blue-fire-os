@@ -1,0 +1,25 @@
+/**************************************************************************
+ *	bluefire-os
+ *	Version: 00.00.04
+ *	Author: David Davidson
+ *	Name: main.c
+ *	Created: Dec 7, 2011
+ *	Purpose:
+ *  Usage:
+***************************************************************************/
+#include <common_include.h>
+
+// Declared in assembly/test.s
+//extern void infinity();
+
+// function is called by address. static __inline__ calls will move the function down breaking things.
+void k_main(u32int system_memory_amount) {
+
+	initialize_video();
+
+	initialize_boot_console();
+
+	kprintf("Hello World");
+
+	while(1);
+}

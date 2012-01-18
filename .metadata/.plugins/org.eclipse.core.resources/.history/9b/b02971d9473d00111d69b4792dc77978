@@ -1,0 +1,55 @@
+/**************************************************************************
+ *	bluefire-os
+ *	Version: 00.00.04
+ *	Author: David Davidson
+ *	Name: video.c
+ *	Created: Dec 14, 2011
+ *	Purpose:
+ *  Usage:
+***************************************************************************/
+#include <common_include.h>
+
+// Default Video width (columns).
+u16int	crt_width = 80;
+// Default Video height (rows).
+u16int	crt_height = 25;
+
+// Refresh cursor register on the video card to the position recorded for the current console.
+void move_cursor( u08int x_pos, u08int y_pos ) {
+	// Registers 14-15 tell the 6845 where to put the
+	// cursor. The screen is 80 characters wide, memory is linear.
+	u16int cursor_location = ((y_pos * crt_width) + x_pos);
+	outport8(VIDEO_CRT_PORT, 0xE);                  	// Tell the VGA controller we are setting the Cursor Location High byte
+	outport8(VIDEO_CRT_PORT + 1, cursor_location >> 8); // Set it
+	outport8(VIDEO_CRT_PORT, 0xF);                  	// Tell the VGA controller we are setting the Cursor Location Low byte
+	outport8(VIDEO_CRT_PORT + 1, cursor_location);      // Set It
+}
+
+void video_clrscr( console_t *console ) {
+	u32int flags;
+
+	disable_interrupts(flags);
+
+	memset16((u16int *)(console->vid_buffer ), BLANK, crt_width*crt_height*2);
+	console->cursor_x = 0;
+	console->cursor_y = 0;
+
+	// Update the cursor position only for current console.
+	if( console==get_console_addr(0) )
+		move_cursor( console->cursor_x, console->cursor_y);
+
+	enable_interrupts(flags);
+}
+
+void write_char(u08int x_pos, u08int y_pos, u08int char_to_write, console_t *console)
+{
+	//convert the current X & Y to a linear value.
+	int current_location = ((y_pos * crt_width) + x_pos);
+
+	(console->vid_buffer)[current_location] = (((console->cur_color) << 8) | char_to_write);
+}
+void initialize_video() {
+	// Set the size of the screen.
+	crt_width = 80;
+	crt_height = 25;
+}

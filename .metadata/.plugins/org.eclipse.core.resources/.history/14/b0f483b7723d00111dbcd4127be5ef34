@@ -1,0 +1,16 @@
+/**************************************************************************
+ *	bluefire-os
+ *	Version: 00.00.00
+ *	Author: David Davidson
+ *	Name: ctype.h
+ *	Created: Jan 12, 2012
+ *	Last Update: Jan 12, 2012
+ *	Purpose:
+ *  Usage:
+***************************************************************************/
+#ifndef CTYPE_H_
+#define CTYPE_H_
+
+// Public Function declarations
+
+#endif /* CTYPE_H_ */

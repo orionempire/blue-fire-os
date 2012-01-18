@@ -1,0 +1,18 @@
+/**************************************************************************
+ *	bluefire-os
+ *	Version: 00.00.04
+ *	Author: David Davidson
+ *	Name: video.h
+ *	Created: Dec 14, 2011
+ *	Purpose:
+ *  Usage:
+***************************************************************************/
+
+#ifndef VIDEO_H_
+#define VIDEO_H_
+
+
+// Function Declarations
+void initialize_video();
+
+#endif /* VIDEO_H_ */

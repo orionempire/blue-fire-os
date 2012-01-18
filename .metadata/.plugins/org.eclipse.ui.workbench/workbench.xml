@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <workbench progressCount="31" version="2.0">
 <workbenchAdvisor/>
-<window height="1142" maximized="true" width="804" x="2239" y="-17">
+<window height="1142" maximized="true" width="804" x="1974" y="-8">
 <fastViewData fastViewLocation="1024"/>
 <perspectiveBar>
 <itemSize x="160"/>
@@ -14,14 +14,14 @@
 <coolItem id="org.eclipse.cdt.ui.buildConfigActionSet" itemType="typeToolBarContribution" x="89" y="22"/>
 <coolItem id="org.eclipse.debug.ui.launchActionSet" itemType="typeToolBarContribution" x="129" y="22"/>
 <coolItem id="org.eclipse.search.searchActionSet" itemType="typeToolBarContribution" x="122" y="22"/>
-<coolItem id="org.eclipse.ui.edit.text.actionSet.presentation" itemType="typeToolBarContribution" x="61" y="22"/>
+<coolItem id="org.eclipse.ui.edit.text.actionSet.presentation" itemType="typeToolBarContribution" x="107" y="22"/>
 <coolItem id="group.nav" itemType="typeGroupMarker"/>
 <coolItem id="org.eclipse.ui.workbench.navigate" itemType="typeToolBarContribution" x="190" y="22"/>
 <coolItem id="group.editor" itemType="typeGroupMarker"/>
 <coolItem id="org.eclipse.cdt.make.editor" itemType="typePlaceholder" x="-1" y="-1"/>
 <coolItem id="org.eclipse.cdt.ui.editor.CEditor" itemType="typeToolBarContribution" x="-1" y="-1"/>
 <coolItem id="org.eclipse.cdt.ui.editor.asm.AsmEditor" itemType="typePlaceholder" x="-1" y="-1"/>
-<coolItem id="org.eclipse.ui.DefaultTextEditor" itemType="typeToolBarContribution" x="-1" y="-1"/>
+<coolItem id="org.eclipse.ui.DefaultTextEditor" itemType="typePlaceholder" x="-1" y="-1"/>
 <coolItem id="group.help" itemType="typeGroupMarker"/>
 <coolItem id="org.eclipse.ui.workbench.help" itemType="typeToolBarContribution" x="-1" y="-1"/>
 </coolbarLayout>
@@ -36,9 +36,9 @@
 </folder>
 </info>
 </editorArea>
-<editor activePart="true" focus="true" id="org.eclipse.ui.DefaultTextEditor" name="start_here.txt" partName="start_here.txt" path="C:/Users/david.davidson/Dropbox/public_dropbox/Current_work/OS_work/blue_fire_workspace/blue_fire_os/start_here/start_here.txt" title="start_here.txt" tooltip="blue_fire_os/start_here/start_here.txt" workbook="DefaultEditorWorkbook">
-<input factoryID="org.eclipse.ui.part.FileEditorInputFactory" path="/blue_fire_os/start_here/start_here.txt"/>
-<editorState selectionHorizontalPixel="0" selectionLength="0" selectionOffset="0" selectionTopPixel="0"/>
+<editor activePart="true" focus="true" id="org.eclipse.cdt.ui.editor.CEditor" name="main.c" partName="main.c" path="C:/Users/david.davidson/Dropbox/public_dropbox/Current_work/OS_work/blue_fire_workspace/blue_fire_os/bluefire-00.00/bluefire-00.00.04/os/kernel/main.c" title="main.c" tooltip="blue_fire_os/bluefire-00.00/bluefire-00.00.04/os/kernel/main.c" workbook="DefaultEditorWorkbook">
+<input factoryID="org.eclipse.ui.part.FileEditorInputFactory" path="/blue_fire_os/bluefire-00.00/bluefire-00.00.04/os/kernel/main.c"/>
+<editorState selectionHorizontalPixel="0" selectionLength="0" selectionOffset="353" selectionTopPixel="0"/>
 </editor>
 </editors>
 <views>
@@ -49,6 +49,10 @@
 <view id="org.eclipse.cdt.make.ui.views.MakeView" partName="Make Target"/>
 <view id="org.eclipse.ui.views.ProblemView" partName="Problems">
 <viewState PRIMARY_SORT_FIELD="org.eclipse.ui.ide.severityAndDescriptionField" categoryGroup="org.eclipse.ui.ide.severity" markerContentGenerator="org.eclipse.ui.ide.problemsGenerator" partName="Problems">
+<expanded>
+<category IMemento.internal.id="Warnings"/>
+<category IMemento.internal.id="Warnings (2 items)"/>
+</expanded>
 <columnWidths org.eclipse.ui.ide.locationField="90" org.eclipse.ui.ide.markerType="90" org.eclipse.ui.ide.pathField="120" org.eclipse.ui.ide.resourceField="90" org.eclipse.ui.ide.severityAndDescriptionField="300"/>
 <visible IMemento.internal.id="org.eclipse.ui.ide.severityAndDescriptionField"/>
 <visible IMemento.internal.id="org.eclipse.ui.ide.resourceField"/>
@@ -64,7 +68,7 @@
 <viewState/>
 </view>
 </views>
-<perspectives activePart="org.eclipse.ui.DefaultTextEditor" activePerspective="org.eclipse.cdt.ui.CPerspective">
+<perspectives activePart="org.eclipse.cdt.ui.editor.CEditor" activePerspective="org.eclipse.cdt.ui.CPerspective">
 <perspective editorAreaTrimState="2" editorAreaVisible="1" fixed="0" version="0.016">
 <descriptor class="org.eclipse.cdt.internal.ui.CPerspectiveFactory" id="org.eclipse.cdt.ui.CPerspective" label="C/C++"/>
 <alwaysOnActionSet id="org.eclipse.egit.ui.navigation"/>
@@ -184,174 +188,166 @@
 <workingSets/>
 <navigationHistory>
 <editors>
-<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.asm.AsmEditor" path="/blue_fire_os/bluefire-00.00/bluefire-00.00.03/stage2/enable_paging.asm"/>
-<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.asm.AsmEditor" path="/blue_fire_os/bluefire-00.00/bluefire-00.00.03/stage2/stage2.asm"/>
-<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" path="/blue_fire_os/bluefire-00.00/bluefire-00.00.03/os/kernel/main.c"/>
-<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.ui.DefaultTextEditor" path="/blue_fire_os/bluefire-00.00/bluefire-00.00.03/build/stage2.lst"/>
-<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.ui.DefaultTextEditor" path="/blue_fire_os/bluefire-00.00/bluefire-00.00.03/build/bochsrc.bxrc"/>
-<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.ui.DefaultTextEditor" path="/blue_fire_os/bluefire-00.00/bluefire-00.00.03/master_build.sh"/>
-<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.ui.DefaultTextEditor" path="/blue_fire_os/start_here/start_here.txt"/>
-<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.asm.AsmEditor" path="/blue_fire_os/bluefire-00.00/bluefire-00.00.03/stage2/stage2.asm"/>
-<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.asm.AsmEditor" path="/blue_fire_os/bluefire-00.00/bluefire-00.00.03/stage2/load_kernel.asm"/>
-<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" path="/blue_fire_os/bluefire-00.00/bluefire-00.00.03/os/kernel/main.c"/>
-<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.ui.DefaultTextEditor" path="/blue_fire_os/bluefire-00.00/bluefire-00.00.03/os/kernel.ld"/>
-<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.asm.AsmEditor" path="/blue_fire_os/bluefire-00.00/bluefire-00.00.03/stage1/stage1.asm"/>
-<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.asm.AsmEditor" path="/blue_fire_os/bluefire-00.00/bluefire-00.00.03/stage2/stage2.asm"/>
-<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.asm.AsmEditor" path="/blue_fire_os/bluefire-00.00/bluefire-00.00.03/stage2/load_kernel.asm"/>
-<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.ui.DefaultTextEditor" path="/blue_fire_os/bluefire-00.00/bluefire-00.00.03/master_build.sh"/>
-<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.asm.AsmEditor" path="/blue_fire_os/bluefire-00.00/bluefire-00.00.03/stage2/stage2.asm"/>
-<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.ui.DefaultTextEditor" path="/blue_fire_os/bluefire-00.00/bluefire-00.00.03/master_build.sh"/>
-<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.ui.DefaultTextEditor" path="/blue_fire_os/start_here/start_here.txt"/>
+<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" path="/blue_fire_os/bluefire-00.00/bluefire-00.00.04/os/kernel/main.c"/>
+<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" path="/blue_fire_os/bluefire-00.00/bluefire-00.00.04/os/kernel/lib/vsnprintf.c"/>
+<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" path="/blue_fire_os/bluefire-00.00/bluefire-00.00.04/os/kernel/drivers/video/video.c"/>
+<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" path="/blue_fire_os/bluefire-00.00/bluefire-00.00.04/os/kernel/console.c"/>
+<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" path="/blue_fire_os/bluefire-00.00/bluefire-00.00.04/os/include/drivers/video/video.h"/>
+<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" path="/blue_fire_os/bluefire-00.00/bluefire-00.00.04/os/kernel/lib/ctype.c"/>
+<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" path="/blue_fire_os/bluefire-00.00/bluefire-00.00.04/os/include/lib/ctype.h"/>
+<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" path="/blue_fire_os/bluefire-00.00/bluefire-00.00.04/os/kernel/lib/string.c"/>
+<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" path="/blue_fire_os/bluefire-00.00/bluefire-00.00.04/os/kernel/mem.c"/>
+<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" path="/blue_fire_os/bluefire-00.00/bluefire-00.00.04/os/include/console.h"/>
 </editors>
-<item historyLabel="stage2.asm" index="1">
-<position info="not_deleted" x="8875" y="0"/>
+<item historyLabel="main.c" index="0">
+<position info="not_deleted" x="729" y="0"/>
 </item>
-<item historyLabel="stage2.lst" index="3">
-<position info="not_deleted" x="41047" y="4"/>
+<item historyLabel="vsnprintf.c" index="1">
+<position info="not_deleted" x="10244" y="0"/>
 </item>
-<item historyLabel="stage2.asm" index="1">
-<position info="not_deleted" x="8875" y="0"/>
+<item historyLabel="console.c" index="3">
+<position/>
 </item>
-<item historyLabel="main.c" index="2">
-<position info="not_deleted" x="747" y="0"/>
+<item historyLabel="vsnprintf.c" index="1">
+<position info="not_deleted" x="10244" y="0"/>
 </item>
-<item historyLabel="bochsrc.bxrc" index="4">
+<item historyLabel="console.c" index="3">
+<position/>
+</item>
+<item historyLabel="vsnprintf.c" index="1">
+<position info="not_deleted" x="4197" y="0"/>
+</item>
+<item historyLabel="console.c" index="3">
+<position/>
+</item>
+<item historyLabel="vsnprintf.c" index="1">
+<position info="not_deleted" x="4779" y="0"/>
+</item>
+<item historyLabel="console.c" index="3">
+<position/>
+</item>
+<item historyLabel="video.c" index="2">
+<position/>
+</item>
+<item historyLabel="main.c" index="0">
+<position info="not_deleted" x="729" y="0"/>
+</item>
+<item historyLabel="ctype.c" index="5">
+<position info="not_deleted" x="522" y="2"/>
+</item>
+<item historyLabel="ctype.h" index="6">
+<position info="not_deleted" x="544" y="2"/>
+</item>
+<item historyLabel="ctype.c" index="5">
+<position info="not_deleted" x="851" y="0"/>
+</item>
+<item historyLabel="ctype.h" index="6">
+<position info="not_deleted" x="544" y="2"/>
+</item>
+<item historyLabel="main.c" index="0">
+<position info="not_deleted" x="939" y="0"/>
+</item>
+<item historyLabel="vsnprintf.c" index="1">
+<position info="not_deleted" x="4779" y="0"/>
+</item>
+<item historyLabel="console.c" index="3">
+<position/>
+</item>
+<item historyLabel="vsnprintf.c" index="1">
+<position info="not_deleted" x="4779" y="0"/>
+</item>
+<item historyLabel="console.c" index="3">
+<position/>
+</item>
+<item historyLabel="vsnprintf.c" index="1">
+<position info="not_deleted" x="1763" y="0"/>
+</item>
+<item historyLabel="console.c" index="3">
+<position/>
+</item>
+<item historyLabel="video.c" index="2">
+<position/>
+</item>
+<item historyLabel="video.h" index="4">
+<position/>
+</item>
+<item historyLabel="video.c" index="2">
+<position/>
+</item>
+<item historyLabel="string.c" index="7">
 <position info="not_deleted" x="0" y="0"/>
 </item>
-<item historyLabel="main.c" index="2">
-<position info="not_deleted" x="819" y="0"/>
-</item>
-<item historyLabel="stage2.asm" index="1">
-<position info="not_deleted" x="8875" y="0"/>
-</item>
-<item historyLabel="enable_paging.asm" index="0">
+<item historyLabel="console.c" index="3">
 <position/>
 </item>
-<item historyLabel="master_build.sh" index="5">
+<item historyLabel="string.c" index="7">
+<position info="not_deleted" x="738" y="0"/>
+</item>
+<item historyLabel="video.c" index="2">
 <position/>
 </item>
-<item historyLabel="start_here.txt" index="6">
-<position info="not_deleted" x="1102" y="0"/>
+<item historyLabel="string.c" index="7">
+<position info="not_deleted" x="453" y="0"/>
 </item>
-<item historyLabel="stage2.asm" index="7">
-<position info="not_deleted" x="131" y="10"/>
-</item>
-<item historyLabel="start_here.txt" index="6">
-<position info="not_deleted" x="1102" y="0"/>
-</item>
-<item historyLabel="stage2.asm" index="7">
-<position info="not_deleted" x="131" y="10"/>
-</item>
-<item historyLabel="load_kernel.asm" index="8">
+<item historyLabel="video.c" index="2">
 <position/>
 </item>
-<item historyLabel="enable_paging.asm" index="0">
+<item historyLabel="console.c" index="3">
 <position/>
 </item>
-<item historyLabel="start_here.txt" index="6">
-<position info="not_deleted" x="942" y="0"/>
+<item historyLabel="vsnprintf.c" index="1">
+<position info="not_deleted" x="1763" y="0"/>
 </item>
-<item historyLabel="load_kernel.asm" index="8">
-<position/>
+<item historyLabel="main.c" index="0">
+<position info="not_deleted" x="939" y="0"/>
 </item>
-<item historyLabel="stage2.asm" index="7">
-<position info="not_deleted" x="131" y="10"/>
+<item historyLabel="mem.c" index="8">
+<position info="not_deleted" x="393" y="0"/>
 </item>
-<item historyLabel="start_here.txt" index="6">
-<position info="not_deleted" x="916" y="0"/>
+<item historyLabel="main.c" index="0">
+<position info="not_deleted" x="618" y="0"/>
 </item>
-<item historyLabel="load_kernel.asm" index="8">
-<position/>
+<item historyLabel="video.c" index="2">
+<position info="not_deleted" x="5399" y="0"/>
 </item>
-<item historyLabel="stage2.asm" index="7">
-<position info="not_deleted" x="131" y="10"/>
-</item>
-<item historyLabel="start_here.txt" index="6">
-<position info="not_deleted" x="916" y="0"/>
-</item>
-<item historyLabel="enable_paging.asm" index="0">
-<position/>
-</item>
-<item historyLabel="load_kernel.asm" index="8">
-<position/>
-</item>
-<item historyLabel="start_here.txt" index="6">
-<position info="not_deleted" x="916" y="0"/>
-</item>
-<item historyLabel="load_kernel.asm" index="8">
-<position/>
-</item>
-<item historyLabel="enable_paging.asm" index="0">
-<position/>
-</item>
-<item historyLabel="stage2.asm" index="7">
-<position info="not_deleted" x="131" y="10"/>
-</item>
-<item historyLabel="master_build.sh" index="5">
-<position/>
-</item>
-<item historyLabel="stage2.asm" index="7">
-<position info="not_deleted" x="131" y="10"/>
-</item>
-<item historyLabel="master_build.sh" index="5">
+<item historyLabel="video.h" index="4">
 <position info="not_deleted" x="0" y="0"/>
 </item>
-<item historyLabel="stage2.asm" index="7">
-<position info="not_deleted" x="131" y="10"/>
+<item historyLabel="video.c" index="2">
+<position info="not_deleted" x="5399" y="0"/>
 </item>
-<item historyLabel="master_build.sh" index="5">
+<item historyLabel="video.h" index="4">
 <position info="not_deleted" x="0" y="0"/>
 </item>
-<item historyLabel="stage2.asm" index="7">
-<position info="not_deleted" x="1312" y="0"/>
+<item historyLabel="console.h" index="9">
+<position info="not_deleted" x="1575" y="0"/>
 </item>
-<item historyLabel="enable_paging.asm" index="0">
-<position info="not_deleted" x="2732" y="0"/>
-</item>
-<item historyLabel="stage2.asm" index="7">
-<position info="not_deleted" x="1312" y="0"/>
-</item>
-<item historyLabel="load_kernel.asm" index="8">
-<position info="not_deleted" x="1652" y="0"/>
-</item>
-<item historyLabel="stage2.asm" index="7">
-<position info="not_deleted" x="1312" y="0"/>
-</item>
-<item historyLabel="enable_paging.asm" index="0">
+<item historyLabel="console.c" index="3">
 <position info="not_deleted" x="0" y="0"/>
 </item>
-<item historyLabel="main.c" index="9">
-<position info="not_deleted" x="900" y="0"/>
+<item historyLabel="console.h" index="9">
+<position info="not_deleted" x="1575" y="0"/>
 </item>
-<item historyLabel="kernel.ld" index="10">
+<item historyLabel="console.c" index="3">
 <position info="not_deleted" x="0" y="0"/>
 </item>
-<item historyLabel="main.c" index="9">
-<position info="not_deleted" x="900" y="0"/>
+<item historyLabel="console.h" index="9">
+<position info="not_deleted" x="1575" y="0"/>
 </item>
-<item historyLabel="enable_paging.asm" index="0">
+<item historyLabel="console.c" index="3">
 <position info="not_deleted" x="0" y="0"/>
 </item>
-<item historyLabel="stage1.asm" index="11">
+<item historyLabel="console.h" index="9">
+<position info="not_deleted" x="1575" y="0"/>
+</item>
+<item historyLabel="main.c" index="0">
+<position info="not_deleted" x="921" y="0"/>
+</item>
+<item historyLabel="console.c" index="3">
 <position info="not_deleted" x="0" y="0"/>
 </item>
-<item historyLabel="stage2.asm" index="12">
-<position info="not_deleted" x="1312" y="0"/>
-</item>
-<item historyLabel="load_kernel.asm" index="13">
-<position info="not_deleted" x="1613" y="0"/>
-</item>
-<item historyLabel="master_build.sh" index="14">
-<position info="not_deleted" x="0" y="1528"/>
-</item>
-<item historyLabel="stage2.asm" index="15">
-<position info="not_deleted" x="0" y="0"/>
-</item>
-<item historyLabel="master_build.sh" index="16">
-<position info="not_deleted" x="0" y="0"/>
-</item>
-<item active="true" historyLabel="start_here.txt" index="17">
-<position info="not_deleted" x="0" y="0"/>
+<item active="true" historyLabel="main.c" index="0">
+<position info="not_deleted" x="921" y="0"/>
 </item>
 </navigationHistory>
 <input factoryID="org.eclipse.ui.internal.model.ResourceFactory" path="/" type="8"/>
@@ -374,50 +370,50 @@
 </trimLayout>
 </window>
 <mruList>
-<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.ui.DefaultTextEditor" name="start_here.txt" tooltip="blue_fire_os/start_here/start_here.txt">
-<persistable path="/blue_fire_os/start_here/start_here.txt"/>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.ui.systemExternalEditor" name="bochsrc.bxrc" tooltip="blue_fire_os/bluefire-00.00/bluefire-00.00.04/build/bochsrc.bxrc">
+<persistable path="/blue_fire_os/bluefire-00.00/bluefire-00.00.04/build/bochsrc.bxrc"/>
 </file>
-<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.ui.DefaultTextEditor" name="master_build.sh" tooltip="blue_fire_os/bluefire-00.00/bluefire-00.00.03/master_build.sh">
-<persistable path="/blue_fire_os/bluefire-00.00/bluefire-00.00.03/master_build.sh"/>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="console.c" tooltip="blue_fire_os/bluefire-00.00/bluefire-00.00.04/os/kernel/console.c">
+<persistable path="/blue_fire_os/bluefire-00.00/bluefire-00.00.04/os/kernel/console.c"/>
 </file>
-<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.asm.AsmEditor" name="load_kernel.asm" tooltip="blue_fire_os/bluefire-00.00/bluefire-00.00.03/stage2/load_kernel.asm">
-<persistable path="/blue_fire_os/bluefire-00.00/bluefire-00.00.03/stage2/load_kernel.asm"/>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="console.h" tooltip="blue_fire_os/bluefire-00.00/bluefire-00.00.04/os/include/console.h">
+<persistable path="/blue_fire_os/bluefire-00.00/bluefire-00.00.04/os/include/console.h"/>
 </file>
-<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.asm.AsmEditor" name="stage1.asm" tooltip="blue_fire_os/bluefire-00.00/bluefire-00.00.03/stage1/stage1.asm">
-<persistable path="/blue_fire_os/bluefire-00.00/bluefire-00.00.03/stage1/stage1.asm"/>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="video.h" tooltip="blue_fire_os/bluefire-00.00/bluefire-00.00.04/os/include/drivers/video/video.h">
+<persistable path="/blue_fire_os/bluefire-00.00/bluefire-00.00.04/os/include/drivers/video/video.h"/>
 </file>
-<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.ui.systemExternalEditor" name="memory_map.odg" tooltip="blue_fire_os/bluefire-00.00/bluefire-00.00.03/docs/memory_map.odg">
-<persistable path="/blue_fire_os/bluefire-00.00/bluefire-00.00.03/docs/memory_map.odg"/>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="video.c" tooltip="blue_fire_os/bluefire-00.00/bluefire-00.00.04/os/kernel/drivers/video/video.c">
+<persistable path="/blue_fire_os/bluefire-00.00/bluefire-00.00.04/os/kernel/drivers/video/video.c"/>
 </file>
-<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.ui.DefaultTextEditor" name="kernel.ld" tooltip="blue_fire_os/bluefire-00.00/bluefire-00.00.03/os/kernel.ld">
-<persistable path="/blue_fire_os/bluefire-00.00/bluefire-00.00.03/os/kernel.ld"/>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="mem.c" tooltip="blue_fire_os/bluefire-00.00/bluefire-00.00.04/os/kernel/mem.c">
+<persistable path="/blue_fire_os/bluefire-00.00/bluefire-00.00.04/os/kernel/mem.c"/>
 </file>
-<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.ui.systemExternalEditor" name="bochsrc.bxrc" tooltip="blue_fire_os/bluefire-00.00/bluefire-00.00.03/build/bochsrc.bxrc">
-<persistable path="/blue_fire_os/bluefire-00.00/bluefire-00.00.03/build/bochsrc.bxrc"/>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="string.c" tooltip="blue_fire_os/bluefire-00.00/bluefire-00.00.04/os/kernel/lib/string.c">
+<persistable path="/blue_fire_os/bluefire-00.00/bluefire-00.00.04/os/kernel/lib/string.c"/>
 </file>
-<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="main.c" tooltip="blue_fire_os/bluefire-00.00/bluefire-00.00.03/os/kernel/main.c">
-<persistable path="/blue_fire_os/bluefire-00.00/bluefire-00.00.03/os/kernel/main.c"/>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="ctype.h" tooltip="blue_fire_os/bluefire-00.00/bluefire-00.00.04/os/include/lib/ctype.h">
+<persistable path="/blue_fire_os/bluefire-00.00/bluefire-00.00.04/os/include/lib/ctype.h"/>
 </file>
-<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.asm.AsmEditor" name="enable_paging.asm" tooltip="blue_fire_os/bluefire-00.00/bluefire-00.00.03/stage2/enable_paging.asm">
-<persistable path="/blue_fire_os/bluefire-00.00/bluefire-00.00.03/stage2/enable_paging.asm"/>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="ctype.c" tooltip="blue_fire_os/bluefire-00.00/bluefire-00.00.04/os/kernel/lib/ctype.c">
+<persistable path="/blue_fire_os/bluefire-00.00/bluefire-00.00.04/os/kernel/lib/ctype.c"/>
 </file>
-<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.asm.AsmEditor" name="stage2.asm" tooltip="blue_fire_os/bluefire-00.00/bluefire-00.00.03/stage2/stage2.asm">
-<persistable path="/blue_fire_os/bluefire-00.00/bluefire-00.00.03/stage2/stage2.asm"/>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.ui.systemExternalEditor" name="bf_kernel32.dis" tooltip="blue_fire_os/bluefire-00.00/bluefire-00.00.04/build/bf_kernel32.dis">
+<persistable path="/blue_fire_os/bluefire-00.00/bluefire-00.00.04/build/bf_kernel32.dis"/>
 </file>
-<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.ui.DefaultTextEditor" name="stage2.lst" tooltip="blue_fire_os/bluefire-00.00/bluefire-00.00.03/build/stage2.lst">
-<persistable path="/blue_fire_os/bluefire-00.00/bluefire-00.00.03/build/stage2.lst"/>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="vsnprintf.h" tooltip="blue_fire_os/bluefire-00.00/bluefire-00.00.04/os/include/lib/vsnprintf.h">
+<persistable path="/blue_fire_os/bluefire-00.00/bluefire-00.00.04/os/include/lib/vsnprintf.h"/>
 </file>
-<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.ui.DefaultTextEditor" name="Please_Note.txt" tooltip="blue_fire_os/bluefire-00.00/bluefire-00.00.03/os/kernel/Please_Note.txt">
-<persistable path="/blue_fire_os/bluefire-00.00/bluefire-00.00.03/os/kernel/Please_Note.txt"/>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="string.h" tooltip="blue_fire_os/bluefire-00.00/bluefire-00.00.04/os/include/lib/string.h">
+<persistable path="/blue_fire_os/bluefire-00.00/bluefire-00.00.04/os/include/lib/string.h"/>
 </file>
-<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="video.c" tooltip="blue_fire_os/bluefire-00.00/bluefire-00.00.03/os/kernel/drivers/video/video.c">
-<persistable path="/blue_fire_os/bluefire-00.00/bluefire-00.00.03/os/kernel/drivers/video/video.c"/>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="common.h" tooltip="blue_fire_os/bluefire-00.00/bluefire-00.00.04/os/include/common.h">
+<persistable path="/blue_fire_os/bluefire-00.00/bluefire-00.00.04/os/include/common.h"/>
 </file>
-<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.ui.systemExternalEditor" name="bf_kernel32.dis" tooltip="blue_fire_os/bluefire-00.00/bluefire-00.00.03/build/bf_kernel32.dis">
-<persistable path="/blue_fire_os/bluefire-00.00/bluefire-00.00.03/build/bf_kernel32.dis"/>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="vsnprintf.c" tooltip="blue_fire_os/bluefire-00.00/bluefire-00.00.04/os/kernel/lib/vsnprintf.c">
+<persistable path="/blue_fire_os/bluefire-00.00/bluefire-00.00.04/os/kernel/lib/vsnprintf.c"/>
 </file>
-<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.asm.AsmEditor" name="test.s" tooltip="blue_fire_os/bluefire-00.00/bluefire-00.00.03/os/assembly/test.s">
-<persistable path="/blue_fire_os/bluefire-00.00/bluefire-00.00.03/os/assembly/test.s"/>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="main.c" tooltip="blue_fire_os/bluefire-00.00/bluefire-00.00.04/os/kernel/main.c">
+<persistable path="/blue_fire_os/bluefire-00.00/bluefire-00.00.04/os/kernel/main.c"/>
 </file>
 </mruList>
 </workbench>

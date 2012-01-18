@@ -1,0 +1,25 @@
+/**************************************************************************
+ *	bluefire-os
+ *	Version: 00.00.00
+ *	Author: David Davidson
+ *	Name: i386.h
+ *	Created: Jan 11, 2012
+ *	Purpose: Describes the only supported architecture, 386 class 32 bit.
+ *  Usage:
+***************************************************************************/
+
+#ifndef I386_H_
+#define I386_H_
+
+static __inline__ u32int GET_IF(){
+	// return the interrupt enable flag value in EFLAGS register
+	u32int IF;
+	__asm__ __volatile__ (
+		"pushfl			\n"
+		"popl	%%eax		\n"
+		"shrl	$9, %%eax	\n"
+		"andl	$1, %%eax	\n" : "=a" (IF) : );
+	return IF;
+}
+
+#endif /* I386_H_ */
