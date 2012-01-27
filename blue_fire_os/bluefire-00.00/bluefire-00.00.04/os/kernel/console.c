@@ -13,7 +13,7 @@ static console_t vir_cons[K_TOT_VIR_CONS+1];
 
 /**************************************************************************
 * The first 4 MB of memory where Identity Mapped by the boot loader so address 0xB8000 works.
-* If this changes then kernel paging has to be activated first.
+* This must be changed after init_paging unmaps lower memory.
 **************************************************************************/
 void initialize_boot_console() {
 	vir_cons[0].vid_buffer = (u16int *)0xB8000;
@@ -34,7 +34,24 @@ s32int kputchar( s32int c ) {
 
 	disable_interrupts(flags);
 	// For  now just print to the video buffer.
-	video_put_char((console_t *)(&vir_cons[0]), c);
+	video_put_char(c, (console_t *)(&vir_cons[0]));
+
+	enable_interrupts(flags);
+
+	return( 0 );
+
+}
+
+/**************************************************************************
+* Put a character on the current console.
+* c - The ASCII value of the character.
+**************************************************************************/
+s32int kplacechar( u08int x_pos, u08int y_pos, s32int c ) {
+	u32int flags;
+
+	disable_interrupts(flags);
+	// For  now just print to the video buffer.
+	video_place_char(x_pos, y_pos, c,(console_t *)(&vir_cons[0]));
 
 	enable_interrupts(flags);
 

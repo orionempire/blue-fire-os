@@ -1,0 +1,41 @@
+;**********************************************************
+;	bluefire-os
+;	Version: 00.00.04
+;	Author: David Davidson
+;	Name: start.asm
+;	Last update: 2012-01-10
+;	Purpose:
+;	Usage: Must be in protect mode.
+;***********************************************************
+
+; Tell assembler to generate 32 bit byte code. Any code in this
+; Module must be called after in Protect mode.
+[BITS 32]
+
+GLOBAL _start
+GLOBAL var_system_memory_amount
+GLOBAL stage2_return_address
+
+;***********************************************************
+; It all starts here
+;***********************************************************
+_start:
+	; Jump over the data section
+	jmp entry
+	var_system_memory_amount	DD	0x0
+	stage2_return_address		DD 	0x0
+
+entry:
+	; Turn off floppy motor
+	mov	dx, 0x03F2
+	mov	al, 0x0C
+	out	dx, al
+
+	; Shortly this will be come unusable as lower memory will no longer
+	; be identity mapped in the paging section of the kernel but it is
+	; still there for future use.
+	pop [stage2_return_address]
+	; Store system memory that was passed on the stack
+	pop [var_system_memory_amount]
+pause:
+	jmp pause

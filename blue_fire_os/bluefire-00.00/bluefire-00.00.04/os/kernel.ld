@@ -9,8 +9,8 @@ K_PHYS_START = 0x100000;
 K_STACK_SIZE = 0x10000;
 PAGE_SIZE = 0x1000;
 
-ENTRY (k_main)
-
+/*ENTRY (k_main)*/
+ENTRY (_start)
 SECTIONS
 {
 	.text K_VIR_START : AT(K_PHYS_START)

@@ -20,7 +20,7 @@
     20                                  ;	to 0 and have all addresses in the code prefix with 0x8000
     21                                  ;***********************************************************
     22                                  org 0x8000
-    23 00000000 E91E01                  start:	jmp main	;jump over to first byte of executable code
+    23 00000000 E91E01                  start:	jmp main			;jump over to first byte of executable code
     24                                  
     25                                  %include "load_kernel.asm"
     26                              <1> ;**********************************************************
@@ -206,8 +206,8 @@
    206                                  ; Global Descriptor Register (GDR)
    207                                  ;***********************************************************
    208                                  gdtr:
-   209 00000103 1700                    	dw end_of_gdt - gdt_data - 1 	; limit (Size of GDT)
-   210 00000105 [09010000]              	dd gdt_data 			; base of GDT
+   209 00000103 1700                    	DW end_of_gdt - gdt_data - 1 	; limit (Size of GDT)
+   210 00000105 [09010000]              	DD gdt_data 					; base of GDT
    211                                  ;***********************************************************
    212                                  ; Global Descriptor Table (GDT)
    213                                  ;***********************************************************
@@ -284,7 +284,7 @@
    284                                  	;interrupts will not be enabled again until protect mode
    285 0000014D FA                      	cli
    286 0000014E E87100                  	call	enable_protect_mode
-   287 00000151 EA[5C02]0800            	jmp		0x8:protect_mode_start		; jump to end of code using Descripter Table Addressing
+   287 00000151 EA[E201]0800            	jmp		0x8:protect_mode_start		; jump to end of code using Descripter Table Addressing
    288                                  
    289                                  ;***********************************************************
    290                                  ;		Halt Execution
@@ -411,172 +411,35 @@
    411                                  ;***********************************************************
    412                                  bits 32
    413                                  
-   414                                  %include "enable_paging.asm"
-   415                              <1> ;**********************************************************
-   416                              <1> ;	bluefire-os
-   417                              <1> ;	Version: 00.00.03
-   418                              <1> ;	Author: David Davidson
-   419                              <1> ;	Name: enable_paging.asm
-   420                              <1> ;	Last update: 2012-01-10
-   421                              <1> ;	Purpose:
-   422                              <1> ;	Usage: Must be in protect mode.
-   423                              <1> ;***********************************************************
-   424                              <1> 
-   425                              <1> ; Tell assembler to generate 32 bit byte code. Any code in this
-   426                              <1> ; Module must be called after in Protect mode.
-   427                              <1> [BITS 32]
-   428                              <1> 
-   429                              <1> ; Kernel virtual start address
-   430                              <1> %define K_VIR_START	0xC0000000
-   431                              <1> 
-   432                              <1> ;Kernel physiscal start address
-   433                              <1> %define K_PHYS_START	0x100000
-   434                              <1> 
-   435                              <1> ; Paging constants
-   436                              <1> %define	P_PRESENT 	0x01
-   437                              <1> %define P_WRITE		0x02
-   438                              <1> %define P_USER		0x04
-   439                              <1> %define PAGE_SIZE	0x1000
-   440                              <1> 
-   441                              <1> ; TODO -> document memory map
-   442                              <1> %define K_PDE		0x1000	; Page directory
-   443                              <1> %define K_PTE		0x2000	; Kernel page table #0 (4MB)
-   444                              <1> %define I_PTE		0x3000	; First 4MB Identity-map page table
-   445                              <1> 
-   446                              <1> %macro memset 3
-   447                              <1> ; void memset(void *dest_ptr, int val, dword count);
-   448                              <1> ; o32 a32 forces the opperand and addressing of the string command into 32 bit mode.
-   449                              <1> 	mov edi, %1
-   450                              <1> 	mov eax, %2
-   451                              <1> 	mov ecx, %3
-   452                              <1> 	cld
-   453                              <1> 	o32 a32 rep stosb
-   454                              <1> %endmacro
-   455                              <1> 
-   456                              <1> %macro memcpy 3
-   457                              <1> ; void memcpy(void *dest_ptr, void *org_ptr, dword count);
-   458                              <1> 	mov edi, %1
-   459                              <1> 	mov esi, %2
-   460                              <1> 	mov ecx, %3
-   461                              <1> 	cld
-   462                              <1> 	o32 a32 rep movsb
-   463                              <1> %endmacro
-   464                              <1> 
-   465                              <1> setup_and_enable_paging:
-   466                              <1> 	; Zero out the future page directory, so there are no random entries
-   467                              <1> 	; pointing to phantom memory
-   468                              <1> 	; -> 0x1000 - 0x1FFF : 0x0
-   469                              <1> 	memset K_PDE, 0, PAGE_SIZE
-   470                              <2> 
-   471                              <2> 
-   472 000001E2 BF00100000          <2>  mov edi, %1
-   473 000001E7 B800000000          <2>  mov eax, %2
-   474 000001EC B900100000          <2>  mov ecx, %3
-   475 000001F1 FC                  <2>  cld
-   476 000001F2 F3AA                <2>  o32 a32 rep stosb
-   477                              <1> 
-   478                              <1> ;***********************************************************
-   479                              <1> ; Set up the first 4MB as identity mapped memory.
-   480                              <1> ; memory written here will write to the same physical location
-   481                              <1> ; 0x00000000-0x003fffff -> 0x0000000000000000-0x00000000003fffff
-   482                              <1> ;***********************************************************
-   483                              <1> 	;          Fill      :     With
-   484                              <1> 	; -> 0x3000 - 0x3FFF : 0x0(0 - 3FF)003
-   485 000001F4 B803000000          <1> 	mov	eax, (P_PRESENT | P_WRITE)
-   486 000001F9 B900040000          <1> 	mov	ecx, 1024
-   487 000001FE BF00300000          <1> 	mov	edi, I_PTE
-   488 00000203 FC                  <1> 	cld
-   489                              <1> 	; Fill the page table.
-   490                              <1> Map_I_PTE:
-   491 00000204 AB                  <1> 	stosd
-   492 00000205 0500100000          <1> 	add	eax, PAGE_SIZE
-   493 0000020A E2F8                <1> 	loop	Map_I_PTE
-   494                              <1> 	; Write the filled page table in the page directory.
-   495                              <1> 	; -> 0x1000 : 0x3007
-   496 0000020C C70500100000073000- <1> 	mov dword [K_PDE], I_PTE | P_PRESENT | P_WRITE | P_USER
-   497 00000215 00                  <1>
-   498                              <1> 
-   499                              <1> ;***********************************************************
-   500                              <1> ; Set up the kernel page table. The 4 MB starting at 1 MB as mapped to
-   501                              <1> ; Logical addresses starting with 0xC to physical addresses 0x + 1MB.
-   502                              <1> ; So writing to 0xC0000001 will put it in physical location 0x00010001
-   503                              <1> ; 0xc0000000-0xc03fffff -> 0x0000000000100000-0x00000000004fffff
-   504                              <1> ;***********************************************************
-   505                              <1> 	;          Fill      :     With
-   506                              <1> 	; -> 0x2000 - 0x2FFF : 0x0(100 - 4FF)003
-   507 00000216 B803001000          <1> 	mov	eax, (K_PHYS_START | P_PRESENT | P_WRITE)
-   508 0000021B B900040000          <1> 	mov	ecx, 1024
-   509 00000220 BF00200000          <1> 	mov	edi, K_PTE
-   510                              <1> 	; Fill the page table.
-   511                              <1> Map_K_PTE:
-   512 00000225 AB                  <1> 	stosd
-   513 00000226 0500100000          <1> 	add	eax, PAGE_SIZE
-   514 0000022B E2F8                <1> 	loop	Map_K_PTE
-   515                              <1> 	; Write the filled page table in the page directory.
-   516                              <1> 	; -> 0x1C00 : 0x2007
-   517 0000022D C705001C0000072000- <1> 	mov dword [K_PDE+(K_VIR_START/(PAGE_SIZE*1024))*4], K_PTE | P_PRESENT | P_WRITE | P_USER
-   518 00000236 00                  <1>
-   519                              <1> 
-   520                              <1> 
-   521                              <1> ;
-   522                              <1> ;***********************************************************
-   523                              <1> ; Map page directory into itself. this allows no maintenance while ensuring
-   524                              <1> ; page directory sanity, if it is manipulted as it acts as its own page table.
-   525                              <1> ; 0xfffff000-0xffffffff -> 0x0000000000001000-0x0000000000001fff
-   526                              <1> ; 0xfff00000-0xfff00fff -> 0x0000000000002000-0x0000000000002fff
-   527                              <1> ; 0xffc00000-0xffc00fff -> 0x0000000000003000-0x0000000000003fff
-   528                              <1> ;***********************************************************
-   529                              <1> 	; -> 0x1FFC : 0x1007
-   530 00000237 C705FC1F0000071000- <1> 	mov dword [K_PDE+1023*4], K_PDE | P_PRESENT | P_WRITE | P_USER
-   531 00000240 00                  <1>
-   532                              <1> 
-   533                              <1> ;***********************************************************
-   534                              <1> ; Enable paging
-   535                              <1> ;***********************************************************
-   536                              <1> 	; Setup the Page Directory Base Register
-   537 00000241 B800100000          <1> 	mov	eax, K_PDE
-   538 00000246 0F22D8              <1> 	mov	cr3, eax
-   539                              <1> 	; enable
-   540 00000249 0F20C0              <1> 	mov	eax, cr0
-   541 0000024C 0D00000180          <1> 	or	eax, 0x80010000 ; CR0.PG = CR0.WP = 1
-   542 00000251 0F22C0              <1> 	mov	cr0, eax
-   543                              <1> 
-   544                              <1> ; The registers are set on jump so a self jump is executed
-   545 00000254 EA[5B020000]0800    <1> 	jmp	0x08:paging_enabled
-   546                              <1> 
-   547                              <1> paging_enabled:
-   548                              <1> 
-   549 0000025B C3                  <1> 	ret
-   550                                  
-   551                                  protect_mode_start:
-   552                                  ;***********************************************************
-   553                                  ;   Set segment registers
-   554                                  ;***********************************************************
-   555 0000025C 66B81000                	mov	ax, 0x10	; set data segments to data selector
-   556 00000260 8ED8                    	mov	ds, ax
-   557 00000262 8ED0                    	mov	ss, ax
-   558 00000264 8EC0                    	mov	es, ax
-   559 00000266 BCFFFF0900              	mov	esp, 9FFFFh		; Reset the stack, same place, new address mode
-   560                                  
-   561 0000026B E872FFFFFF              	call setup_and_enable_paging
-   562                                  
-   563                                  ;***********************************************************
-   564                                  ;   Execute Kernel
-   565                                  ;***********************************************************
-   566                                  	; Pass amount of system memory hard coded for now but
-   567                                  	; will be calulated later.
-   568 00000270 FF35[FF000000]          	push DWORD [var_system_memory_amount]
-   569                                  	; we have to save the address in case the kernel
-   570                                  	; executes a ret with the proper stack
-   571 00000276 68[82020000]            	push fatal_bootstrap_return
-   572                                  	; jump to our kernel! It should be at 0xC0000000
-   573 0000027B EA000000C00800          	jmp	0x8:0xC0000000
-   574                                  
-   575                                  ;***********************************************************
-   576                                  ;	If we make it here then kernel returned with out permission
-   577                                  ;   Stop execution and halt
-   578                                  ;***********************************************************
-   579                                  fatal_bootstrap_return:
-   580 00000282 FA                      	cli
-   581 00000283 F4                      	hlt
-   582                                  
+   414                                  protect_mode_start:
+   415                                  ;***********************************************************
+   416                                  ;   Set segment registers
+   417                                  ;***********************************************************
+   418 000001E2 66B81000                	mov	ax, 0x10	; set data segments to data selector
+   419 000001E6 8ED8                    	mov	ds, ax
+   420 000001E8 8ED0                    	mov	ss, ax
+   421 000001EA 8EC0                    	mov	es, ax
+   422 000001EC BCFFFF0900              	mov	esp, 9FFFFh		; Reset the stack, same place, new address mode
+   423                                  
+   424                                  	;call setup_and_enable_paging
+   425                                  ;***********************************************************
+   426                                  ;   Execute Kernel
+   427                                  ;***********************************************************
+   428                                  	; Pass amount of system memory hard coded for now but
+   429                                  	; will be calulated later.
+   430 000001F1 FF35[FF000000]          	push DWORD [var_system_memory_amount]
+   431                                  	; we have to save the address in case the kernel
+   432                                  	; executes a ret with the proper stack. For now it will be thrown away
+   433                                  	; as the kernel quickly removes identity mapping but, it is there for later use if needed.
+   434 000001F7 68[03020000]            	push fatal_bootstrap_return
+   435                                  	; jump to our kernel! It should be at physical address0x100000
+   436 000001FC EA000010000800          	jmp	0x8:0x100000
+   437                                  
+   438                                  ;***********************************************************
+   439                                  ;	If we make it here then kernel returned with out permission
+   440                                  ;   Stop execution and halt
+   441                                  ;***********************************************************
+   442                                  fatal_bootstrap_return:
+   443 00000203 FA                      	cli
+   444 00000204 F4                      	hlt
+   445                                  

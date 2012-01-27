@@ -22,6 +22,6 @@ void initialize_video();
 void video_clrscr( console_t *console );
 void video_set_color( console_t *console, u08int attrib );
 void video_place_char(u08int x_pos, u08int y_pos, u08int char_to_write, console_t *console);
-void video_put_char( console_t *console, u08int c );
+void video_put_char( u08int c, console_t *console );
 
 #endif /* VIDEO_H_ */

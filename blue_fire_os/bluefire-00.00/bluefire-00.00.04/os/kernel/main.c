@@ -9,11 +9,12 @@
 ***************************************************************************/
 #include <common_include.h>
 
-// Declared in assembly/test.s
-// extern void infinity();
+// declared in assembly/start.asm
+extern u32int var_system_memory_amount, _start;
+//extern u32int _start;
 
-// function is called by address. static __inline__ calls might move the function down breaking things.
-void k_main(u32int system_memory_amount) {
+// Control arrives here from assembly/start.asm
+void k_main() {
 
 	initialize_video();
 
@@ -25,8 +26,15 @@ void k_main(u32int system_memory_amount) {
 	kset_color(LIGHT_BLUE);
 	kprintf("Blue Fire OS.\n");
 	kset_color(DEFAULT_COLOR);
-	kprintf("Kernel is running at virtual address: %#010x\n", (u32int)&k_main );
-	kprintf("Total System memory is: %d MB\n", (system_memory_amount /(1024 * 1024)) );
+	kprintf("Kernel is running at virtual address: %#010x\n", (u32int)&_start);
+	kprintf("Total System memory is: %d MB\n", (var_system_memory_amount /(1024 * 1024)) );
+
+	dbg(PAGE_SIZE)
+	//dump_dirty_pages();
+
+	initialize_paging() ;
 
 	dbg_brk();
+	// We must never reach this point.
+	PANIC("End of k_main reached.");
 }

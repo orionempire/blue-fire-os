@@ -12,16 +12,16 @@
 # we need to build a list of every c and assembly source file used. Add seperate 
 # entires for any new directory containing c source files and s source files.
 
-# ensure main must be positioned first
-SOURCES=kernel/main.c
-#then make sure to exclude main from the list and add every other source after it
-SOURCES+=$(shell ls kernel/*.c assembly/*.s |grep -vir "main")
+# Build a list of all primary source files using /bin/sh
+SOURCES+=$(shell ls kernel/*.c assembly/*.asm)
+
 # add all locations other than primary to list of source files. 
 SOURCES+=$(shell ls kernel/lib/*.c kernel/drivers/video/*.c )	
 
 # Build a list of every object that is going to be created.
+# Iterate throught the list of source files and convert them all to .o files
 OBJECTS += $(SOURCES:.c=.o)	
-OBJECTS := $(OBJECTS:.s=.o)		
+OBJECTS := $(OBJECTS:.asm=.o)
 		
 INCDIR	=./include
 LDSCRIPT=kernel.ld
@@ -39,7 +39,7 @@ bf_kernel32.elf: $(OBJECTS)
 	$(LD) -o ../build/$@ $(OBJECTS)
 
 # use nasm on all of the assembly source files
-%.o: %.s
+%.o: %.asm
 	$(NASM) -o $@ $<		
 
 # use gcc on all of the c language source files	
@@ -48,7 +48,7 @@ bf_kernel32.elf: $(OBJECTS)
 
 # Every file used by SOURCES must be accounted for here.
 clean:
-	rm -f  kernel/*.o kernel/drivers/video/*.o assembly/*.o
+	rm -f  kernel/*.o assembly/*.o kernel/lib/*.o kernel/drivers/video/*.o 
 	
 # A clean up that wont be called from our build script
 scrub: clean

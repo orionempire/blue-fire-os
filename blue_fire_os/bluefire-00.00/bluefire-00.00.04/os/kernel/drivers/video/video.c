@@ -109,7 +109,7 @@ void video_place_char(u08int x_pos, u08int y_pos, u08int char_to_write, console_
 // console 	- The address of the selected console.
 // c 		- The ASCII code of the character to print.
  * **************************************************************************/
-void video_put_char( console_t *console, u08int c ) {
+void video_put_char( u08int c, console_t *console) {
 
 	u32int flags;
 

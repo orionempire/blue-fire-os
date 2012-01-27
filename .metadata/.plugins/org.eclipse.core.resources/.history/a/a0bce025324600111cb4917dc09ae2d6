@@ -1,0 +1,22 @@
+/**************************************************************************
+ *	bluefire-os
+ *	Version: 00.00.00
+ *	Author: David Davidson
+ *	Name: kernel_map.h
+ *	Created: Jan 23, 2012
+ *	Last Update: Jan 23, 2012
+ *	Purpose:
+ *  Usage:
+***************************************************************************/
+#ifndef KERNEL_MAP_H_
+#define KERNEL_MAP_H_
+
+/**************************************************************************
+ * 	Virtual address memory definitions
+**************************************************************************/
+// the page tables are self mapped here.
+#define VIRTUAL_PAGE_TABLE_MAP		0xFFC00000
+#define VIRTUAL_PAGE_DIRECTORY_MAP	(0xFFC00000 + (VIRTUAL_PAGE_TABLE_MAP / (1024)))
+
+
+#endif /* KERNEL_MAP_H_ */

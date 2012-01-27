@@ -13,7 +13,9 @@
 #include <common.h>
 #include <console.h>
 #include <i386.h>
+#include <kernel_map.h>
 #include <mem.h>
+#include <paging.h>
 #include <stdarg.h>
 #include <drivers/video/video.h>
 #include <lib/ctype.h>

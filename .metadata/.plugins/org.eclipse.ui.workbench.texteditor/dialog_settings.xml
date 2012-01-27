@@ -13,13 +13,16 @@
 		<item value="false" key="isRegEx"/>
 		<item value="false" key="incremental"/>
 		<item value="false" key="wholeword"/>
-		<item value="long" key="selection"/>
+		<item value="initialize_paging" key="selection"/>
 		<list key="findhistory">
+			<item value="initialize_paging"/>
+			<item value="PAGE_TABLE_MAP"/>
+			<item value="paging"/>
+			<item value="init_free_frames"/>
 			<item value="long"/>
 			<item value=" int"/>
 			<item value="int"/>
 			<item value="char"/>
-			<item value="es"/>
 		</list>
 		<list key="replacehistory">
 		</list>

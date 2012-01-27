@@ -20,7 +20,7 @@ bits 16
 ;	to 0 and have all addresses in the code prefix with 0x8000
 ;***********************************************************
 org 0x8000
-start:	jmp main	;jump over to first byte of executable code
+start:	jmp main			;jump over to first byte of executable code
 
 %include "load_kernel.asm"
 
@@ -40,8 +40,8 @@ var_system_memory_amount	DD	0x8000000
 ; Global Descriptor Register (GDR)
 ;***********************************************************
 gdtr:
-	dw end_of_gdt - gdt_data - 1 	; limit (Size of GDT)
-	dd gdt_data 			; base of GDT
+	DW end_of_gdt - gdt_data - 1 	; limit (Size of GDT)
+	DD gdt_data 					; base of GDT
 ;***********************************************************
 ; Global Descriptor Table (GDT)
 ;***********************************************************
@@ -245,8 +245,6 @@ turn_off_floppy_motor:
 ;***********************************************************
 bits 32
 
-%include "enable_paging.asm"
-
 protect_mode_start:
 ;***********************************************************
 ;   Set segment registers
@@ -257,8 +255,7 @@ protect_mode_start:
 	mov	es, ax
 	mov	esp, 9FFFFh		; Reset the stack, same place, new address mode
 
-	call setup_and_enable_paging
-
+	;call setup_and_enable_paging
 ;***********************************************************
 ;   Execute Kernel
 ;***********************************************************
@@ -266,10 +263,11 @@ protect_mode_start:
 	; will be calulated later.
 	push DWORD [var_system_memory_amount]
 	; we have to save the address in case the kernel
-	; executes a ret with the proper stack
+	; executes a ret with the proper stack. For now it will be thrown away
+	; as the kernel quickly removes identity mapping but, it is there for later use if needed.
 	push fatal_bootstrap_return
-	; jump to our kernel! It should be at 0xC0000000
-	jmp	0x8:0xC0000000
+	; jump to our kernel! It should be at physical address0x100000
+	jmp	0x8:0x100000
 
 ;***********************************************************
 ;	If we make it here then kernel returned with out permission

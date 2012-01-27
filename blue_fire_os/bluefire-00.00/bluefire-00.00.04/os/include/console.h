@@ -49,5 +49,7 @@ void initialize_boot_console();
 console_t *get_console_addr(s32int c);
 void kset_color(u08int attrib);
 s32int kprintf(const s08int *fmt, ...);
+s32int kputchar( s32int c );
+s32int kplacechar( u08int x_pos, u08int y_pos, s32int c );
 
 #endif /* CONSOLE_H_ */
