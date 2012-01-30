@@ -1,0 +1,80 @@
+/**************************************************************************
+ *	bluefire-os
+ *	Version: 00.00.04
+ *	Author: David Davidson
+ *	Name: mem.h
+ *	Created: Jan 12, 2012
+ *	Purpose:
+ *  Usage:
+***************************************************************************/
+#ifndef MEM_H_
+#define MEM_H_
+
+// GDT constants
+#define GDT_TABLE_DIMENSION		8192	// number of entries in the GDT
+#define GDT_ENTRY_DIMENSION		8		// size of each entry
+
+// Segment Constants
+#define PRESENT			0x80
+#define CODE			0x18
+#define DATA			0x10
+#define EXP_DOWN		0x04
+#define CONFORMING		0x04
+#define READABLE		0x02
+#define WRITEABLE		0x02
+
+#define CODE_SEG		(CODE | PRESENT | READABLE)
+#define DATA_SEG		(DATA | PRESENT | WRITEABLE)
+#define STACK_SEG		DATA_SEG
+#define TSS_SEG			(PRESENT | 0x09)
+#define REAL_SEG		(CODE | PRESENT | READABLE)
+
+#define INT_GATE		(PRESENT | 0x0E) // 32-bit Interrupt Gate
+#define TASK_GATE		(PRESENT | 0x05) // Task Gate
+#define TRAP_GATE		(PRESENT | 0x0F) // 32-bit Trap Gate
+
+#define DPL_0			0x00
+#define DPL_1			0x20
+#define DPL_2			0x40
+#define DPL_3			0x60
+
+#define BUSY_FLAG		0x02
+
+#define ATTR_32BIT      0x40
+#define ATTR_GRANUL     0x80
+
+#define KERNEL_DATA		0x08
+#define KERNEL_STACK	0x08
+#define KERNEL_CODE		0x10
+
+#define USER_DATA		0x18
+#define USER_STACK		0x18
+#define USER_CODE		0x20
+
+// GDT structure
+typedef struct gdt_entry {
+	u16int limit;
+	u16int base0_15;
+	u08int base16_23;
+	u08int attribs0_7;  // P(1bit) | DPL(2bit) | S(1bit) | Type(4bit)
+	u08int attribs8_15; // G(1bit) | D/B(1bit) | 0(1bit) | AVL(1bit) | limit16_19(4bit)
+	u08int base24_31;
+// P=Present, DPL=Descriptor Privilege Level, S=Descriptor type (0=system; 1=code or data),
+// Type=Segment type, G=Granularity, D/B=Default operation size(0=16bit; 1=32bit segment),
+// AVL=Available for use by system software.
+} gdt_entry_t;
+
+typedef struct gdt_register {
+	u16int limit;
+	u08int base[sizeof(u32int)];
+} gdt_reg;
+
+// Public Function declarations
+void memset8(void *dest_ptr, u08int val, u32int count);
+void memset16(void *dest_ptr, u16int val, u32int count);
+void memset32(void *dest_ptr, u32int val, u32int count);
+void memcpy8(void *dest_ptr, const void *org_ptr, u32int count);
+void memcpy32(void *dest_ptr, const void *org_ptr, u32int count);
+void install_GDT();
+
+#endif /* MEM_H_ */

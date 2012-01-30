@@ -1,0 +1,46 @@
+/**************************************************************************
+ *	bluefire-os
+ *	Version: 00.00.04
+ *	Author: David Davidson
+ *	Name: mem.h
+ *	Created: Jan 12, 2012
+ *	Purpose:
+ *  Usage:
+***************************************************************************/
+#ifndef MEM_H_
+#define MEM_H_
+
+// GDT constants
+#define GDT_TABLE_DIMENSION		8192	// number of entries in the GDT
+#define GDT_ENTRY_DIMENSION		8		// size of each entry
+
+
+// GDT structure //
+typedef struct gdt_entry
+{
+	u16int limit;
+	u16int base0_15;
+	u08int base16_23;
+	u08int attribs0_7;  // P(1bit) | DPL(2bit) | S(1bit) | Type(4bit)
+	u08int attribs8_15; // G(1bit) | D/B(1bit) | 0(1bit) | AVL(1bit) | limit16_19(4bit)
+	u08int base24_31;
+// P=Present, DPL=Descriptor Privilege Level, S=Descriptor type (0=system; 1=code or data),
+// Type=Segment type, G=Granularity, D/B=Default operation size(0=16bit; 1=32bit segment),
+// AVL=Available for use by system software.
+} gdt_entry_t;
+
+typedef struct gdt_register
+{
+	u16int limit;
+	u08int base[sizeof(u32int)];
+} gdt_reg;
+
+// Public Function declarations
+void memset8(void *dest_ptr, u08int val, u32int count);
+void memset16(void *dest_ptr, u16int val, u32int count);
+void memset32(void *dest_ptr, u32int val, u32int count);
+void memcpy8(void *dest_ptr, const void *org_ptr, u32int count);
+void memcpy32(void *dest_ptr, const void *org_ptr, u32int count);
+void install_GDT();
+
+#endif /* MEM_H_ */
