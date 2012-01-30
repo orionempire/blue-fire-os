@@ -29,7 +29,8 @@ void k_main() {
 	kprintf("Kernel is running at virtual address: %#010x\n", (u32int)&_start);
 	kprintf("Total System memory is: %d MB\n", (var_system_memory_amount /(1024 * 1024)) );
 
-	dump_dirty_pages();
+	dbg(PAGE_SIZE)
+	//dump_dirty_pages();
 
 	initialize_paging() ;
 

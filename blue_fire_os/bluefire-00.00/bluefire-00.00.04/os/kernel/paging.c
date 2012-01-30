@@ -19,9 +19,15 @@ u32int *K_VIR_END;
 // Free-frames stack is placed just above kernel memory
 u32int *free_frames = (u32int *)&KERNEL_TOP;
 
-// Master page directory
+// Accounting record of the Master page directory
 u32int K_PDBR[1024];
 
+/**************************************************************************
+*	Free frame stack. Basically one word of memory is recored to represent
+*	every physical group (page) of memory not used. Later on a more efficient
+*	bitset algorithm will be used but for now things are kept simple as there
+*	arn't to many kernel resources available for debugging.
+**************************************************************************/
 // ---------- Free frames stack operators ----------
 u32int pop_frame() {
 	u32int ret;
@@ -57,7 +63,29 @@ void push_frame(u32int p_addr) {
 	enable_interrupts(flags);
 }
 
-// ---------- Mapping operators ----------
+/**************************************************************************
+*	---------- Mapping operators ----------
+*	Associates a Virtual address with a physical address
+**************************************************************************/
+// ---------- Initialization routines ----------
+void init_free_frames() {
+	u32int p_addr;
+
+	// First physical 16MB are reserved for kernel, BIOS & DMA
+	// so let's start with free memory area at 16MB
+	// -> 0xC0015000 - 0xC0031000 : 0x(1000-8000)
+	p_addr = P_ADDR_16MB;		//0x1000
+	K_VIR_END = free_frames;	//(KERNEL_TOP, dynamic) 0xC0015000 in the current example
+	while (p_addr < ADDR_TO_PAGE(var_system_memory_amount)) {
+		*(K_VIR_END++) = p_addr++;
+	}
+
+	// Last frame is NULL => out of physical memory.
+	// Kernel virtual address space ends here:
+	*K_VIR_END=NULL;
+}
+
+// ---------- Actual map routine ----------
 s32int map_page(u32int vir_addr, u32int phys_addr, u16int attribs) {
 	// Perform a page mapping for the current address space
 	u32int *PTE;
@@ -70,7 +98,7 @@ s32int map_page(u32int vir_addr, u32int phys_addr, u16int attribs) {
 	vir_addr = PAGE_ALIGN(vir_addr);
 	phys_addr = PAGE_ALIGN(phys_addr);
 
-	// Get only valid attribs
+	// Get only valid attributes
 	attribs &= (PAGE_SIZE-1);
 
 
@@ -111,23 +139,7 @@ s32int map_page(u32int vir_addr, u32int phys_addr, u16int attribs) {
 
 	return(TRUE);
 }
-// ---------- Initialization routines ----------
-void init_free_frames() {
-	u32int p_addr;
 
-	// First physical 16MB are reserved for kernel, BIOS & DMA
-	// so let's start with free memory area at 16MB
-	// -> 0xC0015000 - 0xC0031000 : 0x(1000-8000)
-	p_addr = P_ADDR_16MB;		//0x1000
-	K_VIR_END = free_frames;	//(KERNEL_TOP, dynamic) 0xC0015000 in the current example
-	while (p_addr < ADDR_TO_PAGE(var_system_memory_amount)) {
-		*(K_VIR_END++) = p_addr++;
-	}
-
-	// Last frame is NULL => out of physical memory.
-	// Kernel virtual address space ends here:
-	*K_VIR_END=NULL;
-}
 
 /**************************************************************************
 *	Sets up everything we need for paging
@@ -139,9 +151,10 @@ void initialize_paging() {
 	// Initialize free frames stack
 	init_free_frames();
 
-	// Unmap first 4MB identical-map pages
-	// for now on the self mapped page directory entry is used
-	// so what was once 0x1000 is now 0xFFFFF000
+	// Every process assumes it has the first 3GB of memory to its self. Until now
+	// lower memory was identity mapped so 0x1000(V) = 0x1000(P) while the page directory that resided in it
+	// was self mapped and addressable as either 0x1000(V) or 0xFFFFF000(V) both mapping to 0x1000(P). Now Lower
+	// memory will be unmaped and only the self mapped will work.
 	// -> 0xFFFFF000 : 0x0
 	*ADDR_TO_PDE(0) = NULL;
 
