@@ -1,0 +1,16 @@
+/**************************************************************************
+ *	bluefire-os
+ *	Version: 00.00.00
+ *	Author: David Davidson
+ *	Name: clock.h
+ *	Created: Feb 2, 2012
+ *	Last Update: Feb 2, 2012
+ *	Purpose:
+ *  Usage:
+***************************************************************************/
+#ifndef CLOCK_H_
+#define CLOCK_H_
+
+// Public Function declarations
+
+#endif /* CLOCK_H_ */

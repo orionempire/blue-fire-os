@@ -1,0 +1,30 @@
+/**************************************************************************
+ *	bluefire-os
+ *	Version: 00.00.00
+ *	Author: David Davidson
+ *	Name: clock.c
+ *	Created: Feb 2, 2012
+ *	Purpose:
+ *  Usage:
+***************************************************************************/
+#include <common_include.h>
+
+
+void initialize_clock() {
+	u32int flags;
+
+	disable_and_save_interrupts(flags);
+
+	// Initialize channel 0 of the 8253A timer
+
+	disable();
+
+	//Turn the timer on.
+	outport08(TIMER_MODE, SQUARE_WAVE);
+	//Set the 8253s low byte
+	outport08(TIMER0, TIMER_COUNT & 0xFF);
+	//Set the 8253s high byte
+	outport08(TIMER0, TIMER_COUNT >> 8);
+
+	restore_interrupts(flags);
+}
