@@ -21,7 +21,7 @@ BlueFire OS - Version 00 - From boot sector to shell.
 		BlueFire OS - 00.00.02 -> functional boot sector that loads stage 2 and displays message
 		BlueFire OS - 00.00.03 -> stage 2 enable a20, GDT, map memory, load kernel, enable paging, hello world from kernel
 		BlueFire OS - 00.00.04 -> Move paging enabled from stage2, Boot console, video, initialize page stack paging.  
-		BlueFire OS - 00.00.05 -> Interrupt controller, GDT . 
+		BlueFire OS - 00.00.05 -> Interrupt controller, GDT, exceptions, interrupts. 
 		BlueFire OS - 00.00.06 ->  
 		BlueFire OS - 00.00.08 ->  
 	  	BlueFire OS - 00.00.09 ->  

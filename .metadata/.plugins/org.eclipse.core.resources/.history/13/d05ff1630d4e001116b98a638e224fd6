@@ -1,0 +1,29 @@
+Welcome to BlueFire OS! Blue Fire is a didactic OS that was created to show every step of creating a bootstrapping OS.
+
+Design Goals
+A teaching OS			- The primary mission is to teach OS design. Elegance and advance features are routinley used but never at the expense of the primary goal.	
+Unified tool set 		- At first every thing needed to develop the OS is available in Linux (as of this writing Bochs Debugger is lacking and is done in windows).
+Bootstrapping			- The hope is that by the end of the project the OS can build its self.
+Open source Protocols   - Only open source data constructs are used I.E. ext2 everywhere no fat12
+One effective way only	- The goal is understanding not ubiquity so the OS is designed to work on a reference architecture and nothing else.
+
+Limitations
+	Until XX.XX.XX
+		1 MB kernel size limit		- the kernel is loaded from a 1 MB reserved section of the boot floppy. 		
+		Amount of kernel loaded		- will be calculated later. Currently hard coded set at stage2/load_kernel->var_sector_groups_left_to_load can be lowered 
+									  to save time while testing
+		Sytem memory is hard coded 	- will be calculated later. Currently hard coded to 128MB at stage2/stage2.asm. Must be changed if system memory amount changes.
+		  
+
+BlueFire OS - Version 00 - From boot sector to shell.
+	BlueFire OS - 00.00 -> Stage 1, Stage 2, and first kernel functionality 
+		BlueFire OS - 00.00.01 -> hello world boot sector
+		BlueFire OS - 00.00.02 -> functional boot sector that loads stage 2 and displays message
+		BlueFire OS - 00.00.03 -> stage 2 enable a20, GDT, map memory, load kernel, enable paging, hello world from kernel
+		BlueFire OS - 00.00.04 -> Move paging enabled from stage2, Boot console, video, initialize page stack paging.  
+		BlueFire OS - 00.00.05 -> Interrupt controller, GDT . 
+		BlueFire OS - 00.00.06 ->  
+		BlueFire OS - 00.00.08 ->  
+	  	BlueFire OS - 00.00.09 ->  
+	  	BlueFire OS - 00.00.10 -> 
+	  	BlueFire OS - 00.00.11 ->

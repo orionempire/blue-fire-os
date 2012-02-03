@@ -9,8 +9,9 @@
 ***************************************************************************/
 #include <common_include.h>
 
-// Global Descriptor Table (GDT)
-gdt_entry_t gdt[GDT_TABLE_DIMENSION];
+// Global Descriptor Table (GDT) (volatile ?)
+// The GDT register will point here
+volatile gdt_entry_t gdt[GDT_TABLE_DIMENSION];
 // GDT pointer
 gdt_reg gdt_ptr;
 // Busy (used) entries in GDT
@@ -29,7 +30,7 @@ u16int setup_GDT_entry(u16int limit, u32int base, u08int attribs0_7, u08int attr
 		}
 	}
 
-	disable_interrupts(flags);
+	disable_and_save_interrupts(flags);
 
 	gdt[i].limit = limit;
 	gdt[i].base0_15 = base & 0xFFFF;
@@ -40,7 +41,7 @@ u16int setup_GDT_entry(u16int limit, u32int base, u08int attribs0_7, u08int attr
 
 	gdt_busy_entry[i] = 1;
 
-	enable_interrupts(flags);
+	restore_interrupts(flags);
 
 	// Return the selector //
 	return(i * GDT_ENTRY_DIMENSION);
@@ -50,7 +51,7 @@ u16int setup_GDT_entry(u16int limit, u32int base, u08int attribs0_7, u08int attr
 void remove_GDT_entry(u16int sel){
 	u32int flags;
 
-	disable_interrupts(flags);
+	disable_and_save_interrupts(flags);
 
 	gdt[sel/GDT_ENTRY_DIMENSION].limit = 0;
 	gdt[sel/GDT_ENTRY_DIMENSION].base0_15 = 0;
@@ -61,10 +62,10 @@ void remove_GDT_entry(u16int sel){
 
 	gdt_busy_entry[sel/GDT_ENTRY_DIMENSION] = 0;
 
-	enable_interrupts(flags);
+	restore_interrupts(flags);
 }
 
-void install_GDT() {
+void initialize_GDT() {
 	register u16int i;
 
 	// Reset the GDT

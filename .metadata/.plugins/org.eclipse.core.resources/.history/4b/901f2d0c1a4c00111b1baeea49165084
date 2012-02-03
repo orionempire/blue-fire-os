@@ -1,0 +1,89 @@
+;**********************************************************
+;	bluefire-os
+;	Version: 00.00.05
+;	Author: David Davidson
+;	Name: interrupt_top.asm
+;	Last update: 2012-01-30
+;	Purpose: holds the entery point of functions called from itd.
+;	Usage:
+;***********************************************************
+
+%ifndef INTERRUPT_REQUEST_S
+%define INTERRUPT_REQUEST_S
+
+%define KERNEL_DATA_SEL 0x08
+
+%macro BUILD_IRQ 1
+	push	eax		; Save eax register
+	mov	eax, %1		; Put in eax the IRQ number
+	jmp	COMMON_ISR
+%endmacro
+
+%endif
+
+GLOBAL irq_00, irq_01, irq_02, irq_03, irq_04, irq_05, irq_06, irq_07
+GLOBAL irq_08, irq_09, irq_0A, irq_0B, irq_0C, irq_0D, irq_0E, irq_0F
+GLOBAL irq_unhandled
+
+;Declared in os/kernel/interrupt_handler.c
+EXTERN default_handler
+
+irq_00:
+	BUILD_IRQ 0x00
+irq_01:
+	BUILD_IRQ 0x01
+irq_02:
+	BUILD_IRQ 0x02
+irq_03:
+	BUILD_IRQ 0x03
+irq_04:
+	BUILD_IRQ 0x04
+irq_05:
+	BUILD_IRQ 0x05
+irq_06:
+	BUILD_IRQ 0x06
+irq_07:
+	BUILD_IRQ 0x07
+irq_08:
+	BUILD_IRQ 0x08
+irq_09:
+	BUILD_IRQ 0x09
+irq_0A:
+	BUILD_IRQ 0x0A
+irq_0B:
+	BUILD_IRQ 0x0B
+irq_0C:
+	BUILD_IRQ 0x0C
+irq_0D:
+	BUILD_IRQ 0x0D
+irq_0E:
+	BUILD_IRQ 0x0E
+irq_0F:
+	BUILD_IRQ 0x0F
+irq_unhand:
+	BUILD_IRQ 0xFF
+
+COMMON_ISR:
+	push	gs
+	push	fs
+	push	es
+	push	ds		; Saving selectors
+	pushad			; Saving general purpose registers
+
+	mov	ebx, KERNEL_DATA_SEL
+	mov	ds, ebx
+	mov	es, ebx
+	mov	fs, ebx
+	mov	gs, ebx		; Update segment registers
+
+	push	eax		; push IRQ number
+	call	interrupt_handler
+	pop	eax
+
+	popad			; Restore general purpose registers
+	pop	ds
+	pop	es
+	pop	fs
+	pop	gs			; Restore segment registers
+	pop	eax			; Restore old eax value
+	iretd

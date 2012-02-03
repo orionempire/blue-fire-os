@@ -29,10 +29,6 @@
 #define TSS_SEG			(PRESENT | 0x09)
 #define REAL_SEG		(CODE | PRESENT | READABLE)
 
-#define INT_GATE		(PRESENT | 0x0E) // 32-bit Interrupt Gate
-#define TASK_GATE		(PRESENT | 0x05) // Task Gate
-#define TRAP_GATE		(PRESENT | 0x0F) // 32-bit Trap Gate
-
 #define DPL_0			0x00
 #define DPL_1			0x20
 #define DPL_2			0x40
@@ -133,6 +129,6 @@ static __inline__ void memcpy32(void *dest_ptr, const void *org_ptr, u32int coun
 //void memset32(void *dest_ptr, u32int val, u32int count);
 //void memcpy08(void *dest_ptr, const void *org_ptr, u32int count);
 //void memcpy32(void *dest_ptr, const void *org_ptr, u32int count);
-void install_GDT();
+void initialize_GDT();
 
 #endif /* MEM_H_ */

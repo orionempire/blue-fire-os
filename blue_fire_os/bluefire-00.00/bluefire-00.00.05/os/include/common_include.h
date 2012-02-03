@@ -12,12 +12,15 @@
 
 #include <common.h>
 #include <console.h>
+#include <exception_handler.h>
 #include <i386.h>
-#include <interrupt.h>
+#include <interrupt_controller.h>
+#include <interrupt_handler.h>
 #include <kernel_map.h>
 #include <mem.h>
 #include <paging.h>
 #include <stdarg.h>
+#include <v86.h>
 #include <drivers/video/video.h>
 #include <lib/ctype.h>
 #include <lib/string.h>

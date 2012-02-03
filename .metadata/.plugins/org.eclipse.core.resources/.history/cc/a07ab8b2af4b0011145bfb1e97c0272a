@@ -1,0 +1,16 @@
+/**************************************************************************
+ *	bluefire-os
+ *	Version: 00.00.00
+ *	Author: David Davidson
+ *	Name: exception_handler.h
+ *	Created: Jan 30, 2012
+ *	Last Update: Jan 30, 2012
+ *	Purpose:
+ *  Usage:
+***************************************************************************/
+#ifndef EXCEPTION_HANDLER_H_
+#define EXCEPTION_HANDLER_H_
+
+// Public Function declarations
+
+#endif /* EXCEPTION_HANDLER_H_ */

@@ -53,14 +53,14 @@ gdt_data:
 	DB 0					; Access byte (descriptor type)
 	DB 0					; Flags, Limit middle (bytes 19:16)
 	DB 0					; Base high (bytes 31:24)
-; boot code:				; code descriptor
+; boot code:				; code descriptor  0x08
 	DW 0xFFFF           	; Limit (bytes 15:0)
 	DW 0                	; Base  (bytes 15:0)
 	DB 0                	; Base  (bytes 23:16)
 	DB 0b10011010        	; access  = Present, Ring 0, 1, Executable, Direction, Readable, Unaccessed (1,00,1,1110 -> 9A)
 	DB 0b11001111        	; granularity = 4KB Granularity, 32bit segment size, reserved, reserved (AVL), Limit (bytes 19:16) (1,1,0,0,1111 - > CF)
 	DB 0                	; Base  (bytes 31:24)
-; boot data:	        	; data descriptor
+; boot data:	        	; data descriptor  0x10
 	DW 0xFFFF           	; Limit (bytes 15:0)
 	DW 0                	; Base  (bytes 15:0)
 	DB 0                	; Base  (bytes 23:16)

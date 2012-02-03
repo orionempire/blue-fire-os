@@ -12,8 +12,12 @@
 # we need to build a list of every c and assembly source file used. Add seperate 
 # entires for any new directory containing c source files and s source files.
 
-# Build a list of all primary source files using /bin/sh
-SOURCES+=$(shell ls kernel/*.c assembly/*.asm)
+# You would think that the ENTRY (_start) in kernel.ld ensures that start goes first
+# but all it really does is mark _start as the entry point. Since this code uses a flat format
+# for simplicity start.asm must be the first entry on the build line. 
+SOURCES=assembly/start.asm
+# Build a list of all primary source files using /bin/sh leave
+SOURCES+=$(shell ls kernel/*.c assembly/*.asm  |grep -vir "start.asm")
 
 # add all locations other than primary to list of source files. 
 SOURCES+=$(shell ls kernel/lib/*.c kernel/drivers/video/*.c )	

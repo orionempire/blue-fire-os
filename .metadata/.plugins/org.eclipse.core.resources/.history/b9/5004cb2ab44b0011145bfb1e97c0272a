@@ -1,0 +1,32 @@
+/**************************************************************************
+ *	bluefire-os
+ *	Version: 00.00.00
+ *	Author: David Davidson
+ *	Name: exception_handler.h
+ *	Created: Jan 30, 2012
+ *	Last Update: Jan 30, 2012
+ *	Purpose:
+ *  Usage:
+***************************************************************************/
+#ifndef EXCEPTION_HANDLER_H_
+#define EXCEPTION_HANDLER_H_
+
+// Context pushed by assembly/exception_top.asm
+typedef struct exc_context {
+	// General purpose register.
+	u32int	edi, esi, ebp, esp, ebx, edx, ecx, eax;
+	// Segment register.
+	u32int	es, ds, fs, gs;
+	// The exception number and error code.
+	u32int	EXC, err_code;
+	// Current instruction pointer (a.k.a. program counter).
+	u32int	eip;
+	// Code segment register.
+	u32int	cs;
+	// EFLAGS register.
+	u32int	eflags;
+} exc_context_t;
+
+// Public Function declarations
+
+#endif /* EXCEPTION_HANDLER_H_ */

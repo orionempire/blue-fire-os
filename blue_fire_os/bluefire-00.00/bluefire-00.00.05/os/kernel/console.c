@@ -32,11 +32,11 @@ void initialize_boot_console() {
 s32int kputchar( s32int c ) {
 	u32int flags;
 
-	disable_interrupts(flags);
+	disable_and_save_interrupts(flags);
 	// For  now just print to the video buffer.
 	video_put_char(c, (console_t *)(&vir_cons[0]));
 
-	enable_interrupts(flags);
+	restore_interrupts(flags);
 
 	return( 0 );
 
@@ -49,11 +49,11 @@ s32int kputchar( s32int c ) {
 s32int kplacechar( u08int x_pos, u08int y_pos, s32int c ) {
 	u32int flags;
 
-	disable_interrupts(flags);
+	disable_and_save_interrupts(flags);
 	// For  now just print to the video buffer.
 	video_place_char(x_pos, y_pos, c,(console_t *)(&vir_cons[0]));
 
-	enable_interrupts(flags);
+	restore_interrupts(flags);
 
 	return( 0 );
 

@@ -33,26 +33,26 @@ u32int pop_frame() {
 	u32int ret;
 	u32int flags;
 
-	disable_interrupts(flags);
+	disable_and_save_interrupts(flags);
 
 	if (*free_frames != NULL) {
 		ret = *free_frames;
 		*free_frames = NULL;
 		free_frames++;
 
-		enable_interrupts(flags);
+		restore_interrupts(flags);
 		return(ret);
 	}
 
 	// Out of memory
-	enable_interrupts(flags);
+	restore_interrupts(flags);
 	return NULL;
 }
 
 void push_frame(u32int p_addr) {
 	u32int flags;
 
-	disable_interrupts(flags);
+	disable_and_save_interrupts(flags);
 
 	// Push the frame into free frames stack
 	if ((u32int)free_frames > ((u32int)&KERNEL_TOP)) {
@@ -60,7 +60,7 @@ void push_frame(u32int p_addr) {
 		*free_frames=p_addr;
 	}
 
-	enable_interrupts(flags);
+	restore_interrupts(flags);
 }
 
 /**************************************************************************
@@ -92,7 +92,7 @@ s32int map_page(u32int vir_addr, u32int phys_addr, u16int attribs) {
 	u32int i;
 	u32int flags;
 
-	disable_interrupts(flags);
+	disable_and_save_interrupts(flags);
 
 	// Round virtual & physical address to the page boundary
 	vir_addr = PAGE_ALIGN(vir_addr);
@@ -108,7 +108,7 @@ s32int map_page(u32int vir_addr, u32int phys_addr, u16int attribs) {
 		PTE = (u32int *)(pop_frame() * PAGE_SIZE);
 		if (PTE == NULL) {
 			// Out of memory
-			enable_interrupts(flags);
+			restore_interrupts(flags);
 			return(FALSE);
 		}
 
@@ -135,7 +135,7 @@ s32int map_page(u32int vir_addr, u32int phys_addr, u16int attribs) {
 	// Invalidate the page in the TLB cache
 	invlpg(vir_addr);
 
-	enable_interrupts(flags);
+	restore_interrupts(flags);
 
 	return(TRUE);
 }

@@ -1,0 +1,20 @@
+/**************************************************************************
+ *	bluefire-os
+ *	Version: 00.00.00
+ *	Author: David Davidson
+ *	Name: interrupt_handler.h
+ *	Created: Jan 30, 2012
+ *	Last Update: Jan 30, 2012
+ *	Purpose:
+ *  Usage:
+***************************************************************************/
+#ifndef INTERRUPT_HANDLER_H_
+#define INTERRUPT_HANDLER_H_
+
+
+//! Total number of IRQ.
+#define NUMBER_ALLOCATED_IRQ		16
+
+// Public Function declarations
+
+#endif /* INTERRUPT_HANDLER_H_ */

@@ -11,15 +11,28 @@
 #define I386_H_
 
 // Turn off interrupts: save flags and disable IRQs.
-#define disable_interrupts(flags) \
+#define disable_and_save_interrupts( flags ) \
+	__asm__ __volatile__ ("pushfl ; popl %0 ; cli" : "=g"(flags) : : "memory")
+
+// Turn on interrupts if they were on before.
+#define restore_interrupts( flags ) \
+	__asm__ __volatile__ ("pushl %0 ; popfl" : : "g"(flags) : "memory", "cc")
+
+// Enable all interrupts.
+#define enable_interrupts()	__asm__ __volatile__ ("sti" : : : "memory");
+
+// Disable all interrupts.
+#define disable_interrupts()	__asm__ __volatile__ ("cli" : : : "memory");
+
+/*
+#define disable_interrupts( flags ) \
 	__asm__ __volatile__ ("pushfl ; popl %0 ; cli" : "=g"(flags) : : "memory")
 
 // Turn on interrupts: restore flags.
 #define enable_interrupts(flags)	restore_flags(flags)
-
 #define restore_flags( flags ) \
 	__asm__ __volatile__ ("pushl %0 ; popfl" : : "g"(flags) : "memory", "cc")
-
+*/
 // Halt the CPU until an interrupt occurs.
 #define idle() \
 	__asm__ __volatile__ ("hlt" : : : "memory");

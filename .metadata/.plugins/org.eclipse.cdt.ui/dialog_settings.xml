@@ -8,11 +8,14 @@
 		<item value="227191" key="searchFlags"/>
 		<item value="false" key="caseSensitive"/>
 		<list key="previousPatterns">
+			<item value="disable_interrupts"/>
+			<item value="enable_interrupts"/>
+			<item value="restore_interrupts"/>
 			<item value="K_PDBR"/>
 		</list>
 	</section>
 	<section name="org.eclipse.cdt.ui.text.hover.CMacroExpansionExploration.internal">
-		<item value="465" key="size.width"/>
+		<item value="714" key="size.width"/>
 		<item value="180" key="size.height"/>
 	</section>
 	<section name="org.eclipse.cdt.internal.ui.preferences.EditTemplateDialog_dialogBounds">

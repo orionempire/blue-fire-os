@@ -17,7 +17,13 @@ extern u32int var_system_memory_amount, _start;
 void print_ok();
 void print_failed();
 
-// Control arrives here from assembly/start.asm
+/**************************************************************************
+*
+***************************************************************************/
+
+/**************************************************************************
+* Control arrives here from assembly/start.asm
+***************************************************************************/
 void k_main() {
 
 	initialize_video();
@@ -37,22 +43,33 @@ void k_main() {
 	initialize_paging();
 	print_ok();
 
+
 	// Reprogram the Programmable Interrupt Controller 8259
 	kprintf("Reprogramming PIC 8259...");
 	reprogram_PIC_8259();
 	print_ok();
 
+	// Install the GDT
 	kprintf("Installing kernel GDT...");
-	install_GDT();
+	initialize_GDT();
 	print_ok();
+
+
+
+	// Install the IDT
+	kprintf("Installing kernel IDT...");
+	initialize_IDT();
+	print_ok();
+
 
 	dbg_brk();
 	// We must never reach this point.
 	PANIC("End of k_main reached.");
 }
 
-
-// Prints [ OK ] in green.
+/**************************************************************************
+* Prints [ OK ] in green.
+***************************************************************************/
 void print_ok() {
 	kset_color( DEFAULT_COLOR );
 	kprintf( "\r\t\t\t\t\t\t[ " );
@@ -62,7 +79,9 @@ void print_ok() {
 	kprintf( " ]\n" );
 }
 
-// Prints [ Failed ] in red.
+/**************************************************************************
+* Prints [ Failed ] in green.
+***************************************************************************/
 void  print_failed() {
 	kset_color( DEFAULT_COLOR );
 	kprintf( "\r\t\t\t\t\t\t[ " );
