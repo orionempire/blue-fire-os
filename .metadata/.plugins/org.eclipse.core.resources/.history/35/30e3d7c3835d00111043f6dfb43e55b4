@@ -1,0 +1,16 @@
+/**************************************************************************
+ *	bluefire-os
+ *	Version: 00.00.00
+ *	Author: David Davidson
+ *	Name: semaphore.h
+ *	Created: Feb 22, 2012
+ *	Last Update: Feb 22, 2012
+ *	Purpose:
+ *  Usage:
+***************************************************************************/
+#ifndef SEMAPHORE_H_
+#define SEMAPHORE_H_
+
+// Public Function declarations
+
+#endif /* SEMAPHORE_H_ */

@@ -1,0 +1,55 @@
+/**************************************************************************
+ *	bluefire-os
+ *	Version: 00.00.00
+ *	Author: David Davidson
+ *	Name: semaphore.h
+ *	Created: Feb 22, 2012
+ *	Last Update: Feb 22, 2012
+ *	Purpose:
+ *  Usage:
+***************************************************************************/
+#ifndef SEMAPHORE_H_
+#define SEMAPHORE_H_
+
+//! Spinlock semaphore structure.
+typedef struct semaphore
+{
+	atomic_t count;
+	s32int sleepers;
+	queue_t *waitq;
+} semaphore_t;
+
+
+// Declare a spinlock semaphore in a unlocked state.
+#define DECLARE_MUTEX( name ) semaphore_t name = { atomic_init(1), 0, NULL }
+
+//! Check if a semaphore is locked
+#define sem_is_locked( s )  ( atomic_read((&((s)->count)))!=1 )
+
+//! Semaphore "DOWN" routine.
+static __inline__ void DOWN( semaphore_t *sem ) {
+	__asm__ __volatile__ (
+		"lock ; decl %0\n"		// --( sem->count );
+		"jge 1f\n"				// if( sem->count < 0 ) {
+		"pushl %1\n"			//
+		"call __down_failed\n"	//	__down_failed( sem );
+		"popl %1\n"				// }
+		"1:\n"
+		: "=m"(sem->count) : "r"(sem) : "memory");
+}
+
+//! Semaphore "UP" routine.
+static __inline__ void UP( semaphore_t *sem )
+{
+	__asm__ __volatile__ (
+		"lock ; incl %0\n"	// ++( sem->count )
+		"jg 1f\n"		// if ( sem->count<=0 )
+		"pushl %1\n"		// {
+		"call __up_wakeup\n"	//	__up_wakeup( sem );
+		"popl %1\n"		// }
+		"1:\n"
+		: "=m"(sem->count) : "r"(sem) : "memory");
+}
+// Public Function declarations
+
+#endif /* SEMAPHORE_H_ */

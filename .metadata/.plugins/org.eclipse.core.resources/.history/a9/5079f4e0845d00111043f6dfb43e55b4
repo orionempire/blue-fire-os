@@ -1,0 +1,27 @@
+/**************************************************************************
+ *	bluefire-os
+ *	Version: 00.00.00
+ *	Author: David Davidson
+ *	Name: semaphore.h
+ *	Created: Feb 22, 2012
+ *	Last Update: Feb 22, 2012
+ *	Purpose:
+ *  Usage:
+***************************************************************************/
+#ifndef SEMAPHORE_H_
+#define SEMAPHORE_H_
+
+//! Spinlock semaphore structure.
+typedef struct semaphore
+{
+	atomic_t count;
+	s32int sleepers;
+	queue_t *waitq;
+} semaphore_t;
+
+
+// Declare a spinlock semaphore in a unlocked state.
+#define DECLARE_MUTEX( name ) semaphore_t name = { atomic_init(1), 0, NULL }
+// Public Function declarations
+
+#endif /* SEMAPHORE_H_ */
