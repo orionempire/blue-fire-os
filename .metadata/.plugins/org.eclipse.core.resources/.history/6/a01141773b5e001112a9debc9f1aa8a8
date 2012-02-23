@@ -1,0 +1,19 @@
+/**************************************************************************
+ *	bluefire-os
+ *	Version: 00.00.00
+ *	Author: David Davidson
+ *	Name: blueshell.h
+ *	Created: Feb 23, 2012
+ *	Last Update: Feb 23, 2012
+ *	Purpose:
+ *  Usage:
+***************************************************************************/
+#ifndef BLUESHELL_H_
+#define BLUESHELL_H_
+
+#define SH_PROMPT	"\r[root@localhost %s]# "
+
+// Public Function declarations
+
+void shell( s32int argc, char **argv);
+#endif /* BLUESHELL_H_ */

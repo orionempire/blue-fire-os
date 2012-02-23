@@ -1,0 +1,30 @@
+/**************************************************************************
+ *	bluefire-os
+ *	Version: 00.00.00
+ *	Author: David Davidson
+ *	Name: blueshell.c
+ *	Created: Feb 23, 2012
+ *	Purpose:
+ *  Usage:
+***************************************************************************/
+#include <common_include.h>
+
+
+void shell( s32int argc, char **argv){
+	// Shell command buffer
+	s08int cmd[256];
+	s32int i;
+
+
+	// Reset the command buffer
+	memset08(cmd, 0, 256);
+
+	// Command line
+	while(TRUE) {
+			kprintf(SH_PROMPT,"");
+
+			scanf("%s", cmd);
+
+			kprintf("/n%s/n",cmd);
+	}
+}
