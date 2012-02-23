@@ -1,0 +1,86 @@
+/**************************************************************************
+ *	bluefire-os
+ *	Version: 00.00.08
+ *	Author: David Davidson
+ *	Name: keyboard.c
+ *	Created: Feb 22, 2012
+ *	Purpose:
+ *  Usage:
+***************************************************************************/
+#include <common_include.h>
+
+// Shift key flag.
+static u08int shift_flag = 0;
+// Control key flag.
+static u08int control_flag = 0;
+// Alt key flag.
+static u08int alt_flag = 0;
+
+void keyboard_wait_controller() {
+	s32int retries = 500000;
+
+
+	while (((inport08(KEYBOARD_STATUS) & KEYBOARD_BUSY) == KEYBOARD_BUSY) && retries!=0) {
+			retries--;
+	}
+}
+
+void update_leds() {
+	s32int leds;
+	console_t *curr_cons = get_console_addr( get_curr_console() );
+
+	leds = (curr_cons->scroll_lock) | (curr_cons->num_lock << 1) | (curr_cons->caps_lock << 2);
+
+	u32int flags;
+	disable_and_save_interrupts(flags);
+
+	keyboard_wait_controller();
+	outport08(KEYBOARD_PORT, KEYBOARD_LED_CODE);
+	keyboard_wait_controller();
+	outport08(KEYBOARD_PORT, leds);
+
+
+	restore_interrupts(flags);
+
+}
+u16int scan_key() {
+	static s32int code, val;
+
+	u32int flags;
+	disable_and_save_interrupts(flags);
+
+	code = inport08(KEYBOARD_PORT);				// Get scan code
+	val =  inport08(KEYBOARD_ACKNOWLEDGE);		// Get keyboard acknowledge
+	outport08(KEYBOARD_ACKNOWLEDGE, val | 0x80);// Disable bit 7
+	outport08(KEYBOARD_ACKNOWLEDGE, val);		// Send that back
+
+	restore_interrupts(flags);
+	return( code );
+}
+
+// Keyboard interrupt handler routine. It is invoked every time a key is
+// pressed or released on the keyboard.
+void keyboard_handler(irq_context_t *context) {
+
+	console_t *curr_cons;
+	u16int code;
+	u16int keypressed;
+
+	keypressed = scan_key();
+
+	// Get the current console structure.
+	curr_cons = get_console_addr( get_curr_console() );
+
+	// If CTRL+ALT+DEL is pressed Reboot the system.
+	if (control_flag==1 && alt_flag==1 && keypressed==DEL_SCAN)
+			reboot();
+
+	enable_IRQ(context->IRQ);
+
+}
+void initialize_keyboard() {
+
+	update_leds();
+
+	register_interrupt_handler(KEYBOARD_IRQ, &keyboard_handler);
+}

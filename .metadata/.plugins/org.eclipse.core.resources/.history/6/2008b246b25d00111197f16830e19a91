@@ -1,0 +1,19 @@
+/**************************************************************************
+ *	bluefire-os
+ *	Version: 00.00.08
+ *	Author: David Davidson
+ *	Name: keyboard.c
+ *	Created: Feb 22, 2012
+ *	Purpose:
+ *  Usage:
+***************************************************************************/
+#include <common_include.h>
+
+void update_leds() {
+	int leds;
+	console_t *curr_cons = get_console_addr( get_curr_console() );
+	u32int flags;
+}
+void initialize_keyboard() {
+	void update_leds();
+}

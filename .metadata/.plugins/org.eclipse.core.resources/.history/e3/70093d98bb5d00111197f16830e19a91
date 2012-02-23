@@ -1,0 +1,39 @@
+/**************************************************************************
+ *	bluefire-os
+ *	Version: 00.00.08
+ *	Author: David Davidson
+ *	Name: keyboard.h
+ *	Created: Feb 22, 2012
+ *	Last Update: Feb 22, 2012
+ *	Purpose:
+ *  Usage:
+***************************************************************************/
+#ifndef KEYBOARD_H_
+#define KEYBOARD_H_
+
+// --- Keyboard registers ---------------------------------------------
+
+// Keyboard base address port.
+#define KEYBOARD_PORT			0x60
+// Keyboard acknowledge register.
+#define KEYBOARD_ACKNOWLEDGE	0x61
+// Keyboard status register.
+#define KEYBOARD_STATUS			0x64
+// Keyboard LED register.
+#define KEYBOARD_LED_CODE		0xED
+
+// --- Keyboard register values ---------------------------------------
+
+// The keyboard controller is busy.
+#define KEYBOARD_BUSY			0x02
+// Command to set the typematic delay and rate.
+#define KEYBOARD_SET_TYPEMATIC	0xF3
+
+// --- Key codes ------------------------------------------------------
+// Public Function declarations
+void initialize_keyboard();
+void keyboard_handler(irq_context_t *context);
+void update_leds();
+void keyboard_wait_controller();
+
+#endif /* KEYBOARD_H_ */

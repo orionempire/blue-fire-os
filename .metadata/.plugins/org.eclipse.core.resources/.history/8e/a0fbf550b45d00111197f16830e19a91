@@ -1,0 +1,44 @@
+/**************************************************************************
+ *	bluefire-os
+ *	Version: 00.00.08
+ *	Author: David Davidson
+ *	Name: keyboard.c
+ *	Created: Feb 22, 2012
+ *	Purpose:
+ *  Usage:
+***************************************************************************/
+#include <common_include.h>
+
+void keyboard_wait_controller() {
+	s32int retries = 500000;
+
+
+	while (((inport08(KEYBOARD_STATUS) & KEYBOARD_BUSY) == KEYBOARD_BUSY) && retries!=0) {
+			retries--;
+	}
+}
+
+void update_leds() {
+	s32int leds;
+	console_t *curr_cons = get_console_addr( get_curr_console() );
+
+	leds = (curr_cons->scroll_lock) | (curr_cons->num_lock << 1) | (curr_cons->caps_lock << 2);
+
+	u32int flags;
+	disable_and_save_interrupts(flags);
+
+	keyboard_wait_controller();
+	outport08(KEYBOARD_PORT, KEYBOARD_LED_CODE);
+	keyboard_wait_controller();
+	outport08(KEYBOARD_PORT, leds);
+
+
+	restore_interrupts(flags);
+
+}
+void initialize_keyboard() {
+	//u32int flags;
+	//disable_and_save_interrupts(flags);
+
+	update_leds();
+}
