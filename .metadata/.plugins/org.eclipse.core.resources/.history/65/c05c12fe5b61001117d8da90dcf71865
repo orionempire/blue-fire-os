@@ -1,0 +1,16 @@
+/**************************************************************************
+ *	bluefire-os
+ *	Version: 00.00.00
+ *	Author: David Davidson
+ *	Name: floppy.h
+ *	Created: Feb 27, 2012
+ *	Last Update: Feb 27, 2012
+ *	Purpose:
+ *  Usage:
+***************************************************************************/
+#ifndef FLOPPY_H_
+#define FLOPPY_H_
+
+// Public Function declarations
+void initialize_floppy();
+#endif /* FLOPPY_H_ */

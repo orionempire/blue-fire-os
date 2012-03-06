@@ -5106,3 +5106,13 @@ java.lang.ClassCastException: org.eclipse.cdt.codan.core.cxx.internal.model.cfg.
 	at org.eclipse.jface.text.reconciler.MonoReconciler.process(MonoReconciler.java:77)
 	at org.eclipse.cdt.internal.ui.text.CReconciler.process(CReconciler.java:408)
 	at org.eclipse.jface.text.reconciler.AbstractReconciler$BackgroundThread.run(AbstractReconciler.java:206)
+!SESSION 2012-02-27 10:40:44.861 -----------------------------------------------
+eclipse.buildId=M20110909-1335
+java.version=1.6.0_30
+java.vendor=Sun Microsystems Inc.
+BootLoader constants: OS=win32, ARCH=x86, WS=win32, NL=en_US
+Framework arguments:  -product org.eclipse.epp.package.cpp.product
+Command-line arguments:  -os win32 -ws win32 -arch x86 -product org.eclipse.epp.package.cpp.product
+
+!ENTRY org.eclipse.epp.usagedata.recording 1 0 2012-02-27 10:41:08.667
+!MESSAGE Usage data uploaded to http://udc.eclipse.org/upload.php in 2715 milliseconds.

@@ -1,0 +1,16 @@
+/**************************************************************************
+ *	bluefire-os
+ *	Version: 00.00.00
+ *	Author: David Davidson
+ *	Name: floppy.c
+ *	Created: Feb 27, 2012
+ *	Purpose:
+ *  Usage:
+***************************************************************************/
+#include <common_include.h>
+
+
+// Initialize the floppy driver
+void init_floppy() {
+	kprintf("Floopy");
+}

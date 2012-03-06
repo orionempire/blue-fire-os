@@ -1,0 +1,65 @@
+/**************************************************************************
+ *	bluefire-os
+ *	Version: 00.00.10
+ *	Author: David Davidson
+ *	Name: floppy.c
+ *	Created: Feb 27, 2012
+ *	Purpose:
+ *  Usage:
+***************************************************************************/
+#include <common_include.h>
+
+
+// FDC operation finish
+volatile s32int fdc_done = FALSE;
+
+// Disk change flag
+volatile s32int fdc_change = FALSE;
+
+// Floppy r/w buffer
+u08int *fdc_buffer;
+
+void fdc_reset() {
+	// Stop the motor and disable IRQ
+	outportb(FDC_DOR, 0x00);
+	// Program data rate (500K/s)
+	outportb(FDC_DSR, 0x00);
+
+	// re-enable floppy IRQ
+	outportb(FDC_DOR, 0x0C);
+	// Wait for fdc
+	fdc_done = TRUE;
+	fdc_wait(TRUE);
+
+	// Specify drive timings //
+	fdc_sendbyte(FLOPPY_COMMAND_SPECIFY);
+	fdc_sendbyte(0xDF); // SRT = 3ms, HUT = 240ms
+	fdc_sendbyte(0x02); // HLT = 4ms, ND = 0 (DMA mode selected)
+
+	// Clear disk change flag
+	fdc_seek(1);
+
+	fdc_recalibrate();
+	fdc_change = FALSE;
+
+}
+
+// Initialize the floppy driver
+void initialize_floppy() {
+	s32int v;
+
+	// Create the FDC buffer
+	fdc_buffer = (u08int *)PHYSICAL(dma_pop_frame()*PAGE_SIZE);
+
+	// Reset the controller
+	fdc_reset();
+
+	// Get floppy controller version
+	fdc_sendbyte(FLOPPY_COMMAND_VERSION);
+	v = fdc_getbyte();
+
+	if (v==0x90)
+		printf("Enhanced");
+	else
+		printf("8272A/765A");
+}

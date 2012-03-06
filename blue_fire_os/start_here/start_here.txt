@@ -1,7 +1,7 @@
 Welcome to BlueFire OS! Blue Fire is a didactic OS that was created to show every step of creating a bootstrapping OS.
 
 Design Goals
-A teaching OS			- The primary mission is to teach OS design. Elegance and advance features are routinley used but never at the expense of the primary goal.	
+A teaching OS			- The primary mission is to teach OS design. Elegance and advance features are routinely used but never at the expense of the primary goal.	
 Unified tool set 		- At first every thing needed to develop the OS is available in Linux (as of this writing Bochs Debugger is lacking and is done in windows).
 Bootstrapping			- The hope is that by the end of the project the OS can build its self.
 Open source Protocols   - Only open source data constructs are used I.E. ext2 everywhere no fat12
