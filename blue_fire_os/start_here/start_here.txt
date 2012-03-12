@@ -29,6 +29,6 @@ BlueFire OS - Version 00 - From boot sector to shell.
 	  	BlueFire OS - 00.00.10 -> Floppy Driver, EXT2
 	  	BlueFire OS - 00.00.11 ->  
 	  	BlueFire OS - 00.00.12 -> 
-	  	BlueFire OS - 00.00.13 -> 
+
 	  	
  Future -> Advance shell, DMA, Tasks, VFS, NULL driver,  system calls.		

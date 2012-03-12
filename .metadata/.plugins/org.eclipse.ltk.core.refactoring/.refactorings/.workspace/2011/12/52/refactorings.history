@@ -1,4 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<session version="1.0">
-<refactoring comment="Delete resource &apos;blue_fire_os/bluefire-00.00/bluefire-00.00.03/os/assembly/beyond.s&apos;" deleteContents="false" description="Delete resource &apos;blue_fire_os/bluefire-00.00/bluefire-00.00.03/os/assembly/beyond.s&apos;" element1="/blue_fire_os/bluefire-00.00/bluefire-00.00.03/os/assembly/beyond.s" flags="7" id="org.eclipse.ltk.core.refactoring.delete.resources" resources="1" stamp="1324409340347"/>
-</session>
