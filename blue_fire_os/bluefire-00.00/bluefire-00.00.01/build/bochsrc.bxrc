@@ -29,8 +29,9 @@ cpu: count=1, ips=4000000, reset_on_triple_fault=1, ignore_bad_msrs=1
 cpuid: cpuid_limit_winnt=0, mmx=1, sse=sse2, xapic=1, sep=1, aes=0, xsave=0, movbe=0, 1g_pages=0, pcid=0 fsgsbase=0
 cpuid: stepping=3, vendor_string="GenuineIntel", brand_string="              Intel(R) Pentium(R) 4 CPU        "
 print_timestamps: enabled=0
-# Uncomment to enable debugging with gdb stub
-# gdbstub: enabled=1, port=1234, text_base=0, data_base=0, bss_base=0
+# Debugging with gdb stub. Connect with gdb -> target remote localhost:1234
+# Comment out next line to disable debugging
+gdbstub: enabled=1, port=1234, text_base=0, data_base=0, bss_base=0
 port_e9_hack: enabled=0
 text_snapshot_check: enabled=0
 private_colormap: enabled=0
