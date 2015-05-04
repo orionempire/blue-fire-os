@@ -52,6 +52,17 @@ set $CONTEXTSIZE_CODE  = 8
 
 # __________________end gdb options_________________
 
+#Initialize these variables else comparisons will fail for colouring
+# we must initialize all of them at once, 32 and 64 bits, and ARM.
+set $oldrax = 0
+set $oldrbx = 0
+set $oldrcx = 0
+set $oldrdx = 0
+set $oldrsi = 0
+set $oldrdi = 0
+set $oldrbp = 0
+set $oldrsp = 0
+
 # used by ptraceme/rptraceme
 set $ptrace_bpnum = 0
 
@@ -323,16 +334,207 @@ end
 
 
 define flags
-    # call the auxiliary functions based on target cpu
-    if $ARM == 1
-        flagsarm
-    else
-        flagsx86
-    end
+	flagsx86
 end
 document flags
 Print flags register.
 end
+
+define eflags
+        printf "     OF <%d>  DF <%d>  IF <%d>  TF <%d>",\
+               (($eflags >> 0xB) & 1), (($eflags >> 0xA) & 1), \
+               (($eflags >> 9) & 1), (($eflags >> 8) & 1)
+        printf "  SF <%d>  ZF <%d>  AF <%d>  PF <%d>  CF <%d>\n",\
+               (($eflags >> 7) & 1), (($eflags >> 6) & 1),\
+               (($eflags >> 4) & 1), (($eflags >> 2) & 1), ($eflags & 1)
+        printf "     ID <%d>  VIP <%d> VIF <%d> AC <%d>",\
+               (($eflags >> 0x15) & 1), (($eflags >> 0x14) & 1), \
+               (($eflags >> 0x13) & 1), (($eflags >> 0x12) & 1)
+        printf "  VM <%d>  RF <%d>  NT <%d>  IOPL <%d>\n",\
+               (($eflags >> 0x11) & 1), (($eflags >> 0x10) & 1),\
+               (($eflags >> 0xE) & 1), (($eflags >> 0xC) & 3)
+end
+document eflags
+Print eflags register.
+end
+
+define cpsr
+	eflags
+end
+document cpsr
+Print cpsr register.
+end
+
+
+define regx86
+    printf "  "
+    # EAX
+    echo \033[32m
+	printf "EAX:"
+    if ($eax != $oldeax && $SHOWREGCHANGES == 1)
+   	 	echo \033[31m   	 	
+   	else
+   	 	echo \033[0m
+   	end
+   	printf " 0x%08X  ", $eax
+   	# EBX
+    echo \033[32m
+   	printf "EBX:"
+   	if ($ebx != $oldebx && $SHOWREGCHANGES == 1) 
+	    echo \033[31m   		
+   	else
+	    echo \033[0m
+   	end
+   	printf " 0x%08X  ", $ebx
+   	# ECX
+    echo \033[32m
+   	printf "ECX:"
+   	if ($ecx != $oldecx && $SHOWREGCHANGES == 1)
+	    echo \033[31m	    
+	else
+	    echo \033[0m
+	end
+	printf " 0x%08X  ", $ecx
+	# EDX
+	if ($edx != $oldedx && $SHOWREGCHANGES == 1)
+	    echo \033[32m
+    	printf "EDX:"
+	    echo \033[31m
+	    printf " 0x%08X  ", $edx
+	else
+	    echo \033[32m
+    	printf "EDX:"
+	    echo \033[0m
+	    printf " 0x%08X  ", $edx
+	end
+    echo \033[1m\033[4m\033[31m
+    flags
+    echo \033[0m
+    printf "  "
+    # ESI
+	echo \033[32m
+    printf "ESI:"
+    if ($esi != $oldesi && $SHOWREGCHANGES == 1)
+	    echo \033[31m	    
+	else
+	    echo \033[0m
+	end
+	printf " 0x%08X  ", $esi
+	# EDI
+	echo \033[32m
+    printf "EDI:"
+	if ($edi != $oldedi && $SHOWREGCHANGES == 1)
+	    echo \033[31m	    
+	else
+	    echo \033[0m
+	end
+	printf " 0x%08X  ", $edi
+	# EBP
+	echo \033[32m
+	printf "EBP:"
+	if ($ebp != $oldebp && $SHOWREGCHANGES == 1)
+	    echo \033[31m
+	else
+	    echo \033[0m
+	end
+	printf " 0x%08X  ", $ebp
+	# ESP
+	echo \033[32m
+    printf "ESP:"
+	if ($esp != $oldesp && $SHOWREGCHANGES == 1)
+	    echo \033[31m	    
+	else
+	    echo \033[0m
+    end
+    printf " 0x%08X  ", $esp
+    # EIP
+    echo \033[32m
+    printf "EIP:"
+    echo \033[0m
+    printf " 0x%08X\n  ", $eip
+    echo \033[32m
+    printf "CS:"
+    echo \033[0m
+    printf " %04X  ", $cs
+    echo \033[32m
+    printf "DS:"
+    echo \033[0m
+    printf " %04X  ", $ds
+    echo \033[32m
+    printf "ES:"
+    echo \033[0m
+    printf " %04X  ", $es
+    echo \033[32m
+    printf "FS:"
+    echo \033[0m
+    printf " %04X  ", $fs
+    echo \033[32m
+    printf "GS:"
+    echo \033[0m
+    printf " %04X  ", $gs
+    echo \033[32m
+    printf "SS:"
+    echo \033[0m
+    printf " %04X", $ss
+    echo \033[0m
+end
+document regx86
+Auxiliary function to display X86 registers.
+end
+
+
+define reg
+        regx86
+        # call smallregisters
+	    smallregisters
+        # display conditional jump routine
+        dumpjump
+        printf "\n"
+        if ($SHOWREGCHANGES == 1)
+	        	set $oldeax = $eax
+		    	set $oldebx = $ebx
+			    set $oldecx = $ecx
+    			set $oldedx = $edx
+	    		set $oldesi = $esi
+		    	set $oldedi = $edi
+			    set $oldebp = $ebp
+			    set $oldesp = $esp
+    		end
+	    end
+    end
+end
+document reg
+Print CPU registers.
+end
+
+
+define smallregisters
+	    # from eax
+    	set $ax = $eax & 0xffff
+    	set $al = $ax & 0xff
+    	set $ah = $ax >> 8
+	    # from ebx
+    	set $bx = $ebx & 0xffff
+    	set $bl = $bx & 0xff
+    	set $bh = $bx >> 8
+    	# from ecx
+    	set $cx = $ecx & 0xffff
+    	set $cl = $cx & 0xff
+    	set $ch = $cx >> 8
+    	# from edx
+    	set $dx = $edx & 0xffff
+    	set $dl = $dx & 0xff
+	    set $dh = $dx >> 8
+    	# from esi
+    	set $si = $esi & 0xffff
+    	# from edi
+	    set $di = $edi & 0xffff		
+end
+document smallregisters
+Create the 16 and 8 bit cpu registers (gdb doesn't have them by default).
+And 32bits if we are dealing with 64bits binaries.
+end
+
 
 # _____________bluefire specific commands_____________
 set archi i386:x86-64
