@@ -1,0 +1,8 @@
+Install Ubuntu 14.04 LTS.
+Download eclipse to /opt/eclipse.
+#chown X.X /opt/eclipse
+apt-get install openjdk-7-jre-headless
+ apt-get install bochs
+ apt-get install bochs-sdl
+cd ~/git/blue-fire-os/blue_fire_os/bluefire-00.00/bluefire-00.00.01/build/
+./launch_bochs.sh 16
