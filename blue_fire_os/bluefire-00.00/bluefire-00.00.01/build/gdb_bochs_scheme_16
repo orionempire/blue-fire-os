@@ -1,4 +1,3 @@
-
 # __________________gdb options_________________
 
 # set to 0 to tuen off the colorized prompt.
@@ -11,6 +10,8 @@ set $SHOWCPUREGISTERS = 1
 set $SHOWSTACK = 1
 # set to 1 to enable display of data window (default is 0)
 set $SHOWDATAWIN = 1
+# set to 1 to enable display of progam jump info
+set $SHOWPROGRAM = 1
 
 # These make gdb never pause in its output
 set height 0
@@ -402,13 +403,128 @@ Create the 16 and 8 bit cpu registers (gdb doesn't have them by default).
 And 32bits if we are dealing with 64bits binaries.
 end
 
+define reg
+	echo \033[34m\033[1m
+    printf "----------------------------------------"
+    printf "[regs]"
+    printf "------------------------------------------\n"
+    echo \033[0m
+	regx86
+	smallregisters
+	
+	set $oldeax = $eax
+	set $oldebx = $ebx
+    set $oldecx = $ecx
+	set $oldedx = $edx
+	set $oldesi = $esi
+	set $oldedi = $edi
+    set $oldebp = $ebp
+    set $oldesp = $esp
+    printf "\n"
+    echo \033[36m
+end
+document reg
+Print CPU registers.
+end
+
+define sig
+    if $argc == 0
+        info signals
+    end
+    if $argc == 1
+        info signals $arg0
+    end
+    if $argc > 1
+        help sig
+    end
+end
+document sig
+Print what debugger does when program gets various signals.
+Specify a SIGNAL as argument to print info on that signal only.
+Usage: sig <SIGNAL>
+end
+
+# _______________process context_______________
+define context 
+    echo \033[34m
+    if $SHOWCPUREGISTERS == 1    
+	    reg
+    end
+    
+    if $SHOWSTACK == 1    	
+		echo \033[34m\033[1m
+	    printf "----------------------------------------"
+	    printf "[stack]"
+	    printf "[0x%04X:0x%08X]", $ss, $esp
+	    printf "----------------------\n"
+    	echo \033[0m
+    	set $context_i = $CONTEXTSIZE_STACK
+    	while ($context_i > 0)
+       	    set $context_t = $sp + 0x10 * ($context_i - 1)
+       	    hexdump $context_t
+       	    set $context_i--
+    	end
+    end
+    # set to 1 to enable display of data window (default is 0)
+	if $SHOWDATAWIN == 1
+		datawin
+	end
+	
+	if $SHOWPROGRAM == 1
+		pcdump
+	end
+end
+document context
+Print context window, i.e. regs, stack, ds:esi and disassemble cs:eip.
+end
+
+define context-on
+    set $SHOW_CONTEXT = 1
+    printf "Displaying of context is now ON\n"
+end
+document context-on
+Enable display of context on every program break.
+end
+
+
+define context-off
+    set $SHOW_CONTEXT = 0
+    printf "Displaying of context is now OFF\n"
+end
+document context-off
+Disable display of context on every program break.
+end
+
+# _______________program window__________________
+define pcdump
+     if $argc != 0
+        help pcdump
+	end
+	
+	echo \033[34m\033[1m
+    printf "----------------------------------------"
+    printf "[Program]"
+    printf "[0x%08X]", $rip
+    printf "----------------------\n"
+	echo \033[0m
+    set $_count = 0
+    while ($_count < $CONTEXTSIZE_CODE)
+        set $_i = ($_count * 0x10)
+        hexdump $pc+$_i
+        set $_count++
+    end
+    dumpjump
+end
+document pcdump
+Display $CONTEXTSIZE_CODE lines of hexdump for address of pc.
+Usage: pcump N
+end
+
 define dumpjump
     ## grab the first two bytes from the instruction so we can determine the jump instruction
     set $_byte1 = *(unsigned char *)$pc
     set $_byte2 = *(unsigned char *)($pc+1)
-    printf "DEBUG 409"
-    printf " 0x%08X  ", $_byte1
-    printf " 0x%08X  ", $_byte2
+    printf "[0x%08X]", $_byte1
     ## and now check what kind of jump we have (in case it's a jump instruction)
     ## I changed the flags routine to save the flag into a variable, so we don't need to repeat the process :) (search for "define flags")
 
@@ -627,100 +743,68 @@ define dumpjump
        		printf "  Jump is NOT taken (s!=1)"
       	end 
     end
+    printf "\n"
 end
 document dumpjump
 Display if conditional jump will be taken or not.
 end
 
-define reg
-	echo \033[34m\033[1m
-	    printf "----------------------------------------"
-	    printf "[regs]"
-	    printf "------------------------------------------\n"
-	    echo \033[0m
-	regx86
-	smallregisters
-	dumpjump
-	
-	set $oldeax = $eax
-	set $oldebx = $ebx
-    set $oldecx = $ecx
-	set $oldedx = $edx
-	set $oldesi = $esi
-	set $oldedi = $edi
-    set $oldebp = $ebp
-    set $oldesp = $esp
-    printf "\n"
-    echo \033[36m
-end
-document reg
-Print CPU registers.
-end
-
-define sig
-    if $argc == 0
-        info signals
-    end
-    if $argc == 1
-        info signals $arg0
-    end
-    if $argc > 1
-        help sig
-    end
-end
-document sig
-Print what debugger does when program gets various signals.
-Specify a SIGNAL as argument to print info on that signal only.
-Usage: sig <SIGNAL>
-end
-
-# _______________process context_______________
-define context 
-    echo \033[34m
-    if $SHOWCPUREGISTERS == 1    
-	    reg
-    end
-    
-    if $SHOWSTACK == 1
-    	#echo \033[34m
-        #echo \033[34m
-		echo \033[34m\033[1m
-	    printf "----------------------------------------"
-	    printf "[stack]"
-	    printf "[0x%04X:0x%08X]", $ss, $esp
-	    printf "----------------------\n"
-    	echo \033[0m
-    	set $context_i = $CONTEXTSIZE_STACK
-    	while ($context_i > 0)
-       	    set $context_t = $sp + 0x10 * ($context_i - 1)
-       	    hexdump $context_t
-       	    set $context_i--
-    	end
-    end
-    # set to 1 to enable display of data window (default is 0)
-	if $SHOWDATAWIN == 1
-		datawin
+# _______________data window__________________
+define ddump
+     if $argc != 1
+        help ddump
 	end
+	
+	echo \033[34m\033[1m
+    printf "----------------------------------------"
+    printf "[data]"
+    printf "[0x%04X:0x%08X]", $ds, $data_addr
+    printf "----------------------\n"
+	echo \033[0m
+    set $_count = 0
+    while ($_count < $arg0)
+        set $_i = ($_count * 0x10)
+        hexdump $data_addr+$_i
+        set $_count++
+    end
 end
-document context
-Print context window, i.e. regs, stack, ds:esi and disassemble cs:eip.
+document ddump
+Display NUM lines of hexdump for address in $data_addr global variable.
+Usage: ddump NUM
 end
 
-define context-on
-    set $SHOW_CONTEXT = 1
-    printf "Displaying of context is now ON\n"
+define dd
+    if $argc != 1
+        help dd
+    else
+        set $data_addr = $arg0
+        ddump 0x10
+    end
 end
-document context-on
-Enable display of context on every program break.
+document dd
+Display 16 lines of a hex dump of address starting at ADDR.
+Usage: dd ADDR
 end
 
-
-define context-off
-    set $SHOW_CONTEXT = 0
-    printf "Displaying of context is now OFF\n"
+define datawin
+    if ((($esi >> 0x18) == 0x40) || (($esi >> 0x18) == 0x08) || (($esi >> 0x18) == 0xBF))
+        set $data_addr = $esi
+    else
+        if ((($edi >> 0x18) == 0x40) || (($edi >> 0x18) == 0x08) || (($edi >> 0x18) == 0xBF))
+            set $data_addr = $edi
+        else
+            if ((($eax >> 0x18) == 0x40) || (($eax >> 0x18) == 0x08) || (($eax >> 0x18) == 0xBF))
+                set $data_addr = $eax
+            else
+                set $data_addr = $esp
+            end
+        end
+    end
+    ddump $CONTEXTSIZE_DATA
 end
-document context-off
-Disable display of context on every program break.
+document datawin
+Display valid address from one register in data window.
+Registers to choose are: esi, edi, eax, or esp.
 end
 
 # __________hex/ascii dump an address_________
@@ -823,63 +907,7 @@ Display a 16-byte hex/ASCII dump of memory at address ADDR.
 Usage: hexdump_aux ADDR
 end
 
-# _______________data window__________________
-define ddump
-     if $argc != 1
-        help ddump
-	end
-	
-	echo \033[34m\033[1m
-    printf "----------------------------------------"
-    printf "[data]"
-    printf "[0x%04X:0x%08X]", $ds, $data_addr
-    printf "----------------------\n"
-	echo \033[0m
-    set $_count = 0
-    while ($_count < $arg0)
-        set $_i = ($_count * 0x10)
-        hexdump $data_addr+$_i
-        set $_count++
-    end
-end
-document ddump
-Display NUM lines of hexdump for address in $data_addr global variable.
-Usage: ddump NUM
-end
 
-define dd
-    if $argc != 1
-        help dd
-    else
-        set $data_addr = $arg0
-        ddump 0x10
-    end
-end
-document dd
-Display 16 lines of a hex dump of address starting at ADDR.
-Usage: dd ADDR
-end
-
-define datawin
-    if ((($esi >> 0x18) == 0x40) || (($esi >> 0x18) == 0x08) || (($esi >> 0x18) == 0xBF))
-        set $data_addr = $esi
-    else
-        if ((($edi >> 0x18) == 0x40) || (($edi >> 0x18) == 0x08) || (($edi >> 0x18) == 0xBF))
-            set $data_addr = $edi
-        else
-            if ((($eax >> 0x18) == 0x40) || (($eax >> 0x18) == 0x08) || (($eax >> 0x18) == 0xBF))
-                set $data_addr = $eax
-            else
-                set $data_addr = $esp
-            end
-        end
-    end
-    ddump $CONTEXTSIZE_DATA
-end
-document datawin
-Display valid address from one register in data window.
-Registers to choose are: esi, edi, eax, or esp.
-end
 
 # _____________bluefire specific commands_____________
 set archi i386:x86-64
@@ -891,4 +919,5 @@ target remote localhost:1234
 bp *0x7c00
 
 #continue until then
-context
+#c
+#context
