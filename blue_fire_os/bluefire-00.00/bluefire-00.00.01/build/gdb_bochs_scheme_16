@@ -13,6 +13,16 @@ set $SHOWDATAWIN = 1
 # set to 1 to enable display of progam jump info
 set $SHOWPROGRAM = 1
 
+set confirm off
+set verbose off
+
+if $COLOUREDPROMPT == 1
+	set prompt \033[34mGDB-> \033[0m
+end
+
+set output-radix 0x10
+set input-radix 0x10
+
 # These make gdb never pause in its output
 set height 0
 set width 0
@@ -20,9 +30,9 @@ set width 0
 set $SHOW_CONTEXT = 1
 set $SHOW_NEST_INSN = 0
 
-set $CONTEXTSIZE_STACK = 6
-set $CONTEXTSIZE_DATA  = 8
-set $CONTEXTSIZE_CODE  = 8
+set $CONTEXTSIZE_STACK = 4
+set $CONTEXTSIZE_DATA  = 4
+set $CONTEXTSIZE_CODE  = 2
 
 # __________________end gdb options_________________
 
@@ -376,33 +386,6 @@ document regx86
 Auxiliary function to display X86 registers.
 end
 
-define smallregisters
-    # from eax
-	set $ax = $eax & 0xffff
-	set $al = $ax & 0xff
-	set $ah = $ax >> 8
-    # from ebx
-	set $bx = $ebx & 0xffff
-	set $bl = $bx & 0xff
-	set $bh = $bx >> 8
-	# from ecx
-	set $cx = $ecx & 0xffff
-	set $cl = $cx & 0xff
-	set $ch = $cx >> 8
-	# from edx
-	set $dx = $edx & 0xffff
-	set $dl = $dx & 0xff
-    set $dh = $dx >> 8
-	# from esi
-	set $si = $esi & 0xffff
-	# from edi
-    set $di = $edi & 0xffff		
-end
-document smallregisters
-Create the 16 and 8 bit cpu registers (gdb doesn't have them by default).
-And 32bits if we are dealing with 64bits binaries.
-end
-
 define reg
 	echo \033[34m\033[1m
     printf "----------------------------------------"
@@ -410,8 +393,7 @@ define reg
     printf "------------------------------------------\n"
     echo \033[0m
 	regx86
-	smallregisters
-	
+	 
 	set $oldeax = $eax
 	set $oldebx = $ebx
     set $oldecx = $ecx
@@ -465,6 +447,7 @@ define context
        	    set $context_i--
     	end
     end
+    
     # set to 1 to enable display of data window (default is 0)
 	if $SHOWDATAWIN == 1
 		datawin
@@ -503,7 +486,7 @@ define pcdump
 	
 	echo \033[34m\033[1m
     printf "----------------------------------------"
-    printf "[Program]"
+    printf "[program]"
     printf "[0x%08X]", $rip
     printf "----------------------\n"
 	echo \033[0m
@@ -513,6 +496,7 @@ define pcdump
         hexdump $pc+$_i
         set $_count++
     end
+    x/i $rip
     dumpjump
 end
 document pcdump
@@ -524,7 +508,6 @@ define dumpjump
     ## grab the first two bytes from the instruction so we can determine the jump instruction
     set $_byte1 = *(unsigned char *)$pc
     set $_byte2 = *(unsigned char *)($pc+1)
-    printf "[0x%08X]", $_byte1
     ## and now check what kind of jump we have (in case it's a jump instruction)
     ## I changed the flags routine to save the flag into a variable, so we don't need to repeat the process :) (search for "define flags")
 
@@ -907,7 +890,87 @@ Display a 16-byte hex/ASCII dump of memory at address ADDR.
 Usage: hexdump_aux ADDR
 end
 
+# _______________process control______________
+define n
+    if $argc == 0
+        nexti
+    end
+    if $argc == 1
+        nexti $arg0
+    end
+    if $argc > 1
+        help n
+    end
+    
+    context
+end
+document n
+Step one instruction, but proceed through subroutine calls.
+If NUM is given, then repeat it NUM times or till program stops.
+This is alias for nexti.
+Usage: n <NUM>
+end
 
+
+define go
+    if $argc == 0
+        stepi
+    end
+    if $argc == 1
+        stepi $arg0
+    end
+    if $argc > 1
+        help go
+    end
+    
+    context
+end
+document go
+Step one instruction exactly.
+If NUM is given, then repeat it NUM times or till program stops.
+This is alias for stepi.
+Usage: go <NUM>
+end
+
+define cls
+    shell clear
+end
+document cls
+Clear screen.
+end
+
+define dump_hexfile
+    dump ihex memory $arg0 $arg1 $arg2
+end
+document dump_hexfile
+Write a range of memory to a file in Intel ihex (hexdump) format.
+The range is specified by ADDR1 and ADDR2 addresses.
+Usage: dump_hexfile FILENAME ADDR1 ADDR2
+end
+
+
+define dump_binfile
+    dump memory $arg0 $arg1 $arg2
+end
+document dump_binfile
+Write a range of memory to a binary file.
+The range is specified by ADDR1 and ADDR2 addresses.
+Usage: dump_binfile FILENAME ADDR1 ADDR2
+end
+
+#TODO FIX THIS!
+set $MEMORY_DUMP_SIZE=1*0x1000000
+
+define dm
+	if $argc == 0
+		dump_binfile delme.bin 0 $MEMORY_DUMP_SIZE
+	end
+
+	shell bless delme.bin; rm delme.bin
+end
+document dm
+TODO Document this
+end
 
 # _____________bluefire specific commands_____________
 set archi i386:x86-64
@@ -919,5 +982,16 @@ target remote localhost:1234
 bp *0x7c00
 
 #continue until then
-#c
-#context
+context
+
+#Notes
+#si, ni x/4i
+#TODO
+# Traace control
+# Symbol table.
+# Better Memory Dump
+
+# POSSIBLE TODO
+# Assemble into mem.
+# Disassmble
+# Patching memory.
