@@ -892,27 +892,43 @@ end
 
 # _______________process control______________
 define n
-    if $argc == 0
-        nexti
-    end
-    if $argc == 1
-        nexti $arg0
-    end
-    if $argc > 1
+	if $argc > 0
         help n
     end
     
+    set $_nextaddress = 0
+    
+    ## we know that an opcode starting by 0xE8 has a fixed length
+    set $_byte1 = *(unsigned char *)$pc
+    set $_byte2 = *(unsigned char *)($pc+1)
+    set $_byte3 = *(unsigned char *)($pc+2)
+    
+    if ($_byte1 == 0xE8)
+    	# Procedure Call
+    	# 0xE8 opcode -> total instruction size 5 bytes
+        set $_nextaddress = $pc + 0x3
+    end
+    
+    if ($_byte1 == 0xCD)
+    	# TOBEVERIFIED!!! if it's a 0xE8 opcode, the total instruction size will be 5 bytes
+        set $_nextaddress = $pc + 0x2
+    end
+    
+    if ($_nextaddress == 0)
+    	nexti
+    else
+    	printf "Jumping to: 0x%08X" , $_nextaddress
+    	tbreak  *$_nextaddress
+    	continue
+    end
     context
 end
 document n
 Step one instruction, but proceed through subroutine calls.
-If NUM is given, then repeat it NUM times or till program stops.
-This is alias for nexti.
-Usage: n <NUM>
+Usage: n 
 end
 
-
-define go
+define s
     if $argc == 0
         stepi
     end
@@ -925,12 +941,14 @@ define go
     
     context
 end
-document go
+document s
 Step one instruction exactly.
 If NUM is given, then repeat it NUM times or till program stops.
 This is alias for stepi.
-Usage: go <NUM>
+Usage: s <NUM>
 end
+
+# ____________________misc____________________
 
 define cls
     shell clear
@@ -958,18 +976,32 @@ The range is specified by ADDR1 and ADDR2 addresses.
 Usage: dump_binfile FILENAME ADDR1 ADDR2
 end
 
-#TODO FIX THIS!
-set $MEMORY_DUMP_SIZE=1*0x1000000
-
-define dm
-	if $argc == 0
-		dump_binfile delme.bin 0 $MEMORY_DUMP_SIZE
+define dms
+	if $argc == 1
+		dump_binfile delme.bin ($arg0*0xFFFF) (($arg0*0xFFFF)+0xFFFF)
+		shell bless delme.bin; rm delme.bin
+	else 
+		help dms
 	end
 
-	shell bless delme.bin; rm delme.bin
 end
-document dm
-TODO Document this
+document dms
+Dump a small chunk of memory (65k). Indexed from zero.
+Usage: dms NUMBER
+end
+
+define dml
+	if $argc == 1
+		dump_binfile delme.bin ($arg0*0xFFFFF) (($arg0*0xFFFFF)+0xFFFFF)
+		shell bless delme.bin; rm delme.bin
+	else 
+		help dml
+	end
+
+end
+document dml
+Dump a large chunk of memory (1M). Indexed from zero.
+Usage: dml NUMBER
 end
 
 # _____________bluefire specific commands_____________
@@ -979,7 +1011,8 @@ set archi i386:x86-64
 target remote localhost:1234
 
 #set a brake at the beginnging of the bootloader 
-bp *0x7c00
+#bp *0x7c00
+bp *0x7c2B
 
 #continue until then
 context
@@ -989,7 +1022,6 @@ context
 #TODO
 # Traace control
 # Symbol table.
-# Better Memory Dump
 
 # POSSIBLE TODO
 # Assemble into mem.
