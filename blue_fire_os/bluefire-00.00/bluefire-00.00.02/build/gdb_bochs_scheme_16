@@ -975,68 +975,33 @@ Write a range of memory to a binary file.
 The range is specified by ADDR1 and ADDR2 addresses.
 Usage: dump_binfile FILENAME ADDR1 ADDR2
 end
-	
-define dm
-	 #0 args - Use default values
-	 #1 args - Display MB from arg1 
-	 #2 args - Display arg2 MBs from arg 1
-	set $ADDR1 = 0
-	set $ADDR2 = 0xFFFFF
-	
+
+define dms
 	if $argc == 1
-		set $ADDR1 = $arg0
-		set $ADDR2 = ($arg0 + 0xFFFFF)
-	end 
-	
-	if $argc == 2
-		set $ADDR1 = $arg0
-		set $ADDR2 = ($arg0 + ($arg1 * 0xFFFFF))	
-	end
-	
-	if $argc > 2 
-		help dm
-	else
-		printf "Opening memory range 0x%08X to 0x%08X with hex editor.\n" , $ADDR1, $ADDR2
-		dump_binfile delme.bin $ADDR1 $ADDR2
+		dump_binfile delme.bin ($arg0*0xFFFF) (($arg0*0xFFFF)+0xFFFF)
 		shell bless delme.bin; rm delme.bin
+	else 
+		help dms
 	end
+
 end
-document dm
-Dump a specified amount of MB to a hexeditor (bless).
-The range is specified starting at ADDR1 (default 0x0) address for COUNT (default 1) MBs.
-Usage: dm ADDR1 COUNT
+document dms
+Dump a small chunk of memory (65k). Indexed from zero.
+Usage: dms NUMBER
 end
 
-
-define dk
-	 #0 args - Use default values
-	 #1 args - Display MB from arg1 
-	 #2 args - Display arg2 MBs from arg 1
-	set $ADDR1 = 0
-	set $ADDR2 = 0xFFFF
-	
+define dml
 	if $argc == 1
-		set $ADDR1 = $arg0
-		set $ADDR2 = ($arg0 + 0xFFFF)
-	end 
-	
-	if $argc == 2
-		set $ADDR1 = $arg0
-		set $ADDR2 = ($arg0 + ($arg1 * 0xFFFF))	
-	end
-	
-	if $argc > 2 
-		help dk
-	else
-		printf "Opening memory range 0x%08X to 0x%08X with hex editor.\n" , $ADDR1, $ADDR2
-		dump_binfile delme.bin $ADDR1 $ADDR2
+		dump_binfile delme.bin ($arg0*0xFFFFF) (($arg0*0xFFFFF)+0xFFFFF)
 		shell bless delme.bin; rm delme.bin
+	else 
+		help dml
 	end
+
 end
-document dk
-Dump a specified amount of KB to a hexeditor (bless).
-The range is specified starting at ADDR1 (default 0x0) address for COUNT (default 1) KBs.
-Usage: dk ADDR1 COUNT
+document dml
+Dump a large chunk of memory (1M). Indexed from zero.
+Usage: dml NUMBER
 end
 
 # _____________bluefire specific commands_____________
