@@ -31,8 +31,13 @@ set $SHOW_CONTEXT = 1
 set $SHOW_NEST_INSN = 0
 
 set $CONTEXTSIZE_STACK = 4
-set $CONTEXTSIZE_DATA  = 4
+set $CONTEXTSIZE_DATA  = 2
 set $CONTEXTSIZE_CODE  = 2
+
+# Address of next address to be displayed if none speicified. 
+set $CURRENT_ADDR = 0x0
+# Last specified row count to display
+set $CURRENT_COUNT = 0x10
 
 # __________________end gdb options_________________
 
@@ -434,23 +439,12 @@ define context
     end
     
     if $SHOWSTACK == 1    	
-		echo \033[34m\033[1m
-	    printf "----------------------------------------"
-	    printf "[stack]"
-	    printf "[0x%04X:0x%08X]", $ss, $esp
-	    printf "----------------------\n"
-    	echo \033[0m
-    	set $context_i = $CONTEXTSIZE_STACK
-    	while ($context_i > 0)
-       	    set $context_t = $sp + 0x10 * ($context_i - 1)
-       	    hexdump $context_t
-       	    set $context_i--
-    	end
+		stackdump
     end
     
     # set to 1 to enable display of data window (default is 0)
 	if $SHOWDATAWIN == 1
-		datawin
+		dataindexwin
 	end
 	
 	if $SHOWPROGRAM == 1
@@ -478,30 +472,99 @@ document context-off
 Disable display of context on every program break.
 end
 
+# _______________stack window__________________
+define stackdump
+#x/z ($ss << 4) + $esp
+	echo \033[34m\033[1m
+    printf "----------------------------------------"
+    printf "[stack]"
+    printf "[0x%04X:0x%08X]", $ss, $esp
+    printf "----------------------\n"
+	echo \033[0m
+	
+	set $context_i = $CONTEXTSIZE_STACK
+	set $stack_start = ($ss << 4) + $esp
+	
+	#print up as it is the stack.
+	while ($context_i > 0)
+   	    set $context_t = $stack_start + 0x10 * ($context_i - 1)
+   	    hexdump $context_t
+   	    set $context_i--
+	end
+end
+document stackdump
+Display $CONTEXTSIZE_stack lines of hexdump for address of ss:sp.
+Usage: stackdump COUNT
+end
+
+# _______________Data Index window__________________
+define dataindexwin
+	
+	if $argc != 0
+        help dataindexwin
+	end
+	
+	#preserve the old preference
+	set $i_count = $CURRENT_COUNT
+	
+	echo \033[34m\033[1m
+    printf "----------------------------------------"
+    printf "[Source Index]"
+    printf "[0x%04X:0x%08X]", $ds, $esi
+    printf "----------------------\n"
+	echo \033[0m 
+	set $si_start = (($ds << 4) + $esi)
+	
+	dd $si_start $CONTEXTSIZE_DATA
+	
+	echo \033[34m\033[1m
+    printf "----------------------------------------"
+    printf "[Data Index]"
+    printf "[0x%04X:0x%08X]", $es, $edi
+    printf "----------------------\n"
+	echo \033[0m 
+	set $di_start = (($es << 4) + $edi)
+	
+	dd $di_start $CONTEXTSIZE_DATA
+	
+	#preserve the old preference
+	set $CURRENT_COUNT = $i_count
+end
+document dataindexwin
+Display $CONTEXTSIZE lines of hexdump for address pointed to by the source and data registers.
+Usage: dataindexwin
+end
+
+
 # _______________program window__________________
 define pcdump
-     if $argc != 0
+    if $argc != 0
         help pcdump
 	end
 	
 	echo \033[34m\033[1m
     printf "----------------------------------------"
     printf "[program]"
-    printf "[0x%08X]", $rip
+    printf "[0x%04X:0x%08X]", $cs, $pc
     printf "----------------------\n"
 	echo \033[0m
-    set $_count = 0
-    while ($_count < $CONTEXTSIZE_CODE)
-        set $_i = ($_count * 0x10)
-        hexdump $pc+$_i
-        set $_count++
-    end
-    x/i $rip
+    
+    set $pc_start = (($cs << 4) + $pc)
+	
+	dd $pc_start $CONTEXTSIZE_CODE
+	
+    #set $_count = 0
+    #while ($_count < $CONTEXTSIZE_CODE)
+    #    set $_i = ($_count * 0x10)
+    #    hexdump $pc+$_i
+    #    set $_count++
+    #end
+    x/i $pc_start
     dumpjump
 end
 document pcdump
 Display $CONTEXTSIZE_CODE lines of hexdump for address of pc.
-Usage: pcump N
+Usage: pcump COUNT
 end
 
 define dumpjump
@@ -732,64 +795,6 @@ document dumpjump
 Display if conditional jump will be taken or not.
 end
 
-# _______________data window__________________
-define ddump
-     if $argc != 1
-        help ddump
-	end
-	
-	echo \033[34m\033[1m
-    printf "----------------------------------------"
-    printf "[data]"
-    printf "[0x%04X:0x%08X]", $ds, $data_addr
-    printf "----------------------\n"
-	echo \033[0m
-    set $_count = 0
-    while ($_count < $arg0)
-        set $_i = ($_count * 0x10)
-        hexdump $data_addr+$_i
-        set $_count++
-    end
-end
-document ddump
-Display NUM lines of hexdump for address in $data_addr global variable.
-Usage: ddump NUM
-end
-
-define dd
-    if $argc != 1
-        help dd
-    else
-        set $data_addr = $arg0
-        ddump 0x10
-    end
-end
-document dd
-Display 16 lines of a hex dump of address starting at ADDR.
-Usage: dd ADDR
-end
-
-define datawin
-    if ((($esi >> 0x18) == 0x40) || (($esi >> 0x18) == 0x08) || (($esi >> 0x18) == 0xBF))
-        set $data_addr = $esi
-    else
-        if ((($edi >> 0x18) == 0x40) || (($edi >> 0x18) == 0x08) || (($edi >> 0x18) == 0xBF))
-            set $data_addr = $edi
-        else
-            if ((($eax >> 0x18) == 0x40) || (($eax >> 0x18) == 0x08) || (($eax >> 0x18) == 0xBF))
-                set $data_addr = $eax
-            else
-                set $data_addr = $esp
-            end
-        end
-    end
-    ddump $CONTEXTSIZE_DATA
-end
-document datawin
-Display valid address from one register in data window.
-Registers to choose are: esi, edi, eax, or esp.
-end
-
 # __________hex/ascii dump an address_________
 define ascii_char
     if $argc != 1
@@ -910,7 +915,7 @@ define n
     end
     
     if ($_byte1 == 0xCD)
-    	# TOBEVERIFIED!!! if it's a 0xE8 opcode, the total instruction size will be 5 bytes
+    	# TOBEVERIFIED!!! if it's a 0xE8 opcode, the total instruction size will be 3 bytes
         set $_nextaddress = $pc + 0x2
     end
     
@@ -976,32 +981,96 @@ The range is specified by ADDR1 and ADDR2 addresses.
 Usage: dump_binfile FILENAME ADDR1 ADDR2
 end
 
-define dms
+define dd
+	#set $COUNT = 0x10
+	
 	if $argc == 1
-		dump_binfile delme.bin ($arg0*0xFFFF) (($arg0*0xFFFF)+0xFFFF)
-		shell bless delme.bin; rm delme.bin
-	else 
-		help dms
+		set $CURRENT_ADDR = $arg0
 	end
-
+	
+	if $argc == 2
+		set $CURRENT_ADDR = $arg0
+		set $CURRENT_COUNT = $arg1
+	end
+	
+	if $argc > 2
+		help
+	else
+		set $_count = 0
+    	while ($_count < $CURRENT_COUNT)
+    		hexdump $CURRENT_ADDR
+        	set $CURRENT_ADDR = $CURRENT_ADDR + 0x10
+        	set $_count++
+    	end
+    end
 end
-document dms
-Dump a small chunk of memory (65k). Indexed from zero.
-Usage: dms NUMBER
+document dd
+Display COUNT lines of a hex dump of address starting at ADDR.
+Preserves ADDR and COUNT
+Usage: dd ADDR COUNT
 end
 
-define dml
+define dm
+	 #0 args - Use default values
+	 #1 args - Display MB from arg1 
+	 #2 args - Display arg2 MBs from arg 1
+	set $ADDR1 = 0
+	set $ADDR2 = 0xFFFFF
+	
 	if $argc == 1
-		dump_binfile delme.bin ($arg0*0xFFFFF) (($arg0*0xFFFFF)+0xFFFFF)
-		shell bless delme.bin; rm delme.bin
-	else 
-		help dml
+		set $ADDR1 = $arg0
+		set $ADDR2 = ($arg0 + 0xFFFFF)
+	end 
+	
+	if $argc == 2
+		set $ADDR1 = $arg0
+		set $ADDR2 = ($arg0 + ($arg1 * 0xFFFFF))	
 	end
-
+	
+	if $argc > 2 
+		help dm
+	else
+		printf "Opening memory range 0x%08X to 0x%08X with hex editor.\n" , $ADDR1, $ADDR2
+		dump_binfile delme.bin $ADDR1 $ADDR2
+		shell bless delme.bin; rm delme.bin
+	end
 end
-document dml
-Dump a large chunk of memory (1M). Indexed from zero.
-Usage: dml NUMBER
+document dm
+Dump a specified amount of MB to a hexeditor (bless).
+The range is specified starting at ADDR1 (default 0x0) address for COUNT (default 1) MBs.
+Usage: dm ADDR1 COUNT
+end
+
+
+define dk
+	 #0 args - Use default values
+	 #1 args - Display MB from arg1 
+	 #2 args - Display arg2 MBs from arg 1
+	set $ADDR1 = 0
+	set $ADDR2 = 0xFFFF
+	
+	if $argc == 1
+		set $ADDR1 = $arg0
+		set $ADDR2 = ($arg0 + 0xFFFF)
+	end 
+	
+	if $argc == 2
+		set $ADDR1 = $arg0
+		set $ADDR2 = ($arg0 + ($arg1 * 0xFFFF))	
+	end
+	
+	if $argc > 2 
+		help dk
+	else
+		printf "Opening memory range 0x%08X to 0x%08X with hex editor.\n" , $ADDR1, $ADDR2
+		dump_binfile delme.bin $ADDR1 $ADDR2
+		shell bless delme.bin; rm delme.bin
+	end
+end
+document dk
+Dump a specified amount of KB to a hexeditor (bless).
+The range is specified starting at ADDR1 (default 0x0) address for COUNT (default 1) KBs.
+Usage: dk ADDR1 COUNT
 end
 
 # _____________bluefire specific commands_____________
