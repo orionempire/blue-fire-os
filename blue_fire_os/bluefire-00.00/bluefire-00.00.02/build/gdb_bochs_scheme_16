@@ -276,91 +276,88 @@ end
 
 define regx86
     printf "  "
-    # EAX
+    # AX
     echo \033[32m
-	printf "EAX:"
-    if ($eax != $oldeax && $SHOWREGCHANGES == 1)
+	printf "AX:"
+    if ($eax&FFFF != $oldeax && $SHOWREGCHANGES == 1)
    	 	echo \033[31m   	 	
    	else
    	 	echo \033[0m
    	end
-   	printf " 0x%08X  ", $eax
-   	# EBX
+   	printf " 0x%04X  ", $eax&FFFF
+   	# BX
     echo \033[32m
-   	printf "EBX:"
-   	if ($ebx != $oldebx && $SHOWREGCHANGES == 1) 
+   	printf "BX:"
+   	if ($ebx&FFFF != $oldebx && $SHOWREGCHANGES == 1) 
 	    echo \033[31m   		
    	else
 	    echo \033[0m
    	end
-   	printf " 0x%08X  ", $ebx
-   	# ECX
+   	printf " 0x%04X  ", $ebx&FFFF
+   	# CX
     echo \033[32m
-   	printf "ECX:"
-   	if ($ecx != $oldecx && $SHOWREGCHANGES == 1)
+   	printf "CX:"
+   	if ($ecx&FFFF != $oldecx && $SHOWREGCHANGES == 1)
 	    echo \033[31m	    
 	else
 	    echo \033[0m
 	end
-	printf " 0x%08X  ", $ecx
-	# EDX
-	if ($edx != $oldedx && $SHOWREGCHANGES == 1)
-	    echo \033[32m
-    	printf "EDX:"
-	    echo \033[31m
-	    printf " 0x%08X  ", $edx
-	else
-	    echo \033[32m
-    	printf "EDX:"
+	printf " 0x%04X  ", $ecx&FFFF
+	# DX
+	echo \033[32m
+   	printf "DX:"
+   	if ($edx&FFFF != $oldedx && $SHOWREGCHANGES == 1) 
+	    echo \033[31m   		
+   	else
 	    echo \033[0m
-	    printf " 0x%08X  ", $edx
-	end
+   	end
+   	printf " 0x%04X  ", $edx&FFFF
     echo \033[1m\033[4m\033[31m
+    # Flag register
     flags
     echo \033[0m
     printf "  "
-    # ESI
+    # SI
 	echo \033[32m
-    printf "ESI:"
-    if ($esi != $oldesi && $SHOWREGCHANGES == 1)
+    printf "SI:"
+    if ($esi&FFFF != $oldesi && $SHOWREGCHANGES == 1)
 	    echo \033[31m	    
 	else
 	    echo \033[0m
 	end
-	printf " 0x%08X  ", $esi
-	# EDI
+	printf " 0x%04X  ", $esi&FFFF
+	# DI
 	echo \033[32m
-    printf "EDI:"
-	if ($edi != $oldedi && $SHOWREGCHANGES == 1)
+    printf "DI:"
+	if ($edi&FFFF != $oldedi && $SHOWREGCHANGES == 1)
 	    echo \033[31m	    
 	else
 	    echo \033[0m
 	end
-	printf " 0x%08X  ", $edi
-	# EBP
+	printf " 0x%04X  ", $edi
+	# BP
 	echo \033[32m
-	printf "EBP:"
-	if ($ebp != $oldebp && $SHOWREGCHANGES == 1)
+	printf "BP:"
+	if ($ebp&FFFF != $oldebp && $SHOWREGCHANGES == 1)
 	    echo \033[31m
 	else
 	    echo \033[0m
 	end
-	printf " 0x%08X  ", $ebp
-	# ESP
+	printf " 0x%04X  ", $ebp&FFFF
+	# SP
 	echo \033[32m
-    printf "ESP:"
-	if ($esp != $oldesp && $SHOWREGCHANGES == 1)
+    printf "SP:"
+	if ($esp&FFFF != $oldesp && $SHOWREGCHANGES == 1)
 	    echo \033[31m	    
 	else
 	    echo \033[0m
     end
-    printf " 0x%08X  ", $esp
-    # EIP
+    printf " 0x%04X  ", $esp&FFFF
+    # IP
     echo \033[32m
-    printf "EIP:"
+    printf "IP:"
     echo \033[0m
-    #printf " 0x%08X\n  ", $eip
-    printf " 0x%08X\n  ", $rip
+    printf " 0x%04X\n  ", $rip
     echo \033[32m
     printf "CS:"
     echo \033[0m
@@ -399,14 +396,14 @@ define reg
     echo \033[0m
 	regx86
 	 
-	set $oldeax = $eax
-	set $oldebx = $ebx
-    set $oldecx = $ecx
-	set $oldedx = $edx
-	set $oldesi = $esi
-	set $oldedi = $edi
-    set $oldebp = $ebp
-    set $oldesp = $esp
+	set $oldeax = $eax&FFFF
+	set $oldebx = $ebx&FFFF
+    set $oldecx = $ecx&FFFF
+	set $oldedx = $edx&FFFF
+	set $oldesi = $esi&FFFF
+	set $oldedi = $edi&FFFF
+    set $oldebp = $ebp&FFFF
+    set $oldesp = $esp&FFFF
     printf "\n"
     echo \033[36m
 end
@@ -455,6 +452,13 @@ document context
 Print context window, i.e. regs, stack, ds:esi and disassemble cs:eip.
 end
 
+define cn
+	context
+end
+document cn
+Shortcut for context.
+end
+
 define context-on
     set $SHOW_CONTEXT = 1
     printf "Displaying of context is now ON\n"
@@ -478,7 +482,7 @@ define stackdump
 	echo \033[34m\033[1m
     printf "----------------------------------------"
     printf "[stack]"
-    printf "[0x%04X:0x%08X]", $ss, $esp
+    printf "[0x%04X:0x%04X]", $ss, $esp
     printf "----------------------\n"
 	echo \033[0m
 	
@@ -493,7 +497,7 @@ define stackdump
 	end
 end
 document stackdump
-Display $CONTEXTSIZE_stack lines of hexdump for address of ss:sp.
+Display $CONTEXTSIZE_stack lines of hexdump for address of ss:esp.
 Usage: stackdump COUNT
 end
 
@@ -510,22 +514,22 @@ define dataindexwin
 	echo \033[34m\033[1m
     printf "----------------------------------------"
     printf "[Source Index]"
-    printf "[0x%04X:0x%08X]", $ds, $esi
+    printf "[0x%04X:0x%04X]", $ds, $esi&FFFF
     printf "----------------------\n"
 	echo \033[0m 
-	set $si_start = (($ds << 4) + $esi)
+	set $esi_start = (($ds << 4) + $esi&FFFF)
 	
-	dd $si_start $CONTEXTSIZE_DATA
+	dd $esi_start $CONTEXTSIZE_DATA
 	
 	echo \033[34m\033[1m
     printf "----------------------------------------"
     printf "[Data Index]"
-    printf "[0x%04X:0x%08X]", $es, $edi
+    printf "[0x%04X:0x%04X]", $es, $edi&FFFF
     printf "----------------------\n"
 	echo \033[0m 
-	set $di_start = (($es << 4) + $edi)
+	set $edi_start = (($es << 4) + $edi&FFFF)
 	
-	dd $di_start $CONTEXTSIZE_DATA
+	dd $edi_start $CONTEXTSIZE_DATA
 	
 	#preserve the old preference
 	set $CURRENT_COUNT = $i_count
@@ -545,7 +549,7 @@ define pcdump
 	echo \033[34m\033[1m
     printf "----------------------------------------"
     printf "[program]"
-    printf "[0x%04X:0x%08X]", $cs, $pc
+    printf "[0x%04X:0x%04X]", $cs, $pc
     printf "----------------------\n"
 	echo \033[0m
     
@@ -553,12 +557,6 @@ define pcdump
 	
 	dd $pc_start $CONTEXTSIZE_CODE
 	
-    #set $_count = 0
-    #while ($_count < $CONTEXTSIZE_CODE)
-    #    set $_i = ($_count * 0x10)
-    #    hexdump $pc+$_i
-    #    set $_count++
-    #end
     x/i $pc_start
     dumpjump
 end
@@ -569,8 +567,8 @@ end
 
 define dumpjump
     ## grab the first two bytes from the instruction so we can determine the jump instruction
-    set $_byte1 = *(unsigned char *)$pc
-    set $_byte2 = *(unsigned char *)($pc+1)
+    set $_byte1 = *(unsigned char *)(($cs << 4) + $pc)
+    set $_byte2 = *(unsigned char *)(($cs << 4) + ($pc + 1))
     ## and now check what kind of jump we have (in case it's a jump instruction)
     ## I changed the flags routine to save the flag into a variable, so we don't need to repeat the process :) (search for "define flags")
 
@@ -904,18 +902,20 @@ define n
     set $_nextaddress = 0
     
     ## we know that an opcode starting by 0xE8 has a fixed length
-    set $_byte1 = *(unsigned char *)$pc
-    set $_byte2 = *(unsigned char *)($pc+1)
-    set $_byte3 = *(unsigned char *)($pc+2)
+    set $_byte1 = *(unsigned char *)(($cs << 4) + $pc)
+    set $_byte2 = *(unsigned char *)(($cs << 4) + ($pc + 1))
+    set $_byte3 = *(unsigned char *)(($cs << 4) + ($pc + 2))
+    
     
     if ($_byte1 == 0xE8)
     	# Procedure Call
-    	# 0xE8 opcode -> total instruction size 5 bytes
+    	# TOBEVERIFIED!!! if it's a 0xE8 opcode, the total instruction size will be 3 bytes
         set $_nextaddress = $pc + 0x3
     end
     
     if ($_byte1 == 0xCD)
-    	# TOBEVERIFIED!!! if it's a 0xE8 opcode, the total instruction size will be 3 bytes
+    	# Bios interrupt
+    	# TOBEVERIFIED!!! if it's a 0xCD opcode, the total instruction size will be 2 bytes
         set $_nextaddress = $pc + 0x2
     end
     
