@@ -26,7 +26,7 @@ start:	jmp main	;jump over to first byte of executable code
 
 ; ------ Mesages ------
 ;0x0A ascii for next line.  0x0D cursor to the beggining of the line.
-cst_msg_loading 			DB 0x0D, 0x0A, "Loading Stage 2...", 0x0D, 0x0A, 0x00
+cst_msg_loading 			DB 0x0D, 0x0A, "Loading kernel...", 0x0D, 0x0A, 0x00
 cst_msg_unreal	 			DB 0x0D, 0x0A, "Welocme to unreal mode...", 0x0D, 0x0A, 0x00
 ; print one dot for every disk sector we load
 cst_msg_progress 			DB ".", 0x00

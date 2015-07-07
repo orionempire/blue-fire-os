@@ -22,7 +22,7 @@ org 0x8000
 start:	jmp main	;jump over to first byte of executable code
 
 ;0x0A ascii for next line.  0x0D cursor to the beggining of the line.
-cst_msg_loading 			DB 0x0D, 0x0A, "Loading Stage 2...", 0x0D, 0x0A, 0x00
+cst_msg_loading 			DB 0x0D, 0x0A, "Hello world from Stage 2...", 0x0D, 0x0A, 0x00
 
 main:
 	cli				; clear interrupts

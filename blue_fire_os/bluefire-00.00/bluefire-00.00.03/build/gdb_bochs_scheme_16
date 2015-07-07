@@ -1,0 +1,1095 @@
+# __________________gdb options_________________
+
+# set to 0 to tuen off the colorized prompt.
+set $COLOUREDPROMPT = 1
+# set to 0 to disable coloured display of changed registers
+set $SHOWREGCHANGES = 1
+# set to 0 to remove display of cpu registers (default is 1)
+set $SHOWCPUREGISTERS = 1
+# set to 1 to enable display of stack (default is 0)
+set $SHOWSTACK = 1
+# set to 1 to enable display of data window (default is 0)
+set $SHOWDATAWIN = 1
+# set to 1 to enable display of progam jump info
+set $SHOWPROGRAM = 1
+
+set confirm off
+set verbose off
+
+if $COLOUREDPROMPT == 1
+	set prompt \033[34mGDB-> \033[0m
+end
+
+set output-radix 0x10
+set input-radix 0x10
+
+# These make gdb never pause in its output
+set height 0
+set width 0
+
+set $SHOW_CONTEXT = 1
+set $SHOW_NEST_INSN = 0
+
+set $CONTEXTSIZE_STACK = 4
+set $CONTEXTSIZE_DATA  = 2
+set $CONTEXTSIZE_CODE  = 2
+
+# Address of next address to be displayed if none speicified. 
+set $CURRENT_ADDR = 0x0
+# Last specified row count to display
+set $CURRENT_COUNT = 0x10
+
+# __________________end gdb options_________________
+
+# Initialize these variables else comparisons will fail for colouring
+# we must initialize all of them at once
+set $oldeax = 0
+set $oldebx = 0
+set $oldecx = 0
+set $oldedx = 0
+set $oldesi = 0
+set $oldedi = 0
+set $oldebp = 0
+set $oldesp = 0
+
+# _____________breakpoint aliases_____________
+define bpl
+    info breakpoints
+end
+document bpl
+List all breakpoints.
+end
+
+
+define bp
+    if $argc != 1
+        help bp
+    else
+        break $arg0
+    end
+end
+document bp
+Set breakpoint.
+Usage: bp LOCATION
+LOCATION may be a line number, function name, or "*" and an address.
+To break on a symbol you must enclose symbol name inside "".
+Example:
+bp "[NSControl stringValue]"
+Or else you can use directly the break command (break [NSControl stringValue])
+end
+
+
+define bpc 
+    if $argc != 1
+        help bpc
+    else
+        clear $arg0
+    end
+end
+document bpc
+Clear breakpoint.
+Usage: bpc LOCATION
+LOCATION may be a line number, function name, or "*" and an address.
+end
+
+
+define bpe
+    if $argc != 1
+        help bpe
+    else
+        enable $arg0
+    end
+end
+document bpe
+Enable breakpoint with number NUM.
+Usage: bpe NUM
+end
+
+
+define bpd
+    if $argc != 1
+        help bpd
+    else
+        disable $arg0
+    end
+end
+document bpd
+Disable breakpoint with number NUM.
+Usage: bpd NUM
+end
+
+
+define bpt
+    if $argc != 1
+        help bpt
+    else
+        tbreak $arg0
+    end
+end
+document bpt
+Set a temporary breakpoint.
+This breakpoint will be automatically deleted when hit!.
+Usage: bpt LOCATION
+LOCATION may be a line number, function name, or "*" and an address.
+end
+
+
+define bpm
+    if $argc != 1
+        help bpm
+    else
+        awatch $arg0
+    end
+end
+document bpm
+Set a read/write breakpoint on EXPRESSION, e.g. *address.
+Usage: bpm EXPRESSION
+end
+
+
+define bhb
+    if $argc != 1
+        help bhb
+    else
+        hb $arg0
+    end
+end
+document bhb
+Set hardware assisted breakpoint.
+Usage: bhb LOCATION
+LOCATION may be a line number, function name, or "*" and an address.
+end
+
+
+define bht
+    if $argc != 1
+        help bht
+    else
+        thbreak $arg0
+    end
+end
+document bht
+Set a temporary hardware breakpoint.
+This breakpoint will be automatically deleted when hit!
+Usage: bht LOCATION
+LOCATION may be a line number, function name, or "*" and an address.
+end
+
+# ______________process information____________
+
+define flagsx86
+    # OF (overflow) flag
+    if (($eflags >> 0xB) & 1)
+        printf "O "
+        set $_of_flag = 1
+    else
+        printf "o "
+        set $_of_flag = 0
+    end
+    # DF (direction) flag
+    if (($eflags >> 0xA) & 1)
+        printf "D "
+    else
+        printf "d "
+    end
+    # IF (interrupt enable) flag
+    if (($eflags >> 9) & 1)
+        printf "I "
+    else
+        printf "i "
+    end
+    # TF (trap) flag
+    if (($eflags >> 8) & 1)
+        printf "T "
+    else
+        printf "t "
+    end
+    # SF (sign) flag
+    if (($eflags >> 7) & 1)
+        printf "S "
+        set $_sf_flag = 1
+    else
+        printf "s "
+        set $_sf_flag = 0
+    end
+    # ZF (zero) flag
+    if (($eflags >> 6) & 1)
+        printf "Z "
+    	set $_zf_flag = 1
+    else
+        printf "z "
+	    set $_zf_flag = 0
+    end
+    # AF (adjust) flag
+    if (($eflags >> 4) & 1)
+        printf "A "
+    else
+        printf "a "
+    end
+    # PF (parity) flag
+    if (($eflags >> 2) & 1)
+        printf "P "
+	    set $_pf_flag = 1
+    else
+        printf "p "
+    	set $_pf_flag = 0
+    end
+    # CF (carry) flag
+    if ($eflags & 1)
+        printf "C "
+	    set $_cf_flag = 1
+    else
+        printf "c "
+    	set $_cf_flag = 0
+    end
+    printf "\n"
+end
+document flagsx86
+Auxiliary function to set X86cpu flags.
+end
+
+define flags
+   flagsx86
+end
+document flags
+Print flags register.
+end
+
+define eflags
+    printf "     OF <%d>  DF <%d>  IF <%d>  TF <%d>",\
+           (($eflags >> 0xB) & 1), (($eflags >> 0xA) & 1), \
+           (($eflags >> 9) & 1), (($eflags >> 8) & 1)
+    printf "  SF <%d>  ZF <%d>  AF <%d>  PF <%d>  CF <%d>\n",\
+           (($eflags >> 7) & 1), (($eflags >> 6) & 1),\
+           (($eflags >> 4) & 1), (($eflags >> 2) & 1), ($eflags & 1)
+    printf "     ID <%d>  VIP <%d> VIF <%d> AC <%d>",\
+           (($eflags >> 0x15) & 1), (($eflags >> 0x14) & 1), \
+           (($eflags >> 0x13) & 1), (($eflags >> 0x12) & 1)
+    printf "  VM <%d>  RF <%d>  NT <%d>  IOPL <%d>\n",\
+           (($eflags >> 0x11) & 1), (($eflags >> 0x10) & 1),\
+           (($eflags >> 0xE) & 1), (($eflags >> 0xC) & 3)
+end
+document eflags
+Print eflags register.
+end
+
+
+define regx86
+    printf "  "
+    # AX
+    echo \033[32m
+	printf "AX:"
+    if ($eax&FFFF != $oldeax && $SHOWREGCHANGES == 1)
+   	 	echo \033[31m   	 	
+   	else
+   	 	echo \033[0m
+   	end
+   	printf " 0x%04X  ", $eax&FFFF
+   	# BX
+    echo \033[32m
+   	printf "BX:"
+   	if ($ebx&FFFF != $oldebx && $SHOWREGCHANGES == 1) 
+	    echo \033[31m   		
+   	else
+	    echo \033[0m
+   	end
+   	printf " 0x%04X  ", $ebx&FFFF
+   	# CX
+    echo \033[32m
+   	printf "CX:"
+   	if ($ecx&FFFF != $oldecx && $SHOWREGCHANGES == 1)
+	    echo \033[31m	    
+	else
+	    echo \033[0m
+	end
+	printf " 0x%04X  ", $ecx&FFFF
+	# DX
+	echo \033[32m
+   	printf "DX:"
+   	if ($edx&FFFF != $oldedx && $SHOWREGCHANGES == 1) 
+	    echo \033[31m   		
+   	else
+	    echo \033[0m
+   	end
+   	printf " 0x%04X  ", $edx&FFFF
+    echo \033[1m\033[4m\033[31m
+    # Flag register
+    flags
+    echo \033[0m
+    printf "  "
+    # SI
+	echo \033[32m
+    printf "SI:"
+    if ($esi&FFFF != $oldesi && $SHOWREGCHANGES == 1)
+	    echo \033[31m	    
+	else
+	    echo \033[0m
+	end
+	printf " 0x%04X  ", $esi&FFFF
+	# DI
+	echo \033[32m
+    printf "DI:"
+	if ($edi&FFFF != $oldedi && $SHOWREGCHANGES == 1)
+	    echo \033[31m	    
+	else
+	    echo \033[0m
+	end
+	printf " 0x%04X  ", $edi
+	# BP
+	echo \033[32m
+	printf "BP:"
+	if ($ebp&FFFF != $oldebp && $SHOWREGCHANGES == 1)
+	    echo \033[31m
+	else
+	    echo \033[0m
+	end
+	printf " 0x%04X  ", $ebp&FFFF
+	# SP
+	echo \033[32m
+    printf "SP:"
+	if ($esp&FFFF != $oldesp && $SHOWREGCHANGES == 1)
+	    echo \033[31m	    
+	else
+	    echo \033[0m
+    end
+    printf " 0x%04X  ", $esp&FFFF
+    # IP
+    echo \033[32m
+    printf "IP:"
+    echo \033[0m
+    printf " 0x%04X\n  ", $rip
+    echo \033[32m
+    printf "CS:"
+    echo \033[0m
+    printf " %04X  ", $cs
+    echo \033[32m
+    printf "DS:"
+    echo \033[0m
+    printf " %04X  ", $ds
+    echo \033[32m
+    printf "ES:"
+    echo \033[0m
+    printf " %04X  ", $es
+    echo \033[32m
+    printf "FS:"
+    echo \033[0m
+    printf " %04X  ", $fs
+    echo \033[32m
+    printf "GS:"
+    echo \033[0m
+    printf " %04X  ", $gs
+    echo \033[32m
+    printf "SS:"
+    echo \033[0m
+    printf " %04X", $ss
+    echo \033[0m
+end
+document regx86
+Auxiliary function to display X86 registers.
+end
+
+define reg
+	echo \033[34m\033[1m
+    printf "----------------------------------------"
+    printf "[regs]"
+    printf "------------------------------------------\n"
+    echo \033[0m
+	regx86
+	 
+	set $oldeax = $eax&FFFF
+	set $oldebx = $ebx&FFFF
+    set $oldecx = $ecx&FFFF
+	set $oldedx = $edx&FFFF
+	set $oldesi = $esi&FFFF
+	set $oldedi = $edi&FFFF
+    set $oldebp = $ebp&FFFF
+    set $oldesp = $esp&FFFF
+    printf "\n"
+    echo \033[36m
+end
+document reg
+Print CPU registers.
+end
+
+define sig
+    if $argc == 0
+        info signals
+    end
+    if $argc == 1
+        info signals $arg0
+    end
+    if $argc > 1
+        help sig
+    end
+end
+document sig
+Print what debugger does when program gets various signals.
+Specify a SIGNAL as argument to print info on that signal only.
+Usage: sig <SIGNAL>
+end
+
+# _______________process context_______________
+define context 
+    echo \033[34m
+    if $SHOWCPUREGISTERS == 1    
+	    reg
+    end
+    
+    if $SHOWSTACK == 1    	
+		stackdump
+    end
+    
+    # set to 1 to enable display of data window (default is 0)
+	if $SHOWDATAWIN == 1
+		dataindexwin
+	end
+	
+	if $SHOWPROGRAM == 1
+		pcdump
+	end
+end
+document context
+Print context window, i.e. regs, stack, ds:esi and disassemble cs:eip.
+end
+
+define cn
+	context
+end
+document cn
+Shortcut for context.
+end
+
+define context-on
+    set $SHOW_CONTEXT = 1
+    printf "Displaying of context is now ON\n"
+end
+document context-on
+Enable display of context on every program break.
+end
+
+
+define context-off
+    set $SHOW_CONTEXT = 0
+    printf "Displaying of context is now OFF\n"
+end
+document context-off
+Disable display of context on every program break.
+end
+
+# _______________stack window__________________
+define stackdump
+#x/z ($ss << 4) + $esp
+	echo \033[34m\033[1m
+    printf "----------------------------------------"
+    printf "[stack]"
+    printf "[0x%04X:0x%04X]", $ss, $esp
+    printf "----------------------\n"
+	echo \033[0m
+	
+	set $context_i = $CONTEXTSIZE_STACK
+	set $stack_start = ($ss << 4) + $esp
+	
+	#print up as it is the stack.
+	while ($context_i > 0)
+   	    set $context_t = $stack_start + 0x10 * ($context_i - 1)
+   	    hexdump $context_t
+   	    set $context_i--
+	end
+end
+document stackdump
+Display $CONTEXTSIZE_stack lines of hexdump for address of ss:esp.
+Usage: stackdump COUNT
+end
+
+# _______________Data Index window__________________
+define dataindexwin
+	
+	if $argc != 0
+        help dataindexwin
+	end
+	
+	#preserve the old preference
+	set $i_count = $CURRENT_COUNT
+	
+	echo \033[34m\033[1m
+    printf "----------------------------------------"
+    printf "[Source Index]"
+    printf "[0x%04X:0x%04X]", $ds, $esi&FFFF
+    printf "----------------------\n"
+	echo \033[0m 
+	set $esi_start = (($ds << 4) + $esi&FFFF)
+	
+	dd $esi_start $CONTEXTSIZE_DATA
+	
+	echo \033[34m\033[1m
+    printf "----------------------------------------"
+    printf "[Data Index]"
+    printf "[0x%04X:0x%04X]", $es, $edi&FFFF
+    printf "----------------------\n"
+	echo \033[0m 
+	set $edi_start = (($es << 4) + $edi&FFFF)
+	
+	dd $edi_start $CONTEXTSIZE_DATA
+	
+	#preserve the old preference
+	set $CURRENT_COUNT = $i_count
+end
+document dataindexwin
+Display $CONTEXTSIZE lines of hexdump for address pointed to by the source and data registers.
+Usage: dataindexwin
+end
+
+
+# _______________program window__________________
+define pcdump
+    if $argc != 0
+        help pcdump
+	end
+	
+	echo \033[34m\033[1m
+    printf "----------------------------------------"
+    printf "[program]"
+    printf "[0x%04X:0x%04X]", $cs, $pc
+    printf "----------------------\n"
+	echo \033[0m
+    
+    set $pc_start = (($cs << 4) + $pc)
+	
+	dd $pc_start $CONTEXTSIZE_CODE
+	
+    x/i $pc_start
+    dumpjump
+end
+document pcdump
+Display $CONTEXTSIZE_CODE lines of hexdump for address of pc.
+Usage: pcump COUNT
+end
+
+define dumpjump
+    ## grab the first two bytes from the instruction so we can determine the jump instruction
+    set $_byte1 = *(unsigned char *)(($cs << 4) + $pc)
+    set $_byte2 = *(unsigned char *)(($cs << 4) + ($pc + 1))
+    ## and now check what kind of jump we have (in case it's a jump instruction)
+    ## I changed the flags routine to save the flag into a variable, so we don't need to repeat the process :) (search for "define flags")
+
+    ## opcode 0x77: JA, JNBE (jump if CF=0 and ZF=0)
+    ## opcode 0x0F87: JNBE, JA
+    if ( ($_byte1 == 0x77) || ($_byte1 == 0x0F && $_byte2 == 0x87) )
+     	# cf=0 and zf=0
+        if ($_cf_flag == 0 && $_zf_flag == 0)
+        	echo \033[31m
+       		printf "  Jump is taken (c=0 and z=0)"
+      	else
+        	# cf != 0 or zf != 0
+       		echo \033[31m
+       		printf "  Jump is NOT taken (c!=0 or z!=0)"
+      	end 
+    end
+    ## opcode 0x73: JAE, JNB, JNC (jump if CF=0)
+    ## opcode 0x0F83: JNC, JNB, JAE (jump if CF=0)
+    if ( ($_byte1 == 0x73) || ($_byte1 == 0x0F && $_byte2 == 0x83) )
+     	# cf=0
+     	if ($_cf_flag == 0)
+	        echo \033[31m
+       		printf "  Jump is taken (c=0)"
+      	else
+        	# cf != 0
+       		echo \033[31m
+	        printf "  Jump is NOT taken (c!=0)"
+      	end 
+    end
+    ## opcode 0x72: JB, JC, JNAE (jump if CF=1)
+    ## opcode 0x0F82: JNAE, JB, JC
+    if ( ($_byte1 == 0x72) || ($_byte1 == 0x0F && $_byte2 == 0x82) )
+        # cf=1
+        if ($_cf_flag == 1)
+	        echo \033[31m
+    		printf "  Jump is taken (c=1)"
+      	else
+        	# cf != 1
+       		echo \033[31m
+	        printf "  Jump is NOT taken (c!=1)"
+      	end 
+    end
+    ## opcode 0x76: JBE, JNA (jump if CF=1 or ZF=1)
+    ## opcode 0x0F86: JBE, JNA
+    if ( ($_byte1 == 0x76) || ($_byte1 == 0x0F && $_byte2 == 0x86) )
+     	# cf=1 or zf=1
+     	if (($_cf_flag == 1) || ($_zf_flag == 1))
+	        echo \033[31m
+       		printf "  Jump is taken (c=1 or z=1)"
+      	else
+        	# cf != 1 or zf != 1
+       		echo \033[31m
+       		printf "  Jump is NOT taken (c!=1 or z!=1)"
+      	end 
+    end
+    ## opcode 0xE3: JCXZ, JECXZ, JRCXZ (jump if CX=0 or ECX=0 or RCX=0)
+    if ($_byte1 == 0xE3)
+     	# cx=0 or ecx=0
+     	if (($ecx == 0) || ($cx == 0))
+    		echo \033[31m
+	        printf "  Jump is taken (cx=0 or ecx=0)"
+      	else
+    	    echo \033[31m
+   	    	printf "  Jump is NOT taken (cx!=0 or ecx!=0)"
+      	end 
+    end
+    ## opcode 0x74: JE, JZ (jump if ZF=1)
+    ## opcode 0x0F84: JZ, JE, JZ (jump if ZF=1)
+    if ( ($_byte1 == 0x74) || ($_byte1 == 0x0F && $_byte2 == 0x84) )
+         # ZF = 1
+      	if ($_zf_flag == 1)
+	        echo \033[31m
+       		printf "  Jump is taken (z=1)"
+      	else
+            # ZF = 0
+       		echo \033[31m
+	        printf "  Jump is NOT taken (z!=1)"
+      	end 
+    end
+    ## opcode 0x7F: JG, JNLE (jump if ZF=0 and SF=OF)
+    ## opcode 0x0F8F: JNLE, JG (jump if ZF=0 and SF=OF)
+    if ( ($_byte1 == 0x7F) || ($_byte1 == 0x0F && $_byte2 == 0x8F) )
+        # zf = 0 and sf = of
+        if (($_zf_flag == 0) && ($_sf_flag == $_of_flag))
+	        echo \033[31m
+	        printf "  Jump is taken (z=0 and s=o)"
+     	else
+	        echo \033[31m
+	        printf "  Jump is NOT taken (z!=0 or s!=o)"
+        end 
+    end
+    ## opcode 0x7D: JGE, JNL (jump if SF=OF)
+    ## opcode 0x0F8D: JNL, JGE (jump if SF=OF)
+    if ( ($_byte1 == 0x7D) || ($_byte1 == 0x0F && $_byte2 == 0x8D) )
+        # sf = of
+        if ($_sf_flag == $_of_flag)
+	        echo \033[31m
+	        printf "  Jump is taken (s=o)"
+        else
+	        echo \033[31m
+	        printf "  Jump is NOT taken (s!=o)"
+        end 
+    end
+    ## opcode: 0x7C: JL, JNGE (jump if SF != OF)
+    ## opcode: 0x0F8C: JNGE, JL (jump if SF != OF)
+    if ( ($_byte1 == 0x7C) || ($_byte1 == 0x0F && $_byte2 == 0x8C) )
+        # sf != of
+        if ($_sf_flag != $_of_flag)
+	        echo \033[31m
+	        printf "  Jump is taken (s!=o)"
+        else
+    		echo \033[31m
+	        printf "  Jump is NOT taken (s=o)"
+        end 
+    end
+    ## opcode 0x7E: JLE, JNG (jump if ZF = 1 or SF != OF)
+    ## opcode 0x0F8E: JNG, JLE (jump if ZF = 1 or SF != OF)
+    if ( ($_byte1 == 0x7E) || ($_byte1 == 0x0F && $_byte2 == 0x8E) )
+        # zf = 1 or sf != of
+    	if (($_zf_flag == 1) || ($_sf_flag != $_of_flag))
+        	echo \033[31m
+	        printf "  Jump is taken (zf=1 or sf!=of)"
+        else
+	        echo \033[31m
+        	printf "  Jump is NOT taken (zf!=1 or sf=of)"
+        end 
+    end
+    ## opcode 0x75: JNE, JNZ (jump if ZF = 0)
+    ## opcode 0x0F85: JNE, JNZ (jump if ZF = 0)
+    if ( ($_byte1 == 0x75) || ($_byte1 == 0x0F && $_byte2 == 0x85) )
+        # ZF = 0
+        if ($_zf_flag == 0)
+	        echo \033[31m
+    		printf "  Jump is taken (z=0)"
+        else
+            # ZF = 1
+	        echo \033[31m
+        	printf "  Jump is NOT taken (z!=0)"
+        end 
+    end
+    ## opcode 0x71: JNO (OF = 0)
+    ## opcode 0x0F81: JNO (OF = 0)
+    if ( ($_byte1 == 0x71) || ($_byte1 == 0x0F && $_byte2 == 0x81) )
+        # OF = 0
+        if ($_of_flag == 0)
+	        echo \033[31m
+        	printf "  Jump is taken (o=0)"
+        else
+            # OF != 0
+       		echo \033[31m
+       		printf "  Jump is NOT taken (o!=0)"
+      	end 
+    end
+    ## opcode 0x7B: JNP, JPO (jump if PF = 0)
+    ## opcode 0x0F8B: JPO (jump if PF = 0)
+    if ( ($_byte1 == 0x7B) || ($_byte1 == 0x0F && $_byte2 == 0x8B) )
+         # PF = 0
+      	if ($_pf_flag == 0)
+       		echo \033[31m
+       		printf "  Jump is NOT taken (p=0)"
+      	else
+            # PF != 0
+       		echo \033[31m
+	        printf "  Jump is taken (p!=0)"
+      	end 
+    end
+    ## opcode 0x79: JNS (jump if SF = 0)
+    ## opcode 0x0F89: JNS (jump if SF = 0)
+    if ( ($_byte1 == 0x79) || ($_byte1 == 0x0F && $_byte2 == 0x89) )
+         # SF = 0
+      	if ($_sf_flag == 0)
+	        echo \033[31m
+       		printf "  Jump is taken (s=0)"
+      	else
+             # SF != 0
+       		echo \033[31m
+	        printf "  Jump is NOT taken (s!=0)"
+      	end 
+    end
+    ## opcode 0x70: JO (jump if OF=1)
+    ## opcode 0x0F80: JO (jump if OF=1)
+    if ( ($_byte1 == 0x70) || ($_byte1 == 0x0F && $_byte2 == 0x80) )
+         # OF = 1
+    	if ($_of_flag == 1)
+    		echo \033[31m
+	        printf "  Jump is taken (o=1)"
+      	else
+            # OF != 1
+       		echo \033[31m
+	        printf "  Jump is NOT taken (o!=1)"
+      	end 
+    end
+    ## opcode 0x7A: JP, JPE (jump if PF=1)
+    ## opcode 0x0F8A: JP, JPE (jump if PF=1)
+    if ( ($_byte1 == 0x7A) || ($_byte1 == 0x0F && $_byte2 == 0x8A) )
+        # PF = 1
+      	if ($_pf_flag == 1)
+	        echo \033[31m
+       		printf "  Jump is taken (p=1)"
+      	else
+             # PF = 0
+       		echo \033[31m
+	        printf "  Jump is NOT taken (p!=1)"
+      	end 
+    end
+    ## opcode 0x78: JS (jump if SF=1)
+    ## opcode 0x0F88: JS (jump if SF=1)
+    if ( ($_byte1 == 0x78) || ($_byte1 == 0x0F && $_byte2 == 0x88) )
+         # SF = 1
+    	if ($_sf_flag == 1)
+	        echo \033[31m
+       		printf "  Jump is taken (s=1)"
+      	else
+             # SF != 1
+       		echo \033[31m
+       		printf "  Jump is NOT taken (s!=1)"
+      	end 
+    end
+    printf "\n"
+end
+document dumpjump
+Display if conditional jump will be taken or not.
+end
+
+# __________hex/ascii dump an address_________
+define ascii_char
+    if $argc != 1
+        help ascii_char
+    else
+        # thanks elaine :)
+        set $_c = *(unsigned char *)($arg0)
+        if ($_c < 0x20 || $_c > 0x7E)
+            printf "."
+        else
+            printf "%c", $_c
+        end
+    end
+end
+document ascii_char
+Print ASCII value of byte at address ADDR.
+Print "." if the value is unprintable.
+Usage: ascii_char ADDR
+end
+
+
+define hex_quad
+    if $argc != 1
+        help hex_quad
+    else
+        printf "%02X %02X %02X %02X %02X %02X %02X %02X", \
+               *(unsigned char*)($arg0), *(unsigned char*)($arg0 + 1),     \
+               *(unsigned char*)($arg0 + 2), *(unsigned char*)($arg0 + 3), \
+               *(unsigned char*)($arg0 + 4), *(unsigned char*)($arg0 + 5), \
+               *(unsigned char*)($arg0 + 6), *(unsigned char*)($arg0 + 7)
+    end
+end
+document hex_quad
+Print eight hexadecimal bytes starting at address ADDR.
+Usage: hex_quad ADDR
+end
+
+
+define hexdump
+    if $argc == 1
+        hexdump_aux $arg0
+	else
+		if $argc == 2
+			set $_count = 0
+			while ($_count < $arg1)
+				set $_i = ($_count * 0x10)
+				hexdump_aux $data_addr+$_i
+				set $_count++
+			end
+		else
+			help hexdump
+		end
+    end
+end
+document hexdump
+Display a 16-byte hex/ASCII dump of memory starting at address ADDR.
+Optional parameter is the number of lines to display if you want more than one. 
+Usage: hexdump ADDR [nr lines]
+end
+
+
+define hexdump_aux
+    if $argc != 1
+        help hexdump_aux
+    else
+        echo \033[1m
+        printf "0x%08X : ", $arg0
+        echo \033[0m
+        hex_quad $arg0
+        echo \033[1m
+        printf " - "
+        echo \033[0m
+        hex_quad $arg0+8
+        printf " "
+        echo \033[1m
+        ascii_char $arg0+0x0
+        ascii_char $arg0+0x1
+        ascii_char $arg0+0x2
+        ascii_char $arg0+0x3
+        ascii_char $arg0+0x4
+        ascii_char $arg0+0x5
+        ascii_char $arg0+0x6
+        ascii_char $arg0+0x7
+        ascii_char $arg0+0x8
+        ascii_char $arg0+0x9
+        ascii_char $arg0+0xA
+        ascii_char $arg0+0xB
+        ascii_char $arg0+0xC
+        ascii_char $arg0+0xD
+        ascii_char $arg0+0xE
+        ascii_char $arg0+0xF
+        echo \033[0m
+        printf "\n"
+    end
+end
+document hexdump_aux
+Display a 16-byte hex/ASCII dump of memory at address ADDR.
+Usage: hexdump_aux ADDR
+end
+
+# _______________process control______________
+define n
+	if $argc > 0
+        help n
+    end
+    
+    set $_nextaddress = 0
+    
+    ## we know that an opcode starting by 0xE8 has a fixed length
+    set $_byte1 = *(unsigned char *)(($cs << 4) + $pc)
+    set $_byte2 = *(unsigned char *)(($cs << 4) + ($pc + 1))
+    set $_byte3 = *(unsigned char *)(($cs << 4) + ($pc + 2))
+    
+    
+    if ($_byte1 == 0xE8)
+    	# Procedure Call
+    	# TOBEVERIFIED!!! if it's a 0xE8 opcode, the total instruction size will be 3 bytes
+        set $_nextaddress = $pc + 0x3
+    end
+    
+    if ($_byte1 == 0xCD)
+    	# Bios interrupt
+    	# TOBEVERIFIED!!! if it's a 0xCD opcode, the total instruction size will be 2 bytes
+        set $_nextaddress = $pc + 0x2
+    end
+    
+    if ($_nextaddress == 0)
+    	nexti
+    else
+    	printf "Jumping to: 0x%08X" , $_nextaddress
+    	tbreak  *$_nextaddress
+    	continue
+    end
+    context
+end
+document n
+Step one instruction, but proceed through subroutine calls.
+Usage: n 
+end
+
+define s
+    if $argc == 0
+        stepi
+    end
+    if $argc == 1
+        stepi $arg0
+    end
+    if $argc > 1
+        help go
+    end
+    
+    context
+end
+document s
+Step one instruction exactly.
+If NUM is given, then repeat it NUM times or till program stops.
+This is alias for stepi.
+Usage: s <NUM>
+end
+
+# ____________________misc____________________
+
+define cls
+    shell clear
+end
+document cls
+Clear screen.
+end
+
+define dump_hexfile
+    dump ihex memory $arg0 $arg1 $arg2
+end
+document dump_hexfile
+Write a range of memory to a file in Intel ihex (hexdump) format.
+The range is specified by ADDR1 and ADDR2 addresses.
+Usage: dump_hexfile FILENAME ADDR1 ADDR2
+end
+
+
+define dump_binfile
+    dump memory $arg0 $arg1 $arg2
+end
+document dump_binfile
+Write a range of memory to a binary file.
+The range is specified by ADDR1 and ADDR2 addresses.
+Usage: dump_binfile FILENAME ADDR1 ADDR2
+end
+
+define dd
+	#set $COUNT = 0x10
+	
+	if $argc == 1
+		set $CURRENT_ADDR = $arg0
+	end
+	
+	if $argc == 2
+		set $CURRENT_ADDR = $arg0
+		set $CURRENT_COUNT = $arg1
+	end
+	
+	if $argc > 2
+		help
+	else
+		set $_count = 0
+    	while ($_count < $CURRENT_COUNT)
+    		hexdump $CURRENT_ADDR
+        	set $CURRENT_ADDR = $CURRENT_ADDR + 0x10
+        	set $_count++
+    	end
+    end
+end
+document dd
+Display COUNT lines of a hex dump of address starting at ADDR.
+Preserves ADDR and COUNT
+Usage: dd ADDR COUNT
+end
+
+define dm
+	 #0 args - Use default values
+	 #1 args - Display MB from arg1 
+	 #2 args - Display arg2 MBs from arg 1
+	set $ADDR1 = 0
+	set $ADDR2 = 0xFFFFF
+	
+	if $argc == 1
+		set $ADDR1 = $arg0
+		set $ADDR2 = ($arg0 + 0xFFFFF)
+	end 
+	
+	if $argc == 2
+		set $ADDR1 = $arg0
+		set $ADDR2 = ($arg0 + ($arg1 * 0xFFFFF))	
+	end
+	
+	if $argc > 2 
+		help dm
+	else
+		printf "Opening memory range 0x%08X to 0x%08X with hex editor.\n" , $ADDR1, $ADDR2
+		dump_binfile delme.bin $ADDR1 $ADDR2
+		shell bless delme.bin; rm delme.bin
+	end
+end
+document dm
+Dump a specified amount of MB to a hexeditor (bless).
+The range is specified starting at ADDR1 (default 0x0) address for COUNT (default 1) MBs.
+Usage: dm ADDR1 COUNT
+end
+
+
+define dk
+	 #0 args - Use default values
+	 #1 args - Display MB from arg1 
+	 #2 args - Display arg2 MBs from arg 1
+	set $ADDR1 = 0
+	set $ADDR2 = 0xFFFF
+	
+	if $argc == 1
+		set $ADDR1 = $arg0
+		set $ADDR2 = ($arg0 + 0xFFFF)
+	end 
+	
+	if $argc == 2
+		set $ADDR1 = $arg0
+		set $ADDR2 = ($arg0 + ($arg1 * 0xFFFF))	
+	end
+	
+	if $argc > 2 
+		help dk
+	else
+		printf "Opening memory range 0x%08X to 0x%08X with hex editor.\n" , $ADDR1, $ADDR2
+		dump_binfile delme.bin $ADDR1 $ADDR2
+		shell bless delme.bin; rm delme.bin
+	end
+end
+document dk
+Dump a specified amount of KB to a hexeditor (bless).
+The range is specified starting at ADDR1 (default 0x0) address for COUNT (default 1) KBs.
+Usage: dk ADDR1 COUNT
+end
+
+# _____________bluefire specific commands_____________
+set archi i386:x86-64
+
+#connect to already running bochs
+target remote localhost:1234
+
+#set a brake at the beginnging of the bootloader 
+bp *0x7c00
+
+#continue until then
+context
+
+#Notes
+#si, ni x/4i
+#TODO
+
+# POSSIBLE TODO
+# Assemble into mem.
+# Disassmble
+# Patching memory.

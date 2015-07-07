@@ -19,54 +19,55 @@
     19                                  ;***********************************************************
     20                                  org 0x8000
     21                                  
-    22 00000000 EB17                    start:	jmp main	;jump over to first byte of executable code
+    22 00000000 EB20                    start:	jmp main	;jump over to first byte of executable code
     23                                  
     24                                  ;0x0A ascii for next line.  0x0D cursor to the beggining of the line.
-    25 00000002 0D0A4C6F6164696E67-     cst_msg_loading 			DB 0x0D, 0x0A, "Loading Stage 2...", 0x0D, 0x0A, 0x00
-    26 0000000B 20537461676520322E-
-    27 00000014 2E2E0D0A00         
-    28                                  
-    29                                  main:
-    30 00000019 FA                      	cli				; clear interrupts
-    31                                  
-    32                                  ;***********************************************************
-    33                                  ;	Set the segment registers back to 0x0000 as aformentioned
-    34                                  ;	As we are now using the org directive to hard code the address offsets
-    35                                  ;	The stack is staying at 000F:FFFF and should be empty at this point
-    36                                  ;	but we set it again to be safe
-    37                                  ;***********************************************************
-    38 0000001A 31C0                    	xor		ax, ax			; null segments
-    39 0000001C 8ED8                    	mov		ds, ax
-    40 0000001E 8EC0                    	mov		es, ax
-    41                                  
-    42 00000020 B80090                  	mov 	ax, 0x9000
-    43 00000023 8ED0                    	mov		ss, ax
-    44 00000025 BCFFFF                  	mov		sp, 0xFFFF
-    45 00000028 FB                      	sti						; restore interupts we need them before we can make any bios call
-    46                                  
-    47                                  ;***********************************************************
-    48                                  ;	Display welcome message
-    49                                  ;***********************************************************
-    50 00000029 BE[0200]                	mov		si, cst_msg_loading
-    51 0000002C E80200                  	call	print
-    52                                  
-    53                                  end:
-    54 0000002F EBFE                    	jmp 	end				;stop here for now
-    55                                  
+    25 00000002 0D0A48656C6C6F2077-     cst_msg_loading 			DB 0x0D, 0x0A, "Hello world from Stage 2...", 0x0D, 0x0A, 0x00
+    26 0000000B 6F726C642066726F6D-
+    27 00000014 20537461676520322E-
+    28 0000001D 2E2E0D0A00         
+    29                                  
+    30                                  main:
+    31 00000022 FA                      	cli				; clear interrupts
+    32                                  
+    33                                  ;***********************************************************
+    34                                  ;	Set the segment registers back to 0x0000 as aformentioned
+    35                                  ;	As we are now using the org directive to hard code the address offsets
+    36                                  ;	The stack is staying at 000F:FFFF and should be empty at this point
+    37                                  ;	but we set it again to be safe
+    38                                  ;***********************************************************
+    39 00000023 31C0                    	xor		ax, ax			; null segments
+    40 00000025 8ED8                    	mov		ds, ax
+    41 00000027 8EC0                    	mov		es, ax
+    42                                  
+    43 00000029 B80090                  	mov 	ax, 0x9000
+    44 0000002C 8ED0                    	mov		ss, ax
+    45 0000002E BCFFFF                  	mov		sp, 0xFFFF
+    46 00000031 FB                      	sti						; restore interupts we need them before we can make any bios call
+    47                                  
+    48                                  ;***********************************************************
+    49                                  ;	Display welcome message
+    50                                  ;***********************************************************
+    51 00000032 BE[0200]                	mov		si, cst_msg_loading
+    52 00000035 E80200                  	call	print
+    53                                  
+    54                                  end:
+    55 00000038 EBFE                    	jmp 	end				;stop here for now
     56                                  
-    57                                  ;***********************************************************
-    58                                  ;	print:
-    59                                  ;	- Prints a string
-    60                                  ;	assumes
-    61                                  ;	- address of first character is in DS:SI
-    62                                  ;	last character is /0 (NULL)
-    63                                  ;***********************************************************
-    64                                  print:
-    65 00000031 AC                      	lodsb					; Load DS:SI into AL for proccessing
-    66 00000032 08C0                    	or		al, al 			; this can only set the zero flag if AL is NULL
-    67 00000034 7406                    	jz		end_print		; if zero flag is set
-    68 00000036 B40E                    	mov		ah, 0eh			; Bios paramaeter
-    69 00000038 CD10                    	int		10h				; Bios function
-    70 0000003A EBF5                    	jmp		print			; repeat until null terminator is found.
-    71                                  end_print:
-    72 0000003C C3                      	ret
+    57                                  
+    58                                  ;***********************************************************
+    59                                  ;	print:
+    60                                  ;	- Prints a string
+    61                                  ;	assumes
+    62                                  ;	- address of first character is in DS:SI
+    63                                  ;	last character is /0 (NULL)
+    64                                  ;***********************************************************
+    65                                  print:
+    66 0000003A AC                      	lodsb					; Load DS:SI into AL for proccessing
+    67 0000003B 08C0                    	or		al, al 			; this can only set the zero flag if AL is NULL
+    68 0000003D 7406                    	jz		end_print		; if zero flag is set
+    69 0000003F B40E                    	mov		ah, 0eh			; Bios paramaeter
+    70 00000041 CD10                    	int		10h				; Bios function
+    71 00000043 EBF5                    	jmp		print			; repeat until null terminator is found.
+    72                                  end_print:
+    73 00000045 C3                      	ret
