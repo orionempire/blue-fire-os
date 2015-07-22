@@ -1079,8 +1079,9 @@ set archi i386:x86-64
 #connect to already running bochs
 target remote localhost:1234
 
-#set a brake at the beginnging of the bootloader 
+#set a brake at the beginnging and end of the bootloader 
 bp *0x7c00
+bp *0x7c71
 
 #continue until then
 context

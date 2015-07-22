@@ -20,7 +20,7 @@
     20                                  ;	to 0 and have all addresses in the code prefix with 0x8000
     21                                  ;***********************************************************
     22                                  org 0x8000
-    23 00000000 E91E01                  start:	jmp main	;jump over to first byte of executable code
+    23 00000000 E91D01                  start:	jmp main	;jump over to first byte of executable code
     24                                  
     25                                  %include "load_kernel.asm"
     26                              <1> ;**********************************************************
@@ -149,10 +149,10 @@
    149 00000080 5B                  <1> 		pop     bx
    150 00000081 58                  <1> 		pop     ax
    151 00000082 75D8                <1> 		jnz     .sector_loop 					; if less the 5 tries, attempt to read again
-   152 00000084 E8CF00              <1> 		call 	fatal_failure
+   152 00000084 E8CE00              <1> 		call 	fatal_failure
    153                              <1> 	.success:
-   154 00000087 BE[E700]            <1> 		mov     si, cst_msg_progress
-   155 0000008A E8D500              <1> 		call    print
+   154 00000087 BE[E600]            <1> 		mov     si, cst_msg_progress
+   155 0000008A E8D400              <1> 		call    print
    156 0000008D 59                  <1> 		pop     cx
    157 0000008E 5B                  <1> 		pop     bx
    158 0000008F 58                  <1> 		pop     ax
@@ -186,58 +186,58 @@
    186                                  
    187                                  ; ------ Mesages ------
    188                                  ;0x0A ascii for next line.  0x0D cursor to the beggining of the line.
-   189 000000B2 0D0A4C6F6164696E67-     cst_msg_loading 			DB 0x0D, 0x0A, "Loading Stage 2...", 0x0D, 0x0A, 0x00
-   190 000000BB 20537461676520322E-
-   191 000000C4 2E2E0D0A00         
-   192 000000C9 0D0A57656C6F636D65-     cst_msg_unreal	 			DB 0x0D, 0x0A, "Welocme to unreal mode...", 0x0D, 0x0A, 0x00
-   193 000000D2 20746F20756E726561-
-   194 000000DB 6C206D6F64652E2E2E-
-   195 000000E4 0D0A00             
+   189 000000B2 0D0A4C6F6164696E67-     cst_msg_loading 			DB 0x0D, 0x0A, "Loading kernel...", 0x0D, 0x0A, 0x00
+   190 000000BB 206B65726E656C2E2E-
+   191 000000C4 2E0D0A00           
+   192 000000C8 0D0A57656C6F636D65-     cst_msg_unreal	 			DB 0x0D, 0x0A, "Welocme to unreal mode...", 0x0D, 0x0A, 0x00
+   193 000000D1 20746F20756E726561-
+   194 000000DA 6C206D6F64652E2E2E-
+   195 000000E3 0D0A00             
    196                                  ; print one dot for every disk sector we load
-   197 000000E7 2E00                    cst_msg_progress 			DB ".", 0x00
+   197 000000E6 2E00                    cst_msg_progress 			DB ".", 0x00
    198                                  ; Fatal
-   199 000000E9 0D0A466174616C2046-     cst_msg_fatal_failure  		DB 0x0D, 0x0A, "Fatal Failure.....", 0x0A, 0x00
-   200 000000F2 61696C7572652E2E2E-
-   201 000000FB 2E2E0A00           
+   199 000000E8 0D0A466174616C2046-     cst_msg_fatal_failure  		DB 0x0D, 0x0A, "Fatal Failure.....", 0x0A, 0x00
+   200 000000F1 61696C7572652E2E2E-
+   201 000000FA 2E2E0A00           
    202                                  
    203                                  ;-------variables--------
    204                                  ; Currently set to 128 MB. If system memory changes it must be hard coded here
-   205 000000FF 00000008                var_system_memory_amount	DD	0x8000000
+   205 000000FE 00000008                var_system_memory_amount	DD	0x8000000
    206                                  ;***********************************************************
    207                                  ; Global Descriptor Register (GDR)
    208                                  ;***********************************************************
    209                                  gdtr:
-   210 00000103 1700                    	dw end_of_gdt - gdt_data - 1 	; limit (Size of GDT)
-   211 00000105 [09010000]              	dd gdt_data 			; base of GDT
+   210 00000102 1700                    	dw end_of_gdt - gdt_data - 1 	; limit (Size of GDT)
+   211 00000104 [08010000]              	dd gdt_data 			; base of GDT
    212                                  ;***********************************************************
    213                                  ; Global Descriptor Table (GDT)
    214                                  ;***********************************************************
    215                                  gdt_data:
    216                                  ; Dummy descriptor			; 0x00
-   217 00000109 0000                    	DW 0					; Limit low (bytes 15:0)
-   218 0000010B 0000                    	DW 0					; Base low (bytes 15:0)
-   219 0000010D 00                      	DB 0					; Base middle (bytes 23:16)
-   220 0000010E 00                      	DB 0					; Access byte (descriptor type)
-   221 0000010F 00                      	DB 0					; Flags, Limit middle (bytes 19:16)
-   222 00000110 00                      	DB 0					; Base high (bytes 31:24)
+   217 00000108 0000                    	DW 0					; Limit low (bytes 15:0)
+   218 0000010A 0000                    	DW 0					; Base low (bytes 15:0)
+   219 0000010C 00                      	DB 0					; Base middle (bytes 23:16)
+   220 0000010D 00                      	DB 0					; Access byte (descriptor type)
+   221 0000010E 00                      	DB 0					; Flags, Limit middle (bytes 19:16)
+   222 0000010F 00                      	DB 0					; Base high (bytes 31:24)
    223                                  ; boot code:				; code descriptor
-   224 00000111 FFFF                    	DW 0xFFFF           	; Limit (bytes 15:0)
-   225 00000113 0000                    	DW 0                	; Base  (bytes 15:0)
-   226 00000115 00                      	DB 0                	; Base  (bytes 23:16)
-   227 00000116 9A                      	DB 0b10011010        	; access  = Present, Ring 0, 1, Executable, Direction, Readable, Unaccessed (1,00,1,1110 -> 9A)
-   228 00000117 CF                      	DB 0b11001111        	; granularity = 4KB Granularity, 32bit segment size, reserved, reserved (AVL), Limit (bytes 19:16) (1,1,0,0,1111 - > CF)
-   229 00000118 00                      	DB 0                	; Base  (bytes 31:24)
+   224 00000110 FFFF                    	DW 0xFFFF           	; Limit (bytes 15:0)
+   225 00000112 0000                    	DW 0                	; Base  (bytes 15:0)
+   226 00000114 00                      	DB 0                	; Base  (bytes 23:16)
+   227 00000115 9A                      	DB 0b10011010        	; access  = Present, Ring 0, 1, Executable, Direction, Readable, Unaccessed (1,00,1,1110 -> 9A)
+   228 00000116 CF                      	DB 0b11001111        	; granularity = 4KB Granularity, 32bit segment size, reserved, reserved (AVL), Limit (bytes 19:16) (1,1,0,0,1111 - > CF)
+   229 00000117 00                      	DB 0                	; Base  (bytes 31:24)
    230                                  ; boot data:	        	; data descriptor
-   231 00000119 FFFF                    	DW 0xFFFF           	; Limit (bytes 15:0)
-   232 0000011B 0000                    	DW 0                	; Base  (bytes 15:0)
-   233 0000011D 00                      	DB 0                	; Base  (bytes 23:16)
-   234 0000011E 92                      	DB 0b10010010        	; access  = Present, Ring 0, 1, Not Executable, No Direction, Readable, Unaccessed (1,00,1,0010 -> 92)
-   235 0000011F CF                      	DB 0b11001111        	; granularity = 4KB Granularity, 32bit segment size, reserved, reserved (AVL), Limit (bytes 19:16) (1,1,0,0,1111 - > CF)
-   236 00000120 00                      	DB 0                	; Base  (bytes 31:24)
+   231 00000118 FFFF                    	DW 0xFFFF           	; Limit (bytes 15:0)
+   232 0000011A 0000                    	DW 0                	; Base  (bytes 15:0)
+   233 0000011C 00                      	DB 0                	; Base  (bytes 23:16)
+   234 0000011D 92                      	DB 0b10010010        	; access  = Present, Ring 0, 1, Not Executable, No Direction, Readable, Unaccessed (1,00,1,0010 -> 92)
+   235 0000011E CF                      	DB 0b11001111        	; granularity = 4KB Granularity, 32bit segment size, reserved, reserved (AVL), Limit (bytes 19:16) (1,1,0,0,1111 - > CF)
+   236 0000011F 00                      	DB 0                	; Base  (bytes 31:24)
    237                                  end_of_gdt:
    238                                  
    239                                  main:
-   240 00000121 FA                      	cli						; clear interrupts
+   240 00000120 FA                      	cli						; clear interrupts
    241                                  
    242                                  ;***********************************************************
    243                                  ;	Set the segment registers back to 0x0000 as aformentioned
@@ -245,22 +245,22 @@
    245                                  ;	The stack is staying at 000F:FFFF and should be empty at this point
    246                                  ;	but we set it again to be safe
    247                                  ;***********************************************************
-   248 00000122 31C0                    	xor		ax, ax			; null segments
-   249 00000124 8ED8                    	mov		ds, ax
-   250 00000126 8EC0                    	mov		es, ax
-   251 00000128 8EE0                    	mov		fs, ax
-   252 0000012A 8EE8                    	mov		gs, ax
+   248 00000121 31C0                    	xor		ax, ax			; null segments
+   249 00000123 8ED8                    	mov		ds, ax
+   250 00000125 8EC0                    	mov		es, ax
+   251 00000127 8EE0                    	mov		fs, ax
+   252 00000129 8EE8                    	mov		gs, ax
    253                                  
-   254 0000012C B80090                  	mov 	ax, 0x9000
-   255 0000012F 8ED0                    	mov		ss, ax
-   256 00000131 BCFFFF                  	mov		sp, 0xFFFF
-   257 00000134 FB                      	sti						; restore interupts we need them before we can make any bios call
+   254 0000012B B80090                  	mov 	ax, 0x9000
+   255 0000012E 8ED0                    	mov		ss, ax
+   256 00000130 BCFFFF                  	mov		sp, 0xFFFF
+   257 00000133 FB                      	sti						; restore interupts we need them before we can make any bios call
    258                                  
    259                                  ;***********************************************************
    260                                  ;	Display welcome message
    261                                  ;***********************************************************
-   262 00000135 BE[B200]                	mov		si, cst_msg_loading
-   263 00000138 E82700                  	call	print
+   262 00000134 BE[B200]                	mov		si, cst_msg_loading
+   263 00000137 E82700                  	call	print
    264                                  
    265                                  ;***********************************************************
    266                                  ;	Allow more than 1MB to be accessed
@@ -268,10 +268,10 @@
    268                                  ;	Enable Unreal mode
    269                                  ;
    270                                  ;***********************************************************
-   271 0000013B E83000                  	call 	enable_a20_keyboard_out
-   272 0000013E E86100                  	call 	enable_unreal_mode
-   273 00000141 BE[C900]                	mov		si, cst_msg_unreal
-   274 00000144 E81B00                  	call	print
+   271 0000013A E83000                  	call 	enable_a20_keyboard_out
+   272 0000013D E86100                  	call 	enable_unreal_mode
+   273 00000140 BE[C800]                	mov		si, cst_msg_unreal
+   274 00000143 E81B00                  	call	print
    275                                  
    276                                  
    277                                  ;***********************************************************
@@ -279,23 +279,23 @@
    279                                  ;	Ensure that floppy motor is off
    280                                  ;***********************************************************
    281                                  	; load the the kernel into memory
-   282 00000147 E8C9FE                  	call 	load_kernel
-   283 0000014A E88E00                  	call 	turn_off_floppy_motor
+   282 00000146 E8CAFE                  	call 	load_kernel
+   283 00000149 E88E00                  	call 	turn_off_floppy_motor
    284                                  
    285                                  	;interrupts will not be enabled again until protect mode
-   286 0000014D FA                      	cli
-   287 0000014E E87100                  	call	enable_protect_mode
-   288 00000151 EA[5C02]0800            	jmp		0x8:protect_mode_start		; jump to end of code using Descripter Table Addressing
+   286 0000014C FA                      	cli
+   287 0000014D E87100                  	call	enable_protect_mode
+   288 00000150 EA[5B02]0800            	jmp		0x8:protect_mode_start		; jump to end of code using Descripter Table Addressing
    289                                  
    290                                  ;***********************************************************
    291                                  ;		Halt Execution
    292                                  ;***********************************************************
    293                                  fatal_failure:
-   294 00000156 BE[E900]                	mov		si, cst_msg_fatal_failure
-   295 00000159 E80600                  	call 	print
-   296 0000015C B400                    	mov		ah,	0x00	; Both bios call use paramater 0
-   297 0000015E CD16                    	int		0x16		; BIOS 0x16 AH=0x00 -> await keypress
-   298 00000160 CD19                    	int		0x19		; BIOS 0x19 AH=0x00 ->warm boot computer
+   294 00000155 BE[E800]                	mov		si, cst_msg_fatal_failure
+   295 00000158 E80600                  	call 	print
+   296 0000015B B400                    	mov		ah,	0x00	; Both bios call use paramater 0
+   297 0000015D CD16                    	int		0x16		; BIOS 0x16 AH=0x00 -> await keypress
+   298 0000015F CD19                    	int		0x19		; BIOS 0x19 AH=0x00 ->warm boot computer
    299                                  
    300                                  
    301                                  ;***********************************************************
@@ -306,14 +306,14 @@
    306                                  ;	last character is /0 (NULL)
    307                                  ;***********************************************************
    308                                  print:
-   309 00000162 AC                      	lodsb					; Load DS:SI into AL for proccessing
-   310 00000163 08C0                    	or		al, al 			; this can only set the zero flag if AL is NULL
-   311 00000165 7406                    	jz		end_print		; if zero flag is set
-   312 00000167 B40E                    	mov		ah, 0eh			; Bios paramaeter
-   313 00000169 CD10                    	int		10h				; Bios function
-   314 0000016B EBF5                    	jmp		print			; repeat until null terminator is found.
+   309 00000161 AC                      	lodsb					; Load DS:SI into AL for proccessing
+   310 00000162 08C0                    	or		al, al 			; this can only set the zero flag if AL is NULL
+   311 00000164 7406                    	jz		end_print		; if zero flag is set
+   312 00000166 B40E                    	mov		ah, 0eh			; Bios paramaeter
+   313 00000168 CD10                    	int		10h				; Bios function
+   314 0000016A EBF5                    	jmp		print			; repeat until null terminator is found.
    315                                  end_print:
-   316 0000016D C3                      	ret
+   316 0000016C C3                      	ret
    317                                  
    318                                  ;***********************************************************
    319                                  ;		enable_a20_keyboard_out:
@@ -321,37 +321,37 @@
    321                                  ;		- Uses the keyboard controller out port method
    322                                  ;***********************************************************
    323                                  enable_a20_keyboard_out:
-   324 0000016E FA                      	cli						;stop interupts
-   325 0000016F 60                      	pusha					;save state of all registers
-   326 00000170 E85A00                  	call 	wait_for_clear_input
-   327 00000173 B0AD                    	mov     al,0xAD
-   328 00000175 E664                    	out     0x64,al			; disable the keyboard
-   329 00000177 E85300                  	call 	wait_for_clear_input
+   324 0000016D FA                      	cli						;stop interupts
+   325 0000016E 60                      	pusha					;save state of all registers
+   326 0000016F E85A00                  	call 	wait_for_clear_input
+   327 00000172 B0AD                    	mov     al,0xAD
+   328 00000174 E664                    	out     0x64,al			; disable the keyboard
+   329 00000176 E85300                  	call 	wait_for_clear_input
    330                                  
-   331 0000017A B0D0                    	mov     al,0xD0
-   332 0000017C E664                    	out     0x64,al			; tell controller to read key board output port
-   333 0000017E E85300                  	call    wait_for_clear_output
+   331 00000179 B0D0                    	mov     al,0xD0
+   332 0000017B E664                    	out     0x64,al			; tell controller to read key board output port
+   333 0000017D E85300                  	call    wait_for_clear_output
    334                                  
-   335 00000181 E460                    	in      al,0x60
-   336 00000183 6650                    	push    eax				; get output port data and store it
-   337 00000185 E84500                  	call 	wait_for_clear_input
+   335 00000180 E460                    	in      al,0x60
+   336 00000182 6650                    	push    eax				; get output port data and store it
+   337 00000184 E84500                  	call 	wait_for_clear_input
    338                                  
-   339 00000188 B0D1                    	mov     al,0xD1
-   340 0000018A E664                    	out     0x64,al			; tell controller to write to output port
-   341 0000018C E83E00                  	call 	wait_for_clear_input
+   339 00000187 B0D1                    	mov     al,0xD1
+   340 00000189 E664                    	out     0x64,al			; tell controller to write to output port
+   341 0000018B E83E00                  	call 	wait_for_clear_input
    342                                  
-   343 0000018F 6658                    	pop     eax
-   344 00000191 0C02                    	or      al,2			; set bit 1 (enable a20)
-   345 00000193 E660                    	out     0x60,al			; write out data back to the output port
+   343 0000018E 6658                    	pop     eax
+   344 00000190 0C02                    	or      al,2			; set bit 1 (enable a20)
+   345 00000192 E660                    	out     0x60,al			; write out data back to the output port
    346                                  
-   347 00000195 E83500                  	call 	wait_for_clear_input
-   348 00000198 B0AE                    	mov     al,0xAE			; enable the keyboard
-   349 0000019A E664                    	out     0x64,al
+   347 00000194 E83500                  	call 	wait_for_clear_input
+   348 00000197 B0AE                    	mov     al,0xAE			; enable the keyboard
+   349 00000199 E664                    	out     0x64,al
    350                                  
-   351 0000019C E82E00                  	call 	wait_for_clear_input
-   352 0000019F 61                      	popa
-   353 000001A0 FB                      	sti
-   354 000001A1 C3                      	ret
+   351 0000019B E82E00                  	call 	wait_for_clear_input
+   352 0000019E 61                      	popa
+   353 0000019F FB                      	sti
+   354 000001A0 C3                      	ret
    355                                  
    356                                  ;***********************************************************
    357                                  ;	note- we must set es and ds so that the later copy above 1mb works
@@ -359,53 +359,53 @@
    359                                  ;	restored.
    360                                  ;***********************************************************
    361                                  enable_unreal_mode:
-   362 000001A2 FA                      	cli
-   363 000001A3 1E                      	push 	ds
-   364 000001A4 06                      	push	es
+   362 000001A1 FA                      	cli
+   363 000001A2 1E                      	push 	ds
+   364 000001A3 06                      	push	es
    365                                  
-   366 000001A5 0F0116[0301]            	lgdt 	[gdtr]        	; load GDT into GDTR
-   367 000001AA 0F20C0                  	mov  	eax, cr0		; switch to pmode by
-   368 000001AD 0C01                    	or 		al,1			; set pmode bit
-   369 000001AF 0F22C0                  	mov  	cr0, eax
+   366 000001A4 0F0116[0201]            	lgdt 	[gdtr]        	; load GDT into GDTR
+   367 000001A9 0F20C0                  	mov  	eax, cr0		; switch to pmode by
+   368 000001AC 0C01                    	or 		al,1			; set pmode bit
+   369 000001AE 0F22C0                  	mov  	cr0, eax
    370                                  
-   371 000001B2 BB1000                  	mov  	bx, 0x10		; select descriptor 2
-   372 000001B5 8EDB                    	mov  	ds, bx			; 10h = 1 0000b
-   373 000001B7 8EC3                    	mov  	es, bx			; 10h = 1 0000b
+   371 000001B1 BB1000                  	mov  	bx, 0x10		; select descriptor 2
+   372 000001B4 8EDB                    	mov  	ds, bx			; 10h = 1 0000b
+   373 000001B6 8EC3                    	mov  	es, bx			; 10h = 1 0000b
    374                                  
-   375 000001B9 24FE                    	and 	al,0xFE			; back to realmode
-   376 000001BB 0F22C0                  	mov  	cr0, eax		; by toggling bit again
+   375 000001B8 24FE                    	and 	al,0xFE			; back to realmode
+   376 000001BA 0F22C0                  	mov  	cr0, eax		; by toggling bit again
    377                                  
-   378 000001BE 07                      	pop		es
-   379 000001BF 1F                      	pop 	ds				; get back old segment
-   380 000001C0 FB                      	sti
-   381 000001C1 C3                      	ret
+   378 000001BD 07                      	pop		es
+   379 000001BE 1F                      	pop 	ds				; get back old segment
+   380 000001BF FB                      	sti
+   381 000001C0 C3                      	ret
    382                                  
    383                                  enable_protect_mode:
-   384 000001C2 0F20C0                  	mov	eax, cr0		; set bit 0 in cr0--enter pmode
-   385 000001C5 6683C801                	or	eax, 1
-   386 000001C9 0F22C0                  	mov	cr0, eax
-   387 000001CC C3                      	ret
+   384 000001C1 0F20C0                  	mov	eax, cr0		; set bit 0 in cr0--enter pmode
+   385 000001C4 6683C801                	or	eax, 1
+   386 000001C8 0F22C0                  	mov	cr0, eax
+   387 000001CB C3                      	ret
    388                                  
    389                                  wait_for_clear_input:	;wait for a clear input buffer
-   390 000001CD E464                    	in      al,0x64
-   391 000001CF A802                    	test    al,2
-   392 000001D1 75FA                    	jnz     wait_for_clear_input
-   393 000001D3 C3                      	ret
+   390 000001CC E464                    	in      al,0x64
+   391 000001CE A802                    	test    al,2
+   392 000001D0 75FA                    	jnz     wait_for_clear_input
+   393 000001D2 C3                      	ret
    394                                  
    395                                  wait_for_clear_output:	;wait for a clear output buffer
-   396 000001D4 E464                    	in      al,0x64
-   397 000001D6 A801                    	test    al,1
-   398 000001D8 74FA                    	jz      wait_for_clear_output
-   399 000001DA C3                      	ret
+   396 000001D3 E464                    	in      al,0x64
+   397 000001D5 A801                    	test    al,1
+   398 000001D7 74FA                    	jz      wait_for_clear_output
+   399 000001D9 C3                      	ret
    400                                  
    401                                  ;***********************************************************
    402                                  ; Turn off flopy motor
    403                                  ;***********************************************************
    404                                  turn_off_floppy_motor:
-   405 000001DB BAF203                  	mov	dx, 0x03F2
-   406 000001DE B00C                    	mov	al, 0x0C
-   407 000001E0 EE                      	out	dx, al
-   408 000001E1 C3                      	ret
+   405 000001DA BAF203                  	mov	dx, 0x03F2
+   406 000001DD B00C                    	mov	al, 0x0C
+   407 000001DF EE                      	out	dx, al
+   408 000001E0 C3                      	ret
    409                                  
    410                                  ;***********************************************************
    411                                  ; Protect Mode starts here
@@ -470,11 +470,11 @@
    470                              <1> 	memset K_PDE, 0, PAGE_SIZE
    471                              <2> 
    472                              <2> 
-   473 000001E2 BF00100000          <2>  mov edi, %1
-   474 000001E7 B800000000          <2>  mov eax, %2
-   475 000001EC B900100000          <2>  mov ecx, %3
-   476 000001F1 FC                  <2>  cld
-   477 000001F2 F3AA                <2>  o32 a32 rep stosb
+   473 000001E1 BF00100000          <2>  mov edi, %1
+   474 000001E6 B800000000          <2>  mov eax, %2
+   475 000001EB B900100000          <2>  mov ecx, %3
+   476 000001F0 FC                  <2>  cld
+   477 000001F1 F3AA                <2>  o32 a32 rep stosb
    478                              <1> 
    479                              <1> ;***********************************************************
    480                              <1> ; Set up the first 4MB as identity mapped memory.
@@ -483,19 +483,19 @@
    483                              <1> ;***********************************************************
    484                              <1> 	;          Fill      :     With
    485                              <1> 	; -> 0x3000 - 0x3FFF : 0x0(0 - 3FF)003
-   486 000001F4 B803000000          <1> 	mov	eax, (P_PRESENT | P_WRITE)
-   487 000001F9 B900040000          <1> 	mov	ecx, 1024
-   488 000001FE BF00300000          <1> 	mov	edi, I_PTE
-   489 00000203 FC                  <1> 	cld
+   486 000001F3 B803000000          <1> 	mov	eax, (P_PRESENT | P_WRITE)
+   487 000001F8 B900040000          <1> 	mov	ecx, 1024
+   488 000001FD BF00300000          <1> 	mov	edi, I_PTE
+   489 00000202 FC                  <1> 	cld
    490                              <1> 	; Fill the page table.
    491                              <1> Map_I_PTE:
-   492 00000204 AB                  <1> 	stosd
-   493 00000205 0500100000          <1> 	add	eax, PAGE_SIZE
-   494 0000020A E2F8                <1> 	loop	Map_I_PTE
+   492 00000203 AB                  <1> 	stosd
+   493 00000204 0500100000          <1> 	add	eax, PAGE_SIZE
+   494 00000209 E2F8                <1> 	loop	Map_I_PTE
    495                              <1> 	; Write the filled page table in the page directory.
    496                              <1> 	; -> 0x1000 : 0x3007
-   497 0000020C C70500100000073000- <1> 	mov dword [K_PDE], I_PTE | P_PRESENT | P_WRITE | P_USER
-   498 00000215 00                  <1>
+   497 0000020B C70500100000073000- <1> 	mov dword [K_PDE], I_PTE | P_PRESENT | P_WRITE | P_USER
+   498 00000214 00                  <1>
    499                              <1> 
    500                              <1> ;***********************************************************
    501                              <1> ; Set up the kernel page table. The 4 MB starting at 1 MB as mapped to
@@ -505,18 +505,18 @@
    505                              <1> ;***********************************************************
    506                              <1> 	;          Fill      :     With
    507                              <1> 	; -> 0x2000 - 0x2FFF : 0x0(100 - 4FF)003
-   508 00000216 B803001000          <1> 	mov	eax, (K_PHYS_START | P_PRESENT | P_WRITE)
-   509 0000021B B900040000          <1> 	mov	ecx, 1024
-   510 00000220 BF00200000          <1> 	mov	edi, K_PTE
+   508 00000215 B803001000          <1> 	mov	eax, (K_PHYS_START | P_PRESENT | P_WRITE)
+   509 0000021A B900040000          <1> 	mov	ecx, 1024
+   510 0000021F BF00200000          <1> 	mov	edi, K_PTE
    511                              <1> 	; Fill the page table.
    512                              <1> Map_K_PTE:
-   513 00000225 AB                  <1> 	stosd
-   514 00000226 0500100000          <1> 	add	eax, PAGE_SIZE
-   515 0000022B E2F8                <1> 	loop	Map_K_PTE
+   513 00000224 AB                  <1> 	stosd
+   514 00000225 0500100000          <1> 	add	eax, PAGE_SIZE
+   515 0000022A E2F8                <1> 	loop	Map_K_PTE
    516                              <1> 	; Write the filled page table in the page directory.
    517                              <1> 	; -> 0x1C00 : 0x2007
-   518 0000022D C705001C0000072000- <1> 	mov dword [K_PDE+(K_VIR_START/(PAGE_SIZE*1024))*4], K_PTE | P_PRESENT | P_WRITE | P_USER
-   519 00000236 00                  <1>
+   518 0000022C C705001C0000072000- <1> 	mov dword [K_PDE+(K_VIR_START/(PAGE_SIZE*1024))*4], K_PTE | P_PRESENT | P_WRITE | P_USER
+   519 00000235 00                  <1>
    520                              <1> 
    521                              <1> 
    522                              <1> ;
@@ -528,56 +528,56 @@
    528                              <1> ; 0xffc00000-0xffc00fff -> 0x0000000000003000-0x0000000000003fff
    529                              <1> ;***********************************************************
    530                              <1> 	; -> 0x1FFC : 0x1007
-   531 00000237 C705FC1F0000071000- <1> 	mov dword [K_PDE+1023*4], K_PDE | P_PRESENT | P_WRITE | P_USER
-   532 00000240 00                  <1>
+   531 00000236 C705FC1F0000071000- <1> 	mov dword [K_PDE+1023*4], K_PDE | P_PRESENT | P_WRITE | P_USER
+   532 0000023F 00                  <1>
    533                              <1> 
    534                              <1> ;***********************************************************
    535                              <1> ; Enable paging
    536                              <1> ;***********************************************************
    537                              <1> 	; Setup the Page Directory Base Register
-   538 00000241 B800100000          <1> 	mov	eax, K_PDE
-   539 00000246 0F22D8              <1> 	mov	cr3, eax
+   538 00000240 B800100000          <1> 	mov	eax, K_PDE
+   539 00000245 0F22D8              <1> 	mov	cr3, eax
    540                              <1> 	; enable
-   541 00000249 0F20C0              <1> 	mov	eax, cr0
-   542 0000024C 0D00000180          <1> 	or	eax, 0x80010000 ; CR0.PG = CR0.WP = 1
-   543 00000251 0F22C0              <1> 	mov	cr0, eax
+   541 00000248 0F20C0              <1> 	mov	eax, cr0
+   542 0000024B 0D00000180          <1> 	or	eax, 0x80010000 ; CR0.PG = CR0.WP = 1
+   543 00000250 0F22C0              <1> 	mov	cr0, eax
    544                              <1> 
    545                              <1> ; The registers are set on jump so a self jump is executed
-   546 00000254 EA[5B020000]0800    <1> 	jmp	0x08:paging_enabled
+   546 00000253 EA[5A020000]0800    <1> 	jmp	0x08:paging_enabled
    547                              <1> 
    548                              <1> paging_enabled:
    549                              <1> 
-   550 0000025B C3                  <1> 	ret
+   550 0000025A C3                  <1> 	ret
    551                                  
    552                                  protect_mode_start:
    553                                  ;***********************************************************
    554                                  ;   Set segment registers
    555                                  ;***********************************************************
-   556 0000025C 66B81000                	mov	ax, 0x10	; set data segments to data selector
-   557 00000260 8ED8                    	mov	ds, ax
-   558 00000262 8ED0                    	mov	ss, ax
-   559 00000264 8EC0                    	mov	es, ax
-   560 00000266 BCFFFF0900              	mov	esp, 9FFFFh		; Reset the stack, same place, new address mode
+   556 0000025B 66B81000                	mov	ax, 0x10	; set data segments to data selector
+   557 0000025F 8ED8                    	mov	ds, ax
+   558 00000261 8ED0                    	mov	ss, ax
+   559 00000263 8EC0                    	mov	es, ax
+   560 00000265 BCFFFF0900              	mov	esp, 9FFFFh		; Reset the stack, same place, new address mode
    561                                  
-   562 0000026B E872FFFFFF              	call setup_and_enable_paging
+   562 0000026A E872FFFFFF              	call setup_and_enable_paging
    563                                  
    564                                  ;***********************************************************
    565                                  ;   Execute Kernel
    566                                  ;***********************************************************
    567                                  	; Pass amount of system memory hard coded for now but
    568                                  	; will be calulated later.
-   569 00000270 FF35[FF000000]          	push DWORD [var_system_memory_amount]
+   569 0000026F FF35[FE000000]          	push DWORD [var_system_memory_amount]
    570                                  	; we have to save the address in case the kernel
    571                                  	; executes a ret with the proper stack
-   572 00000276 68[82020000]            	push fatal_bootstrap_return
+   572 00000275 68[81020000]            	push fatal_bootstrap_return
    573                                  	; jump to our kernel! It should be at 0xC0000000
-   574 0000027B EA000000C00800          	jmp	0x8:0xC0000000
+   574 0000027A EA000000C00800          	jmp	0x8:0xC0000000
    575                                  
    576                                  ;***********************************************************
    577                                  ;	If we make it here then kernel returned with out permission
    578                                  ;   Stop execution and halt
    579                                  ;***********************************************************
    580                                  fatal_bootstrap_return:
-   581 00000282 FA                      	cli
-   582 00000283 F4                      	hlt
+   581 00000281 FA                      	cli
+   582 00000282 F4                      	hlt
    583                                  

@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<?fileVersion 4.0.0?>
-
-<cproject storage_type_id="org.eclipse.cdt.core.XmlProjectDescriptionStorage">
+<?fileVersion 4.0.0?><cproject storage_type_id="org.eclipse.cdt.core.XmlProjectDescriptionStorage">
 	<storageModule moduleId="org.eclipse.cdt.core.settings">
 		<buildSystem id="preference.org.eclipse.cdt.managedbuilder.core.configurationDataProvider.167090444">
 			<storageModule id="preference.org.eclipse.cdt.managedbuilder.core.configurationDataProvider.167090444" moduleId="org.eclipse.cdt.core.settings"/>
@@ -45,4 +43,5 @@
 		<project id="blue_fire_os.null.1801979054" name="blue_fire_os"/>
 	</storageModule>
 	<storageModule moduleId="scannerConfiguration"/>
+	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
 </cproject>

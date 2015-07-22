@@ -35,8 +35,8 @@
     35 00000000 EB3D                    start: jmp main			; Jump to first bytes of executable code.
     36                                  
     37                                  ; 0x0A ascii for next line.  0x0D cursor to the beggining of the line.
-    38 00000002 0D0A4C6F6164696E67-     cst_msg_loading 			DB 0x0D, 0x0A, "Loading Stage 1...", 0x0D, 0x0A, 0x00
-    39 0000000B 20537461676520312E-
+    38 00000002 0D0A4C6F6164696E67-     cst_msg_loading 			DB 0x0D, 0x0A, "Loading Stage 2...", 0x0D, 0x0A, 0x00
+    39 0000000B 20537461676520322E-
     40 00000014 2E2E0D0A00         
     41                                  ; print one dot for every disk sector we load
     42 00000019 2E00                    cst_msg_progress 			DB ".", 0x00

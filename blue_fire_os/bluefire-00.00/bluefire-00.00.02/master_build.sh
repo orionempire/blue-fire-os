@@ -25,7 +25,7 @@ mkfs -v -t ext2 /dev/loop0 1400
 
 # write bootloader (stage1) to first sector (0)
 dd if=stage1/stage1.bin of=build/blue_fire_master.img conv=notrunc
-# write bootstrap (stage2) to the end of the disk
+# write bootstrap (stage2) to the end of the disk. There is no check for overflow.
 dd if=stage2/stage2.bin of=build/blue_fire_master.img bs=1024 seek=1400 conv=notrunc
 
 # --- Clean up ---
