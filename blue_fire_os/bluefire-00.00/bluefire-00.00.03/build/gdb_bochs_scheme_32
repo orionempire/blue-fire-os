@@ -361,27 +361,27 @@ define regx86
     echo \033[32m
     printf "CS:"
     echo \033[0m
-    printf " %08X  ", $cs
+    printf " %04X  ", $cs
     echo \033[32m
     printf "DS:"
     echo \033[0m
-    printf " %08X  ", $ds
+    printf " %04X  ", $ds
     echo \033[32m
     printf "ES:"
     echo \033[0m
-    printf " %08X  ", $es
+    printf " %04X  ", $es
     echo \033[32m
     printf "FS:"
     echo \033[0m
-    printf " %08X  ", $fs
+    printf " %04X  ", $fs
     echo \033[32m
     printf "GS:"
     echo \033[0m
-    printf " %08X  ", $gs
+    printf " %04X  ", $gs
     echo \033[32m
     printf "SS:"
     echo \033[0m
-    printf " %08X", $ss
+    printf " %04X", $ss
     echo \033[0m
 end
 document regx86
@@ -549,11 +549,12 @@ define pcdump
 	echo \033[34m\033[1m
     printf "----------------------------------------"
     printf "[program]"
-    printf "[0x%08X:0x%08X]", $cs, $pc
+    printf "[0x%04X:0x%08X]", $cs, $pc
     printf "----------------------\n"
 	echo \033[0m
     
-    set $pc_start = (($cs << 4) + $pc)
+    set $pc_start = $pc
+    #set $pc_start = (($cs << 4) + $pc)
 	
 	dd $pc_start $CONTEXTSIZE_CODE
 	
@@ -567,8 +568,8 @@ end
 
 define dumpjump
     ## grab the first two bytes from the instruction so we can determine the jump instruction
-    set $_byte1 = *(unsigned char *)(($cs << 4) + $pc)
-    set $_byte2 = *(unsigned char *)(($cs << 4) + ($pc + 1))
+    set $_byte1 = *(unsigned char *)($pc)
+    set $_byte2 = *(unsigned char *)($pc + 1)
     ## and now check what kind of jump we have (in case it's a jump instruction)
     ## I changed the flags routine to save the flag into a variable, so we don't need to repeat the process :) (search for "define flags")
 
@@ -902,20 +903,20 @@ define n
     set $_nextaddress = 0
     
     ## we know that an opcode starting by 0xE8 has a fixed length
-    set $_byte1 = *(unsigned char *)(($cs << 4) + $pc)
-    set $_byte2 = *(unsigned char *)(($cs << 4) + ($pc + 1))
-    set $_byte3 = *(unsigned char *)(($cs << 4) + ($pc + 2))
+    set $_byte1 = *(unsigned char *)($pc)
+    set $_byte2 = *(unsigned char *)($pc + 1)
+    set $_byte3 = *(unsigned char *)($pc + 2)
     
     
     if ($_byte1 == 0xE8)
     	# Procedure Call
-    	# TOBEVERIFIED!!! if it's a 0xE8 opcode, the total instruction size will be 3 bytes
-        set $_nextaddress = $pc + 0x3
+    	# if it's a 0xE8 opcode and in 32 bit mode, the total instruction size will be 5 bytes
+        set $_nextaddress = $pc + 0x5
     end
     
     if ($_byte1 == 0xCD)
     	# Bios interrupt
-    	# TOBEVERIFIED!!! if it's a 0xCD opcode, the total instruction size will be 2 bytes
+    	# TOBEVERIFIED!!! if it's a 0xCD opcode can only be called in real mode, the total instruction size will be 2 bytes
         set $_nextaddress = $pc + 0x2
     end
     
@@ -1047,16 +1048,16 @@ define dk
 	 #1 args - Display MB from arg1 
 	 #2 args - Display arg2 MBs from arg 1
 	set $ADDR1 = 0
-	set $ADDR2 = 0xFFFF
+	set $ADDR2 = 0x3FF
 	
 	if $argc == 1
 		set $ADDR1 = $arg0
-		set $ADDR2 = ($arg0 + 0xFFFF)
+		set $ADDR2 = ($arg0 + 0x3FF)
 	end 
 	
 	if $argc == 2
 		set $ADDR1 = $arg0
-		set $ADDR2 = ($arg0 + ($arg1 * 0xFFFF))	
+		set $ADDR2 = ($arg0 + ($arg1 * 0x3FF))	
 	end
 	
 	if $argc > 2 
@@ -1079,9 +1080,11 @@ set archi i386:x86-64
 #connect to already running bochs
 target remote localhost:1234
 
-#set a brake at the first time paging is enabled (in stage 2).
-bp*14d
-#bp *0x814d
+#set a brake at the start of protect mode (in stage 2 ->  jmp 0x8:protect_mode_start)(will need one skip in bios).
+bp *0x150
+# Working temp breakpoint
+bp *0x8265
+bp *0x81e1
 
 #continue until then
 context
