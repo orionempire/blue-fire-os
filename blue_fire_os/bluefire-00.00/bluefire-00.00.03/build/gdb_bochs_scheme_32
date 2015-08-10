@@ -1032,16 +1032,15 @@ define dm
 		help dm
 	else
 		printf "Opening memory range 0x%08X to 0x%08X with hex editor.\n" , $ADDR1, $ADDR2
-		dump_binfile delme.bin $ADDR1 $ADDR2
-		shell bless delme.bin; rm delme.bin
+		dump_binfile /tmp/bluefire_memory_dump.bin $ADDR1 $ADDR2
+		shell hexdump -C /tmp/bluefire_memory_dump.bin|less; 
 	end
 end
 document dm
-Dump a specified amount of MB to a hexeditor (bless).
+Dump a specified amount of MB to a hexeditor.
 The range is specified starting at ADDR1 (default 0x0) address for COUNT (default 1) MBs.
 Usage: dm ADDR1 COUNT
 end
-
 
 define dk
 	 #0 args - Use default values
@@ -1049,6 +1048,7 @@ define dk
 	 #2 args - Display arg2 MBs from arg 1
 	set $ADDR1 = 0
 	set $ADDR2 = 0x3FF
+	set $DUMP_NAME = ""
 	
 	if $argc == 1
 		set $ADDR1 = $arg0
@@ -1064,15 +1064,48 @@ define dk
 		help dk
 	else
 		printf "Opening memory range 0x%08X to 0x%08X with hex editor.\n" , $ADDR1, $ADDR2
-		dump_binfile delme.bin $ADDR1 $ADDR2
-		shell bless delme.bin; rm delme.bin
+		dump_binfile /tmp/bluefire_memory_dump.bin $ADDR1 $ADDR2
+		shell hexdump -C /tmp/bluefire_memory_dump.bin|less
+		
 	end
 end
 document dk
-Dump a specified amount of KB to a hexeditor (bless).
+Dump a specified amount of KB to a hexeditor.
 The range is specified starting at ADDR1 (default 0x0) address for COUNT (default 1) KBs.
 Usage: dk ADDR1 COUNT
 end
+
+define dmf
+	 #0 args - Use default values
+	 #1 args - Display MB from arg1 
+	 #2 args - Display arg2 MBs from arg 1
+	set $ADDR1 = 0
+	set $ADDR2 = 0xFFFFF
+	
+	if $argc == 1
+		set $ADDR1 = $arg0
+		set $ADDR2 = ($arg0 + 0xFFFFF)
+	end 
+	
+	if $argc == 2
+		set $ADDR1 = $arg0
+		set $ADDR2 = ($arg0 + ($arg1 * 0xFFFFF))	
+	end
+	
+	if $argc > 2 
+		help dm
+	else
+		printf "Writing 0x%08X to 0x%08X to file in tmp.\n" , $ADDR1, $ADDR2
+		dump_binfile /tmp/bluefire_memory_dump.bin $ADDR1 $ADDR2
+		shell cp /tmp/bluefire_memory_dump.bin /tmp/bluefire_memory_dump_`date +"%m-%d-%y--%k-%M-%S"`.bin
+	end
+end
+document dmf
+Dump a specified amount of MB /tmp.
+The range is specified starting at ADDR1 (default 0x0) address for COUNT (default 1) MBs.
+Usage: dmf ADDR1 COUNT
+end
+
 
 # _____________bluefire specific commands_____________
 set archi i386:x86-64
@@ -1083,8 +1116,7 @@ target remote localhost:1234
 #set a brake at the start of protect mode (in stage 2 ->  jmp 0x8:protect_mode_start)(will need one skip in bios).
 bp *0x150
 # Working temp breakpoint
-bp *0x8265
-bp *0x81e1
+bp *0x8250
 
 #continue until then
 context
