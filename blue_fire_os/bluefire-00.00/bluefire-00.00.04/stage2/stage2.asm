@@ -266,7 +266,8 @@ protect_mode_start:
 	; executes a ret with the proper stack. For now it will be thrown away
 	; as the kernel quickly removes identity mapping but, it is there for later use if needed.
 	push fatal_bootstrap_return
-	; jump to our kernel! It should be at physical address0x100000
+	; jump to our kernel! It should be at physical address 0x100000
+	; and will start with the code compliled in start.asm.
 	jmp	0x8:0x100000
 
 ;***********************************************************

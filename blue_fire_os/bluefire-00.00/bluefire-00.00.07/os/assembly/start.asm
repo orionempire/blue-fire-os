@@ -4,8 +4,25 @@
 ;	Author: David Davidson
 ;	Name: start.asm
 ;	Last update: 2012-01-10
-;	Purpose:
+;	Purpose: Run any assembly code that is needed before the kerenel
+;		c code starts.
 ;	Usage: Must be in protect mode.
+;***********************************************************
+
+;***********************************************************
+;	This is start.asm the first code to be run as part of the
+;	kernel. It has two purposes...
+;
+;	First, re-run certain critical code that was already run in stage 2.
+;	This might seem redundant but it is important for future growth as
+;	even if the bootloader changes, all of the absolute requirements
+; 	are self contained.
+;
+;	Second, implement any critical funtionality needed before
+;	the kernels c code starts running. An intitial example is that
+;	it moves the stack from lower memory, where it was needed for
+;	bootloader access, to a location higher in memory where it will
+;	only be usable by the kernel.
 ;***********************************************************
 
 ; Tell assembler to generate 32 bit byte code. Any code in this
