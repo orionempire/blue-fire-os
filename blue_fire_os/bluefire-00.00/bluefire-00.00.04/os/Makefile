@@ -26,14 +26,14 @@ OBJECTS := $(OBJECTS:.asm=.o)
 INCDIR	=./include
 LDSCRIPT=kernel.ld
 NASM	=nasm -f elf
-GCC		=gcc -c -Wall -nostdinc -fno-builtin -I$(INCDIR)
-LD		=ld -g -T $(LDSCRIPT) -nostdlib
+GCC		=gcc -c -Wall -nostdinc -fno-builtin -I$(INCDIR) -fno-stack-protector
+LD		=ld -m elf_i386 -g -T $(LDSCRIPT) -nostdlib
 		
 # The final product of our build will be a file called bf_kernel32.elf. Build a debug
 # listing from it then extract a simplified usable file called bf_kernel32.bin
 all: bf_kernel32.elf clean
 	objdump -D -l -x -t ../build/bf_kernel32.elf > ../build/bf_kernel32.dis
-	objcopy -I elf32-i386 -O binary ../build/bf_kernel32.elf ../build/bf_kernel32.bin
+	objcopy -I elf32-i386 -O binary ../build/bf_kernel32.elf ../build/blue_fire_kernel32.bin
 	
 bf_kernel32.elf: $(OBJECTS) 	
 	$(LD) -o ../build/$@ $(OBJECTS)

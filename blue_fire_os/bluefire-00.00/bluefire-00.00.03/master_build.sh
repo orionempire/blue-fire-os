@@ -9,8 +9,8 @@
 
 # --- Build the binaries ---
 echo "Compiling binaries...."
-nasm stage1/stage1.asm -o stage1/stage1.bin -l build/stage1.lst
-nasm stage2/stage2.asm -i stage2/ -o stage2/stage2.bin -l build/stage2.lst
+nasm stage1/stage1.asm -o stage1/stage1.bin -l build/blue_fire_stage1.lst
+nasm stage2/stage2.asm -i stage2/ -o stage2/stage2.bin -l build/blue_fire_stage2.lst
 # debug
 make -C os
 
@@ -39,5 +39,7 @@ sleep 1
 echo "Cleaning Up....."
 rm -f stage1/stage1.bin
 rm -f stage2/stage2.bin
+#rm -f build/bf_kernel*
+make -C os clean
 losetup -d /dev/loop0
 

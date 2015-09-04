@@ -14,17 +14,6 @@ if [ -e $BOCHS_CONFIG ]; then
     rm $BOCHS_CONFIG
 fi
 
-# check if an old log file exists, if so, remove it
-if [ -e $BOCHS_LOG ]; then
-    rm $BOCHS_LOG
-fi
-
-# remove the old log
-if [ -e $COM1_LOG ]; then
-    rm -f $COM1_LOG
-fi
-
-
 # create the config file for bochs
 CONFIG="megs:       128
 display_library: 	sdl
@@ -47,6 +36,21 @@ elif [ "$1" -eq "16" ] || [ "$1" -eq "32" ] || [ "$1" -eq "64" ] ; then
 	gnome-terminal --command="gdb -ix gdb_bochs_scheme_$1" --geometry=120x60
 else 
 	echo "usage"
+fi
+
+# check if an old config file exists, if so, remove it
+if [ -e $BOCHS_CONFIG ]; then
+    rm $BOCHS_CONFIG
+fi
+
+# check if an old log file exists, if so, remove it
+if [ -e $BOCHS_LOG ]; then
+    rm $BOCHS_LOG
+fi
+
+# remove the old log
+if [ -e $COM1_LOG ]; then
+    rm -f $COM1_LOG
 fi
 
 #rm $BOCHS_CONFIG

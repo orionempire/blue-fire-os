@@ -39,5 +39,6 @@ sleep 1
 echo "Cleaning Up....."
 rm -f stage1/stage1.bin
 rm -f stage2/stage2.bin
+rm -f build/bf_kernel*
 losetup -d /dev/loop0
 

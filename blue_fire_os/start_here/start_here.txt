@@ -32,3 +32,8 @@ BlueFire OS - Version 00 - From boot sector to shell.
 
 	  	
  Future -> Advance shell, DMA, Tasks, VFS, NULL driver,  system calls.		
+ 
+ 
+ 
+ #Notes
+ sudo apt-get install gcc-multilib

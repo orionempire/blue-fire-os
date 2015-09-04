@@ -15,7 +15,7 @@
 # ensure main must be positioned first
 SOURCES=kernel/main.c
 #then make sure to exclude main from the list and add every other source after it
-SOURCES+=$(shell ls kernel/*.c assembly/*.s |grep -vir "main")
+SOURCES+=$(shell ls kernel/*.c assembly/*.s |grep -vi "main")
 # add all locations other than primary to list of source files. 
 SOURCES+=$(shell ls kernel/drivers/video/*.c )	
 
@@ -26,13 +26,13 @@ OBJECTS := $(OBJECTS:.s=.o)
 INCDIR	=./include
 LDSCRIPT=kernel.ld
 NASM	=nasm -f elf
-GCC		=gcc -c -Wall -nostdinc -fno-builtin -I$(INCDIR)
-LD		=ld -g -T $(LDSCRIPT) -nostdlib
+GCC		=gcc -c -m32 -nostdlib -nostdinc -fno-builtin -fno-stack-protector -Wall -I$(INCDIR)
+LD		=ld -melf_i386 -g -T $(LDSCRIPT) -nostdlib
 		
 # The final product of our build will be a file called bf_kernel32.elf. Build a debug
 # listing from it then extract a simplified usable file called bf_kernel32.bin
 all: bf_kernel32.elf clean
-	objdump -D -l -x -t ../build/bf_kernel32.elf > ../build/bf_kernel32.dis
+	objdump -D -l -x -t ../build/bf_kernel32.elf > ../build/blue_fire_kernel32.lst
 	objcopy -I elf32-i386 -O binary ../build/bf_kernel32.elf ../build/bf_kernel32.bin
 	
 bf_kernel32.elf: $(OBJECTS) 	
@@ -44,7 +44,7 @@ bf_kernel32.elf: $(OBJECTS)
 
 # use gcc on all of the c language source files	
 %.o: %.c
-	$(GCC) -c -o $@ $<
+	$(GCC) -o $@ $<
 
 # Every file used by SOURCES must be accounted for here.
 clean:

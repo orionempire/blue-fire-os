@@ -432,14 +432,15 @@
    432                                  	; executes a ret with the proper stack. For now it will be thrown away
    433                                  	; as the kernel quickly removes identity mapping but, it is there for later use if needed.
    434 000001F7 68[03020000]            	push fatal_bootstrap_return
-   435                                  	; jump to our kernel! It should be at physical address0x100000
-   436 000001FC EA000010000800          	jmp	0x8:0x100000
-   437                                  
-   438                                  ;***********************************************************
-   439                                  ;	If we make it here then kernel returned with out permission
-   440                                  ;   Stop execution and halt
-   441                                  ;***********************************************************
-   442                                  fatal_bootstrap_return:
-   443 00000203 FA                      	cli
-   444 00000204 F4                      	hlt
-   445                                  
+   435                                  	; jump to our kernel! It should be at physical address 0x100000
+   436                                  	; and will start with the code compliled in start.asm.
+   437 000001FC EA000010000800          	jmp	0x8:0x100000
+   438                                  
+   439                                  ;***********************************************************
+   440                                  ;	If we make it here then kernel returned with out permission
+   441                                  ;   Stop execution and halt
+   442                                  ;***********************************************************
+   443                                  fatal_bootstrap_return:
+   444 00000203 FA                      	cli
+   445 00000204 F4                      	hlt
+   446                                  

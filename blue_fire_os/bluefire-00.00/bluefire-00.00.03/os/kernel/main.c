@@ -18,7 +18,7 @@ void k_main(int system_memory_amount) {
 
 	int var = 0;
 	volatile char *video=(volatile char*)0xB8000;
-	const char *string = "Hello_World_From_Kernel_Land";
+	const char *string = "Hello from kernel land!";
 
 	//Clear screen
 	for (var = 0; var < 4000; var++){
