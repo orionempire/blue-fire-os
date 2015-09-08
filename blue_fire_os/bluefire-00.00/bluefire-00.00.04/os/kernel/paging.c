@@ -180,7 +180,7 @@ void dump_dirty_pages() {
 
 	// Print all the dirty pages
 	kprintf("\nDirty pages:\n");
-	for (vir_addr = 0; vir_addr<VIRTUAL_PAGE_TABLE_MAP; vir_addr += PAGE_SIZE) {
+	for (vir_addr = 0; vir_addr < VIRTUAL_PAGE_TABLE_MAP; vir_addr += PAGE_SIZE) {
 		if (*ADDR_TO_PDE(vir_addr) != NULL) {
 			if ((*ADDR_TO_PTE(vir_addr) & P_DIRTY) == P_DIRTY) {
 				if (!(++display % 24)){

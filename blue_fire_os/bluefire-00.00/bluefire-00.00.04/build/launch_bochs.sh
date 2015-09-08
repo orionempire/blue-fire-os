@@ -14,16 +14,6 @@ if [ -e $BOCHS_CONFIG ]; then
     rm $BOCHS_CONFIG
 fi
 
-# check if an old log file exists, if so, remove it
-if [ -e $BOCHS_LOG ]; then
-    rm $BOCHS_LOG
-fi
-
-# remove the old log
-if [ -e $COM1_LOG ]; then
-    rm -f $COM1_LOG
-fi
-
 
 # create the config file for bochs
 CONFIG="megs:       128
@@ -49,6 +39,17 @@ else
 	echo "usage"
 fi
 
-#rm $BOCHS_CONFIG
+rm $BOCHS_CONFIG
+
+# check if an old log file exists, if so, remove it
+if [ -e $BOCHS_LOG ]; then
+    rm $BOCHS_LOG
+fi
+
+# remove the old log
+if [ -e $COM1_LOG ]; then
+    rm -f $COM1_LOG
+fi
+
 exit 0
 

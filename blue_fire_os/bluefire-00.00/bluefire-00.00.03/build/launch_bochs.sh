@@ -38,10 +38,7 @@ else
 	echo "usage"
 fi
 
-# check if an old config file exists, if so, remove it
-if [ -e $BOCHS_CONFIG ]; then
-    rm $BOCHS_CONFIG
-fi
+rm $BOCHS_CONFIG
 
 # check if an old log file exists, if so, remove it
 if [ -e $BOCHS_LOG ]; then
@@ -53,6 +50,5 @@ if [ -e $COM1_LOG ]; then
     rm -f $COM1_LOG
 fi
 
-#rm $BOCHS_CONFIG
 exit 0
 

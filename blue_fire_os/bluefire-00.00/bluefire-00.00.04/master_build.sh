@@ -9,8 +9,8 @@
 
 # --- Build the binaries ---
 echo "Compiling binaries...."
-nasm stage1/stage1.asm -o stage1/stage1.bin -l build/stage1.lst
-nasm stage2/stage2.asm -i stage2/ -o stage2/stage2.bin -l build/stage2.lst
+nasm stage1/stage1.asm -o stage1/stage1.bin -l build/blue_fire_stage1.lst
+nasm stage2/stage2.asm -i stage2/ -o stage2/stage2.bin -l build/blue_fire_stage2.lst
 # debug
 make -C os
 
@@ -29,7 +29,7 @@ mkfs -v -t ext2 /dev/loop0 400
 dd if=stage1/stage1.bin of=build/blue_fire_master.img conv=notrunc
 
 # write kernel to its reserved space (800 - 2800) on the disk
-dd if=build/bf_kernel32.bin of=build/blue_fire_master.img bs=512 seek=800 count=2000 conv=notrunc
+dd if=build/blue_fire_kernel32.bin of=build/blue_fire_master.img bs=512 seek=800 count=2000 conv=notrunc
 
 # write bootstrap (stage2) to the end of the disk (2800 - 2880)
 dd if=stage2/stage2.bin of=build/blue_fire_master.img bs=512 seek=2800 conv=notrunc
@@ -39,6 +39,7 @@ sleep 1
 echo "Cleaning Up....."
 rm -f stage1/stage1.bin
 rm -f stage2/stage2.bin
-rm -f build/bf_kernel*
+make -C os clean
+
 losetup -d /dev/loop0
 

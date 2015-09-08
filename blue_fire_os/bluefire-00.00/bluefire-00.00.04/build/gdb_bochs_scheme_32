@@ -1112,16 +1112,17 @@ set archi i386:x86-64
 #connect to already running bochs
 target remote localhost:1234
 
-#set a brake at the start of protect mode (in stage 2 ->  jmp 0x8:protect_mode_start)(will need one skip in bios).
-#bp *0x150
-
 #load kernels sysmbol table into GDB so that breakpoint names can be used. 
-file bf_kernel32.elf
+file blue_fire_kernel32.elf
+
+#set a break point at start.asm
+#bp *0x100000
 
 #Set a break at the start of the kernel. (at the beginning of main.c after start.asm)
 bp k_main
 
 #continue until then
+continue
 context
 
 #Notes
