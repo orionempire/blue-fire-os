@@ -106,6 +106,7 @@ s32int map_page(u32int vir_addr, u32int phys_addr, u16int attribs) {
 	if (*ADDR_TO_PDE(vir_addr) == NULL) {
 		// Create a new page table
 		PTE = (u32int *)(pop_frame() * PAGE_SIZE);
+
 		if (PTE == NULL) {
 			// Out of memory
 			enable_interrupts(flags);
