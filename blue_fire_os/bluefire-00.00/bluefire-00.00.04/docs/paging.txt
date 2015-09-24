@@ -1,0 +1,32 @@
+Virtual memory is expressed using 32 bits
+0x00000000 - 0xFFFFFFFF
+0,000,000,000 - 4,294,967,295
+
+Every 4 MB of virtual memory is expressed using a page table wih 1024, 4 byte entries
+(entries * page size) = represented memory
+0x400 * 0x1000 =  0x4000000
+1024 * 4096 = 4,194,304
+
+The Page directory is a array of 1024, 4 byte entries each pointing to a page table
+so it represents 0xFFFFFFFF (4GB) of addressable memory. Each entry represents 0x3FFFFF of addressable memory.
+0x400 * 0x3FFFFF = 0xFFFFFC00 			(Last page is 0xFFFFFC00 - 0x100000000) 
+1024 * 4,194,303 = 4,294,966,272 
+
+So to find which page directory entry 
+Divide the address by the size of a page table
+
+For example 
+0xC0000000 -> 0xC0000000 / 0x400000 = 0x300 
+
+Which is at
+0x300 * 0x004 byte -> 0xC00
+
+
+Some used entries
+|---------------|---------------|------------------------|
+| Index Number  |   Address		|    Virtual Address	 |
+|---------------|---------------|------------------------|
+|     0x000     |   0x000       |0x00000000 - 0x003FFFFF |
+|     0x300     |	0xC00		|0xC0000000 - 0xC03FFFFF |
+|	  0x3FF		|	0xFFC		|0xFFFFF000 - 0xFFFFFFFF |
+|---------------|---------------|------------------------|

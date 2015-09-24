@@ -1,0 +1,30 @@
+start.asm
+;***********************************************************
+;	This is start.asm the first code to be run as part of the
+;	kernel. It has two purposes...
+;
+;	First, re-run certain critical code that was already run in stage 2.
+;	This might seem redundant but it is important for future growth as
+;	even if the bootloader changes, all of the absolute requirements
+; 	are self contained.
+;
+;	Second, implement any critical funtionality needed before
+;	the kernels c code starts running. An intitial example is that
+;	it moves the stack from lower memory, where it was needed for
+;	bootloader access, to a location higher in memory where it will
+;	only be usable by the kernel.
+;***********************************************************
+%define K_PDE			0x1000	; Page directory
+%define K_PTE			0x2000	; Kernel page table #0 (4MB)
+%define I_PTE			0x3000	; First 4MB Identity-map page table
+
+; Write the filled page table in the page directory
+
+
+
+; (K_VIR_START/(PAGE_SIZE*1024))*4 => (0xC0000000/(0x409000)) * 4
+;mov dword [K_PAGE_DIR+(K_VIR_START/(PAGE_SIZE*1024))*4], K_PAGE_TAB | P_PRESENT | P_WRITE | P_USER
+;mov dword [K_PAGE_DIR+(0xC0000000/(0x1000*0x400))*4], K_PAGE_TAB | P_PRESENT | P_WRITE | P_USER
+;mov dword [K_PAGE_DIR+((0xC0000000/(0x400000))*0x4)], K_PAGE_TAB | P_PRESENT | P_WRITE | P_USER
+;mov dword [K_PAGE_DIR+((0x300)*0x4)], K_PAGE_TAB | P_PRESENT | P_WRITE | P_USER
+;mov dword [K_PAGE_DIR+1023*4], K_PAGE_DIR | P_PRESENT | P_WRITE | P_USER
