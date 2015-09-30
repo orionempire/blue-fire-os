@@ -149,6 +149,10 @@ Map_K_PAGE_TAB:
 ;*****************************************************************************
 ; Map page directory into itself. this allows no maintenance while ensuring
 ; page directory sanity, if it is manipulted as it acts as its own page table.
+; So memory location 0x1000 acts as THE page directory and as A page table.
+;*****************************************************************************
+; Since 0x1000, in its role as a page table
+; has 3 non-contigious entries it adds 3 non-contiguious ranges.
 ;*****************************************************************************
 ; 0xFFFFF000-0xFFFFFFFF -> 0x0000000000001000-0x0000000000001FFF
 ; 0xFFF00000-0xFFF00FFF -> 0x0000000000002000-0x0000000000002FFF

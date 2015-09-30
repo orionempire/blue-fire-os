@@ -16,6 +16,8 @@ extern u32int var_system_memory_amount, _start;
 // Control arrives here from assembly/start.asm
 void k_main() {
 
+	dbg("00.00.04 -> 0002")
+	dbg_brk();
 	initialize_video();
 
 	initialize_boot_console();
@@ -33,7 +35,6 @@ void k_main() {
 
 	initialize_paging() ;
 
-	dbg("00.00.04 -> 0001")
 	dbg_brk();
 	// We must never reach this point.
 	PANIC("End of k_main reached.");
