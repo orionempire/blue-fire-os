@@ -16,9 +16,12 @@
 **************************************************************************/
 // NOTE: Must be PAGE_SIZE*1024 aligned!!!
 #define VIRTUAL_KERNEL_START		0xC0000000
+
 // the first 16MB of physical memory are mapped here
-#define VIRTUAL_ACTUAL_MEMORY_START	0xEF000000
-#define VIRTUAL_ACTUAL_MEMORY_END	0xEF000000
+#define VIRTUAL_LOWER_MEMORY_START	0xE0000000
+#define VIRTUAL_LOWER_MEMORY_END	0xE1000000
+
+
 // the page tables are self mapped here.
 #define VIRTUAL_PAGE_TABLE_MAP		0xFFC00000
 //									(0xFFC00000	+ (0xFFC00000 		      / 1024 = 0x3FF000)) = 0xFFFFF000 (maps to 0x1000)

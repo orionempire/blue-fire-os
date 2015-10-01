@@ -14,35 +14,28 @@
 // Paging Constants
 #define PAGE_SIZE	4096U	//A unsigned c literal decimal
 
-#define P_PRESENT	0x01
-#define P_WRITE		0x02
-#define P_USER		0x04
-#define P_ACCESSED	0x20
-#define P_DIRTY		0x40
 
-/**************************************************************************
-*	Page look up routines
-*	To find a page the kernel, the kernel must get values from two tables.
-*	The first table is called the "Page Directory", each entry in it is called
-*	a "Page Directory Entry (PDE)".
-*	The Second table is called the "Page Table" which each entry called
-*	a "Page Table Entry (PTE)".
-*	To find to take a Virtual address and find find what physical address to read...
-*	First,
-*		the PDE is stored at 0x1000(P) which is addressable as 0xFFFFF000(V)
-*	Next
-*		the 4,294,967,295 bytes of addressable space is divided into 1,048,576 parts
-*		and the proper entry is read from the PDE.
-*		So for example... (0 = the first entry)  (C0000000 = the 3072 entry)
-*	Next
-*		the entry stored in that PDE is used as a physical address that represents the PTE
-*		which is a block of 1024 4 bytes entries. That entry is the upper 20 bits of the physical
-*		address while the lower 12 comes from the last bits of the virtual address.
-*
-*	The astute observer might note that this has turned one expensive memory operation in to 3.
-*	The answer is the Translation Lookaside Buffer (TLB). In reality the TLB usually has a
-*	99% hit rate but the downside is that it must be maintained.
-**************************************************************************/
+#define P_WRITE		0x02
+
+
+#define P_PRESENT			0x01
+#define P_WRITABLE			0x02
+#define P_USER				0x04
+#define P_WRITE_THROUGH		0x08
+#define P_CHACHE_DISABLED	0x10
+#define P_ACCESSED			0x20
+#define P_DIRTY				0x40	// PTE only. Set by MMU
+#define P_PAGE_SIZE			0x80	// PDE only. 0 for 4KB
+#define P_GLOBAL			0x100	// PTE only.
+
+// Returns which index entry of the Page Directory Table represents a virtual address
+// Every index entry represents 0x400000 (4MB of memory)
+#define VIRT_TO_PDE_IDX(addr)	( addr / 0x400000)
+
+// Returns the address of the page directory entry representing the specified address.
+// The page directory table was permanently mapped to 0xFFFFF000 by start.asm
+#define VIRT_TO_PDE_ADDR(addr)	(u32int *)(0xFFFFF000 + (VIRT_TO_PDE_IDX(addr) * 0x4))
+
 // Divides the addressable space into 4096 parts and returns which part (addr) is in.
 #define ADDR_TO_PDE(addr)	(u32int *)(VIRTUAL_PAGE_DIRECTORY_MAP + (((u32int) (addr) / (1024 * 1024))&(~0x3)))
 // Divides the 1,048,576 memory portion as calculated above in to 1024 parts and returns which part (addr) is in.

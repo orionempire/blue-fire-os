@@ -20,6 +20,8 @@
 ;	-- Re-setup paging so that
 ;		--- Lower mememory is identity mapped
 ;			(0-4MB virtual = 0-4MB physical)
+;		--- Kernel memory is mapped from 0x100000 to 0xC0000000
+;		--- The page directory is mapped to 0xFFC00000
 ;*****************************************************************************
 
 ; Tell assembler to generate 32 bit byte code. Any code in this
@@ -140,9 +142,9 @@ Map_K_PAGE_TAB:
 	stosd
 	add	eax, PAGE_SIZE
 	loop	Map_K_PAGE_TAB
-	; Entry representing K_VIR_START (0xc0000000) is
-	; 0x300 = K_VIR_START / PAGE_TABLE_REPRESENTS (0x1000 * 0x400)
-	; 0xC00 = 0x300 * 0x4
+	; Entry representing K_VIR_START (0xC0000000) is
+	; 0x300 => K_VIR_START / PAGE_TABLE_REPRESENTS (0x1000 * 0x400)
+	; 0xC00 => 0x300 * 0x4
 	; -> 0x1C00 : 0x2007
 	mov dword [K_PAGE_DIR+(0xC00)], K_PAGE_TAB | P_PRESENT | P_WRITE | P_USER
 
@@ -159,8 +161,8 @@ Map_K_PAGE_TAB:
 ; 0xFFC00000-0xFFC00FFF -> 0x0000000000003000-0x0000000000003FFF
 ;*****************************************************************************
 	; Entry representing 0xFFFFF000 is
-	; 0x3FF = 0xFFFFF000 /  PAGE_TABLE_REPRESENTS (0x1000 * 0x400)
-	; 0xFFC = 0x3FF * 0x4
+	; 0x3FF => 0xFFFFF000 /  PAGE_TABLE_REPRESENTS (0x1000 * 0x400)
+	; 0xFFC => 0x3FF * 0x4
 	; -> 0x1FFC : 0x1007
 	mov dword [K_PAGE_DIR+0xFFC], K_PAGE_DIR | P_PRESENT | P_WRITE | P_USER
 

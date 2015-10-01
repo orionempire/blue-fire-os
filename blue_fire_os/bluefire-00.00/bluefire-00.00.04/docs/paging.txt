@@ -7,9 +7,6 @@ Every 4 MB of virtual memory is expressed using a page table wih 1024, 4 byte en
 0x400 * 0x1000 =  0x4000000
 1024 * 4096 = 4,194,304
 
-
-
-
 The Page directory is a array of 1024, 4 byte entries each pointing to a page table
 so it represents 0xFFFFFFFF (4GB) of addressable memory. Each entry represents 0x3FFFFF of addressable memory.
 0x400 * 0x3FFFFF = 0xFFFFFC00 			(Last page is 0xFFFFFC00 - 0x100000000) 

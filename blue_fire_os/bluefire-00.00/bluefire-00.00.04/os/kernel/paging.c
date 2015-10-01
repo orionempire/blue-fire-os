@@ -93,7 +93,6 @@ s32int map_page(u32int vir_addr, u32int phys_addr, u16int attribs) {
 	u32int flags;
 
 	disable_interrupts(flags);
-
 	// Round virtual & physical address to the page boundary
 	vir_addr = PAGE_ALIGN(vir_addr);
 	phys_addr = PAGE_ALIGN(phys_addr);
@@ -103,10 +102,10 @@ s32int map_page(u32int vir_addr, u32int phys_addr, u16int attribs) {
 
 
 	// If the page directory entry is NULL must be created
-	if (*ADDR_TO_PDE(vir_addr) == NULL) {
+	if (*VIRT_TO_PDE_ADDR(vir_addr) == NULL) {
 		// Create a new page table
 		PTE = (u32int *)(pop_frame() * PAGE_SIZE);
-
+		dbg(PTE)
 		if (PTE == NULL) {
 			// Out of memory
 			enable_interrupts(flags);
@@ -114,7 +113,7 @@ s32int map_page(u32int vir_addr, u32int phys_addr, u16int attribs) {
 		}
 
 		// Set the PDE as present, user level, read-write
-		*ADDR_TO_PDE(vir_addr) = (u32int)PTE | P_PRESENT | P_USER | P_WRITE;
+		*VIRT_TO_PDE_ADDR(vir_addr) = (u32int)PTE | P_PRESENT | P_USER | P_WRITABLE;
 
 		// Invalidate the self-mapping page
 		invlpg((u32int)ADDR_TO_PTE(vir_addr));
@@ -126,7 +125,7 @@ s32int map_page(u32int vir_addr, u32int phys_addr, u16int attribs) {
 
 		// Update master page directory
 		if (vir_addr >= VIRTUAL_KERNEL_START) {
-			K_PDBR[vir_addr/(PAGE_SIZE*1024)] = *ADDR_TO_PDE(vir_addr);
+			K_PDBR[vir_addr/(PAGE_SIZE*1024)] = *VIRT_TO_PDE_ADDR(vir_addr);
 		}
 	}
 
@@ -142,11 +141,7 @@ s32int map_page(u32int vir_addr, u32int phys_addr, u16int attribs) {
 }
 
 
-/**************************************************************************
-*	Sets up everything we need for paging
-**************************************************************************/
 void initialize_paging() {
-	// TODO flush the tlb?
 	u32int addr;
 
 	// Initialize free frames stack
@@ -155,22 +150,19 @@ void initialize_paging() {
 	// Every process assumes it has the first 3GB of memory to its self. Until now
 	// lower memory was identity mapped so 0x1000(V) = 0x1000(P) while the page directory that resided in it
 	// was self mapped and addressable as either 0x1000(V) or 0xFFFFF000(V) both mapping to 0x1000(P). Now Lower
-	// memory will be unmaped and only the self mapped will work.
+	// memory will be un-maped and only the self mapped will work.
 	// -> 0xFFFFF000 : 0x0
-	*ADDR_TO_PDE(0) = NULL;
+	*VIRT_TO_PDE_ADDR(0x0) = NULL;
 
 	// Map physical memory into the kernel address space
-	// Map the physical addresses of the first 16 MB of memory to Virtual addresses 0xEF000000 to 0xF0000000
-	for (addr=VIRTUAL_ACTUAL_MEMORY_START; addr<VIRTUAL_ACTUAL_MEMORY_END; addr+=PAGE_SIZE) {
-		map_page(addr, addr-VIRTUAL_ACTUAL_MEMORY_START, P_PRESENT | P_WRITE);
+	// Map the physical addresses of the first 16 MB of memory to Virtual addresses 0xE0000000 to 0xE1000000
+	for (addr=VIRTUAL_LOWER_MEMORY_START; addr<VIRTUAL_LOWER_MEMORY_END; addr+=PAGE_SIZE) {
+		map_page(addr, addr-VIRTUAL_LOWER_MEMORY_START, P_PRESENT | P_WRITE);
 	}
 
-	// Initialize master page directory
-	// The master page directory is a manually maintained record of the kernel's page directory
-	// Processes will us it when they fork as a base of their page tables.
-	for (addr=0; addr<1024; addr++) {
-		K_PDBR[addr] = ((u32int *)VIRTUAL_PAGE_DIRECTORY_MAP)[addr];
-	}
+
+
+
 }
 
 // ---------- Debug functions ----------
