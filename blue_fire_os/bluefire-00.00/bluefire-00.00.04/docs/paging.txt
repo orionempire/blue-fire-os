@@ -6,6 +6,8 @@ Every 4 MB of virtual memory is expressed using a page table wih 1024, 4 byte en
 (entries * page size) = represented memory
 0x400 * 0x1000 =  0x4000000
 1024 * 4096 = 4,194,304
+So every 4 byte page table entry represents 4 K of memory
+
 
 The Page directory is a array of 1024, 4 byte entries each pointing to a page table
 so it represents 0xFFFFFFFF (4GB) of addressable memory. Each entry represents 0x3FFFFF of addressable memory.
@@ -22,47 +24,3 @@ Which is at
 0x300 * 0x004 byte -> 0xC00
 
 
-At the end of start.asm the following entries are used. 
-                  Page Directory (0x1000)
-|---------------|---------------|------------------------|--------------|
-| Index Number  |   Address		|    Virtual Address	 |  	Entry	|
-|---------------|---------------|------------------------|--------------|
-|     0x000     |     0x000     |0x00000000 - 0x003FFFFF |	0x00003000	|
-|     0x300     |	  0xC00		|0xC0000000 - 0xC03FFFFF |	0x00002000	|
-|	  0x3FF		|	  0xFFC		|0xFFC00000 - 0xFFFFFFFF |	0x00001000	| <- Self	
-|---------------|---------------|------------------------|--------------|
-
-						Page Table (0x2000)
-|---------------|---------------|------------------------|--------------|
-| Index Number  |   Address		|   Virtual Address	     |		Entry	|
-|---------------|---------------|------------------------|--------------|
-|     0x000     |     0x000     |0xXX000000 - 0xXX000FFF |  0x00100000	|
-|     0x001     |	  0x004		|0xXX001000 - 0xXX001FFF |	0x00101000	|
-|     0x002     |	  0x008		|0xXX002000 - 0xXX002FFF |	0x00102000	|
-|     .....     |	  .....		|....................... |	..........	|
-|     0x3FD     |	  0xFF4		|0xXX3FD000	- 0xXX3FDFFF |	0x004FD000	|
-|     0x3FE     |	  0xFF8		|0xXX3FE000	- 0xXX3FEFFF |	0x004FE000	|
-|	  0x3FF		|	  0xFFC		|0xXX3FF000	- 0xXX3FFFFF |	0x004FF000	|
-|---------------|---------------|------------------------|--------------|
-
-						Page Table (0x3000)
-|---------------|---------------|------------------------|--------------|
-| Index Number  |   Address		|  Virtual Address  	 |		Entry	|
-|---------------|---------------|------------------------|--------------|
-|     0x000     |     0x000     |0xXX000000 - 0xXX000FFF |  0x00000000	|
-|     0x001     |	  0x004		|0xXX001000 - 0xXX001FFF |	0x00001000	|
-|     0x002     |	  0x008		|0xXX002000 - 0xXX002FFF |	0x00002000	|
-|     .....     |	  .....		|....................... |	..........	|
-|     0x3FD     |	  0xFF4		|0xXX3FD000	- 0xXX3FDFFF |	0x003FD000	|
-|     0x3FE     |	  0xFF8		|0xXX3FE000	- 0xXX3FEFFF |	0x003FE000	|
-|	  0x3FF		|	  0xFFC		|0xXX3FF000	- 0xXX3FFFFF |	0x003FF000	|
-|---------------|---------------|------------------------|--------------|
-
-						Page Table (0x1000)
-|---------------|---------------|------------------------|--------------|
-| Index Number  |   Address		|   Virtual Address 	 | 		Entry	|
-|---------------|---------------|------------------------|--------------|
-|     0x000     |     0x000     |0xXX000000 - 0xXX000FFF |  0x00003000	|
-|     0x300     |	  0xC00		|0xXX300000	- 0xXX300FFF |  0x00002000	|
-|	  0x3FF		|	  0xFFC		|0xXX3FF000	- 0xXX3FFFFF |  0x00001000	|
-|---------------|---------------|------------------------|--------------|

@@ -29,15 +29,25 @@
 #define P_GLOBAL			0x100	// PTE only.
 
 // Returns which index entry of the Page Directory Table represents a virtual address
-// Every index entry represents 0x400000 (4MB of memory)
+// Every index entry represents 0x400000 (4MB) of memory.
 #define VIRT_TO_PDE_IDX(addr)	( addr / 0x400000)
 
 // Returns the address of the page directory entry representing the specified address.
 // The page directory table was permanently mapped to 0xFFFFF000 by start.asm
-#define VIRT_TO_PDE_ADDR(addr)	(u32int *)(0xFFFFF000 + (VIRT_TO_PDE_IDX(addr) * 0x4))
+#define VIRT_TO_PDE_ADDR(addr)	(u32int *)(0xFFFFF000 + ((VIRT_TO_PDE_IDX(addr) * 0x4)&(~0x3)))
 
 // Divides the addressable space into 4096 parts and returns which part (addr) is in.
 #define ADDR_TO_PDE(addr)	(u32int *)(VIRTUAL_PAGE_DIRECTORY_MAP + (((u32int) (addr) / (1024 * 1024))&(~0x3)))
+
+//---------------------------------------------------------------
+//Every Page Table entry represents 0x1000 (4KB) of memory.
+//#define VIRT_TO_PTE_IDX(addr)	( addr / 0x1000)
+//#define VIRT_TO_PTE_ADDR(addr)	(u32int *)(0xFFC00000 + ((VIRT_TO_PTE_IDX(addr) * 0x4)&(~0x3)))
+
+#define VIRT_TO_PTE_IDX(addr) 	((addr % 0x400000) / 0x1000)
+#define VIRT_TO_PT_ADDR(addr)	(0xFFC00000 + (VIRT_TO_PDE_IDX(addr) * 0x1000))
+#define VIRT_TO_PTE_ADDR(addr)	(u32int *)(VIRT_TO_PT_ADDR(addr) + ((VIRT_TO_PTE_IDX(addr) * 0x4)&(~0x3)))
+
 // Divides the 1,048,576 memory portion as calculated above in to 1024 parts and returns which part (addr) is in.
 #define ADDR_TO_PTE(addr)	(u32int *)(VIRTUAL_PAGE_TABLE_MAP + ((((u32int) (addr) / 1024))&(~0x3)))
 

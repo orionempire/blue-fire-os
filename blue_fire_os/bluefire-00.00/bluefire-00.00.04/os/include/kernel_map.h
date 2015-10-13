@@ -24,6 +24,7 @@
 
 // the page tables are self mapped here.
 #define VIRTUAL_PAGE_TABLE_MAP		0xFFC00000
+
 //									(0xFFC00000	+ (0xFFC00000 		      / 1024 = 0x3FF000)) = 0xFFFFF000 (maps to 0x1000)
 #define VIRTUAL_PAGE_DIRECTORY_MAP	(0xFFC00000 + (VIRTUAL_PAGE_TABLE_MAP / 0x400))
 

@@ -69,15 +69,15 @@ void push_frame(u32int p_addr) {
 **************************************************************************/
 // ---------- Initialization routines ----------
 void init_free_frames() {
-	u32int p_addr;
+	u32int phys_addr;
 
 	// First physical 16MB are reserved for kernel, BIOS & DMA
 	// so let's start with free memory area at 16MB
 	// -> 0xC0015000 - 0xC0031000 : 0x(1000-8000)
-	p_addr = P_ADDR_16MB;		//0x1000
+	phys_addr = P_ADDR_16MB;		//0x1000
 	K_VIR_END = free_frames;	//(KERNEL_TOP, dynamic) 0xC0015000 in the current example
-	while (p_addr < ADDR_TO_PAGE(var_system_memory_amount)) {
-		*(K_VIR_END++) = p_addr++;
+	while (phys_addr < ADDR_TO_PAGE(var_system_memory_amount)) {
+		*(K_VIR_END++) = phys_addr++;
 	}
 
 	// Last frame is NULL => out of physical memory.
@@ -120,7 +120,7 @@ s32int map_page(u32int vir_addr, u32int phys_addr, u16int attribs) {
 
 		// NULL every PTE entry
 		for (i=PAGE_DIR_ALIGN(vir_addr); i<PAGE_DIR_ALIGN_UP(vir_addr); i+=PAGE_SIZE) {
-			*ADDR_TO_PTE(i) = NULL;
+			*VIRT_TO_PTE_ADDR(i) = NULL;
 		}
 
 		// Update master page directory
@@ -130,7 +130,7 @@ s32int map_page(u32int vir_addr, u32int phys_addr, u16int attribs) {
 	}
 
 	// Store the physical address into the page table entry
-	*ADDR_TO_PTE(vir_addr) = (u32int)phys_addr | attribs;
+	*VIRT_TO_PTE_ADDR(vir_addr) = (u32int)phys_addr | attribs;
 
 	// Invalidate the page in the TLB cache
 	invlpg(vir_addr);
@@ -142,6 +142,25 @@ s32int map_page(u32int vir_addr, u32int phys_addr, u16int attribs) {
 
 
 void initialize_paging() {
+	dbg(ADDR_TO_PTE(0))
+	dbg(VIRT_TO_PTE_ADDR(0))
+	dbg(ADDR_TO_PTE(0x00000500))
+	dbg(VIRT_TO_PTE_ADDR(0x00000500))
+	dbg(ADDR_TO_PTE(0x00001000))
+	dbg(VIRT_TO_PTE_ADDR(0x00001000))
+	dbg(ADDR_TO_PTE(0x00001001))
+	dbg(VIRT_TO_PTE_ADDR(0x00001001))
+	dbg(ADDR_TO_PTE(0xC0000000))
+	dbg(VIRT_TO_PTE_ADDR(0xC0000000))
+	dbg(ADDR_TO_PTE(0xFFC00000))
+	dbg(VIRT_TO_PTE_ADDR(0xFFC00000))
+	dbg(ADDR_TO_PTE(0xEF000000))
+	dbg(VIRT_TO_PTE_ADDR(0xEF000000))
+	dbg(ADDR_TO_PTE(0xFFFFF000))
+	dbg(VIRT_TO_PTE_ADDR(0xFFFFF000))
+
+
+//-------------------------------
 	u32int addr;
 
 	// Initialize free frames stack
