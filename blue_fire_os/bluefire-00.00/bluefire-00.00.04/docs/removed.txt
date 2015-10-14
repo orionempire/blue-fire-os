@@ -32,6 +32,7 @@ void initialize_paging() {
 	}
 }
 
+	
 	dbg(ADDR_TO_PTE(0))
 	dbg(VIRT_TO_PTE_ADDR(0))
 	dbg(ADDR_TO_PTE(0x00000500))
@@ -46,7 +47,14 @@ void initialize_paging() {
 	dbg(VIRT_TO_PTE_ADDR(0xFFC00000))
 	dbg(ADDR_TO_PTE(0xEF000000))
 	dbg(VIRT_TO_PTE_ADDR(0xEF000000))
-	dbg_brk()
+	dbg(ADDR_TO_PTE(0xFFFFF000))
+	dbg(VIRT_TO_PTE_ADDR(0xFFFFF000))
+	dbg(ADDR_TO_PTE(0xFFFFF030))
+	dbg(VIRT_TO_PTE_ADDR(0xFFFFF030))
+	dbg(ADDR_TO_PTE(0xDEADBEEF))
+	dbg(VIRT_TO_PTE_ADDR(0xDEADBEEF))
+	dbg(ADDR_TO_PTE(0x00ADBEEF))
+	dbg(VIRT_TO_PTE_ADDR(0x00ADBEEF))
 	
 	dbg(ADDR_TO_PDE(0))
 	dbg(VIRT_TO_PDE_ADDR(0))
@@ -94,14 +102,10 @@ void initialize_paging() {
 	dbg_brk()
 	
 	
-	dbg(VIRT_TO_PTE_ADDR(0))
-	dbg(VIRT_TO_PTE_ADDR(0x00000500))
-	dbg(VIRT_TO_PTE_ADDR(0x00001000))
-	dbg(VIRT_TO_PTE_ADDR(0x00001001))
-	dbg(VIRT_TO_PTE_ADDR(0xC0000000))
-	dbg(VIRT_TO_PTE_ADDR(0xFFC00000))
-	dbg(VIRT_TO_PTE_ADDR(0xEF000000))
-	dbg_brk()
+// P(0x1000000,0x8000000)->V(0xC0015000,0xC0030FFC)
+
+// Creates a mapping for every physical from above 16 MB (which are reserved
+// for BIOS and DMA) to the virtual address starting above the kernel.
 -------------------------------------------------------------------------------------
 paging.h
 -------------------------------------------------------------------------------------
@@ -140,6 +144,12 @@ paging.h
 
 #define VIRT_TO_PTE_IDX(addr) 	((addr % 0x400000) / 0x1000)
 #define VIRT_TO_PTE_ADDR(addr)	(u32int *)(0xFFC00000 + (VIRT_TO_PDE_IDX(addr) * 0x1000) + ((VIRT_TO_PTE_IDX(addr) * 0x4)&(~0x3)))
+
+// Divides the addressable space into 4096 parts and returns which part (addr) is in.
+//#define ADDR_TO_PDE(addr)	(u32int *)(VIRTUAL_PAGE_DIRECTORY_MAP + (((u32int) (addr) / (1024 * 1024))&(~0x3)))
+// Divides the 1,048,576 memory portion as calculated above in to 1024 parts and returns which part (addr) is in.
+//#define ADDR_TO_PTE(addr)	(u32int *)(VIRTUAL_PAGE_TABLE_MAP + ((((u32int) (addr) / 1024))&(~0x3)))
+
 -------------------------------------------------------------------------------------
 start.asm
 -------------------------------------------------------------------------------------
@@ -191,7 +201,9 @@ kernel_map.h
 // the first 16MB of physical memory are mapped here
 #define VIRTUAL_ACTUAL_MEMORY_START	0xEF000000
 #define VIRTUAL_ACTUAL_MEMORY_END	0xEF000000
-
+//									(0xFFC00000	+ (0xFFC00000 		      / 1024 = 0x3FF000)) = 0xFFFFF000 (maps to 0x1000)
+//#define VIRTUAL_PAGE_DIRECTORY_MAP	(0xFFC00000 + (VIRTUAL_PAGE_TABLE_MAP / 0x400))
+//#define VIRTUAL_LOWER_MEMORY_END	0xE1000000
 
 -------------------------------------------------------------------------------------
 paging.txt
