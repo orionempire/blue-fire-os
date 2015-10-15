@@ -168,7 +168,7 @@ void initialize_paging() {
 	// The master page directory is a manually maintained record of the kernel's page directory
 	// Processes will us it when they fork as a base of their page tables.
 	for (addr=0; addr<1024; addr++) {
-		K_PDBR[addr] = ((u32int *)VIRTUAL_PAGE_DIRECTORY_MAP)[addr];
+		K_PDBR[addr] = ((u32int *)VIRTUAL_PAGE_DIRECTORY_START)[addr];
 	}
 
 
@@ -182,7 +182,7 @@ void dump_dirty_pages() {
 
 	// Print all the dirty pages
 	kprintf("\nDirty pages:\n");
-	for (vir_addr = 0; vir_addr < VIRTUAL_PAGE_TABLE_MAP; vir_addr += PAGE_SIZE) {
+	for (vir_addr = 0; vir_addr < VIRTUAL_PAGE_TABLE_START; vir_addr += PAGE_SIZE) {
 		if (*VIRT_TO_PDE_ADDR(vir_addr) != NULL) {
 			if ((*VIRT_TO_PTE_ADDR(vir_addr) & P_DIRTY) == P_DIRTY) {
 				if (!(++display % 24)){

@@ -33,8 +33,6 @@ void k_main() {
 
 	initialize_paging();
 
-	dbg("00.00.04 -> 0009")
-
 	dbg_brk();
 	// We must never reach this point.
 	PANIC("End of k_main reached.");
