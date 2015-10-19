@@ -4,6 +4,16 @@ paging.c
 /**************************************************************************
 *	Sets up everything we need for paging
 **************************************************************************/
+// Accounting record of the Master page directory
+u32int K_PDBR[1024];
+
+// ---------- Actual map routine ----------
+s32int map_page(u32int vir_addr, u32int phys_addr, u16int attribs) {
+		// Update master page directory
+		if (vir_addr >= VIRTUAL_KERNEL_START) {
+			K_PDBR[vir_addr/(PAGE_SIZE*1024)] = *VIRT_TO_PDE_ADDR(vir_addr);
+		}
+}
 void initialize_paging() {
 	// TODO flush the tlb?
 	u32int addr;
@@ -204,6 +214,11 @@ kernel_map.h
 //									(0xFFC00000	+ (0xFFC00000 		      / 1024 = 0x3FF000)) = 0xFFFFF000 (maps to 0x1000)
 //#define VIRTUAL_PAGE_DIRECTORY_MAP	(0xFFC00000 + (VIRTUAL_PAGE_TABLE_MAP / 0x400))
 //#define VIRTUAL_LOWER_MEMORY_END	0xE1000000
+
+-------------------------------------------------------------------------------------
+main.c
+-------------------------------------------------------------------------------------
+dbg("00.00.04 -> 0006")
 
 -------------------------------------------------------------------------------------
 paging.txt

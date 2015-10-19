@@ -60,6 +60,7 @@ void k_main() {
 	initialize_IDT();
 	print_ok();
 
+	dbg("00.00.05 -> 0001")
 
 	dbg_brk();
 	// We must never reach this point.

@@ -87,7 +87,7 @@ static __inline__ void k_update_segment_regs() {
 * Memory manipulation procedures. Inline assembly used, it's less portable, but faster
 **************************************************************************/
 // sets all of destination specified to val 8 bits at a time
-// so memset8(X,0xFF,4) would write 0xFFFFFFFF at X
+// so memset08(X,0xFF,4) would write 0xFFFFFFFF at X
 static __inline__ void memset08(void *dest_ptr, u08int val, u32int count) {
 	__asm__ __volatile__ (	"cld\n"
 				"rep stosb": :"D"(dest_ptr), "c"(count), "a"(val));
@@ -124,11 +124,5 @@ static __inline__ void memcpy32(void *dest_ptr, const void *org_ptr, u32int coun
 	__asm__("": : :"%ecx", "%edi", "%esi");
 }
 // Public Function declarations
-//void memset08(void *dest_ptr, u08int val, u32int count);
-//void memset16(void *dest_ptr, u16int val, u32int count);
-//void memset32(void *dest_ptr, u32int val, u32int count);
-//void memcpy08(void *dest_ptr, const void *org_ptr, u32int count);
-//void memcpy32(void *dest_ptr, const void *org_ptr, u32int count);
-void initialize_GDT();
 
 #endif /* MEM_H_ */

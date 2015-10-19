@@ -11,9 +11,10 @@
 
 // declared in assembly/start.asm
 extern u32int var_system_memory_amount, _start;
-//extern u32int _start;
 
-// Control arrives here from assembly/start.asm
+/**************************************************************************
+* Control arrives here from assembly/start.asm
+***************************************************************************/
 void k_main() {
 
 	initialize_video();

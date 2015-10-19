@@ -14,14 +14,18 @@
 /**************************************************************************
  * 	Virtual address memory definitions
 **************************************************************************/
+// Lower Memory is the first 16 MB
+#define LOWER_MEMORY_SIZE	0x1000000
+
 // NOTE: Must be PAGE_SIZE*1024 aligned!!!
 #define VIRTUAL_KERNEL_START		0xC0000000
+
 // the first 16MB of physical memory are mapped here
-#define VIRTUAL_ACTUAL_MEMORY_START	0xEF000000
-#define VIRTUAL_ACTUAL_MEMORY_END	0xEF000000
+#define VIRTUAL_LOWER_MEMORY_START	0xE0000000
+#define VIRTUAL_LOWER_MEMORY_END	VIRTUAL_LOWER_MEMORY_START + LOWER_MEMORY_SIZE
+
 // the page tables are self mapped here.
-#define VIRTUAL_PAGE_TABLE_MAP		0xFFC00000
-//									(0xFFC00000	+ (0xFFC00000 		      / 1024 = 0x3FF000)) = 0xFFFFF000 (maps to 0x1000)
-#define VIRTUAL_PAGE_DIRECTORY_MAP	(0xFFC00000 + (VIRTUAL_PAGE_TABLE_MAP / 0x400))
+#define VIRTUAL_PAGE_TABLE_START		0xFFC00000
+#define VIRTUAL_PAGE_DIRECTORY_START	0xFFFFF000
 
 #endif /* KERNEL_MAP_H_ */

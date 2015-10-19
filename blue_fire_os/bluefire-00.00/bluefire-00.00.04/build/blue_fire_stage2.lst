@@ -219,14 +219,14 @@
    219 0000010E 00                      	DB 0					; Access byte (descriptor type)
    220 0000010F 00                      	DB 0					; Flags, Limit middle (bytes 19:16)
    221 00000110 00                      	DB 0					; Base high (bytes 31:24)
-   222                                  ; boot code:				; code descriptor
+   222                                  ; boot code:				; code descriptor  0x08
    223 00000111 FFFF                    	DW 0xFFFF           	; Limit (bytes 15:0)
    224 00000113 0000                    	DW 0                	; Base  (bytes 15:0)
    225 00000115 00                      	DB 0                	; Base  (bytes 23:16)
    226 00000116 9A                      	DB 0b10011010        	; access  = Present, Ring 0, 1, Executable, Direction, Readable, Unaccessed (1,00,1,1110 -> 9A)
    227 00000117 CF                      	DB 0b11001111        	; granularity = 4KB Granularity, 32bit segment size, reserved, reserved (AVL), Limit (bytes 19:16) (1,1,0,0,1111 - > CF)
    228 00000118 00                      	DB 0                	; Base  (bytes 31:24)
-   229                                  ; boot data:	        	; data descriptor
+   229                                  ; boot data:	        	; data descriptor  0x10
    230 00000119 FFFF                    	DW 0xFFFF           	; Limit (bytes 15:0)
    231 0000011B 0000                    	DW 0                	; Base  (bytes 15:0)
    232 0000011D 00                      	DB 0                	; Base  (bytes 23:16)

@@ -23,10 +23,10 @@ void video_move_cursor( u08int x_pos, u08int y_pos ) {
 	// Registers 14-15 tell the 6845 where to put the
 	// cursor. The screen is 80 characters wide, memory is linear.
 	u16int cursor_location = ((y_pos * crt_width) + x_pos);
-	outport8(VIDEO_CRT_PORT, 0xE);                  	// Tell the VGA controller we are setting the Cursor Location High byte
-	outport8(VIDEO_CRT_PORT + 1, cursor_location >> 8); // Set it
-	outport8(VIDEO_CRT_PORT, 0xF);                  	// Tell the VGA controller we are setting the Cursor Location Low byte
-	outport8(VIDEO_CRT_PORT + 1, cursor_location);      // Set It
+	outport08(VIDEO_CRT_PORT, 0xE);                  	// Tell the VGA controller we are setting the Cursor Location High byte
+	outport08(VIDEO_CRT_PORT + 1, cursor_location >> 8); // Set it
+	outport08(VIDEO_CRT_PORT, 0xF);                  	// Tell the VGA controller we are setting the Cursor Location Low byte
+	outport08(VIDEO_CRT_PORT + 1, cursor_location);      // Set It
 }
 
 /**************************************************************************
@@ -45,7 +45,7 @@ void video_set_color( console_t *console, u08int attrib ) {
 void video_clrscr( console_t *console ) {
 	u32int flags;
 
-	disable_interrupts(flags);
+	disable_and_save_interrupts(flags);
 
 	memset16((u16int *)(console->vid_buffer ), BLANK, crt_width*crt_height*2);
 	console->cursor_x = 0;
@@ -55,7 +55,7 @@ void video_clrscr( console_t *console ) {
 	if( console==get_console_addr(0) )
 		video_move_cursor( console->cursor_x, console->cursor_y);
 
-	enable_interrupts(flags);
+	restore_interrupts(flags);
 }
 
 /**************************************************************************
@@ -65,7 +65,7 @@ void video_clrscr( console_t *console ) {
 void video_scroll_console(console_t *console) {
 	u32int flags;
 
-	disable_interrupts(flags);
+	disable_and_save_interrupts(flags);
 
     // Row 25 is the end, this means we need to scroll up
     if((console->cursor_y) >= crt_height)
@@ -86,7 +86,7 @@ void video_scroll_console(console_t *console) {
         }
 
     }
-    enable_interrupts(flags);
+    restore_interrupts(flags);
 }
 
 /**************************************************************************
@@ -113,7 +113,7 @@ void video_put_char( u08int c, console_t *console) {
 
 	u32int flags;
 
-	disable_interrupts(flags);
+	disable_and_save_interrupts(flags);
 
 	switch (c)
 	{
@@ -172,7 +172,7 @@ void video_put_char( u08int c, console_t *console) {
 	}
 
 
-	enable_interrupts(flags);
+	restore_interrupts(flags);
 }
 
 void initialize_video() {

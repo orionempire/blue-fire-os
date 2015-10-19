@@ -19,9 +19,6 @@ u32int *K_VIR_END;
 // Free-frames stack is placed just above kernel memory
 u32int *free_frames = (u32int *)&KERNEL_TOP;
 
-// Accounting record of the Master page directory
-u32int K_PDBR[1024];
-
 /**************************************************************************
 *	Free frame stack. Basically one word of memory is recored to represent
 *	every physical group (page) of memory not used. Later on a more efficient
@@ -33,26 +30,26 @@ u32int pop_frame() {
 	u32int ret;
 	u32int flags;
 
-	disable_interrupts(flags);
+	disable_and_save_interrupts(flags);
 
 	if (*free_frames != NULL) {
 		ret = *free_frames;
 		*free_frames = NULL;
 		free_frames++;
 
-		enable_interrupts(flags);
+		restore_interrupts(flags);
 		return(ret);
 	}
 
 	// Out of memory
-	enable_interrupts(flags);
+	restore_interrupts(flags);
 	return NULL;
 }
 
 void push_frame(u32int p_addr) {
 	u32int flags;
 
-	disable_interrupts(flags);
+	disable_and_save_interrupts(flags);
 
 	// Push the frame into free frames stack
 	if ((u32int)free_frames > ((u32int)&KERNEL_TOP)) {
@@ -60,7 +57,7 @@ void push_frame(u32int p_addr) {
 		*free_frames=p_addr;
 	}
 
-	enable_interrupts(flags);
+	restore_interrupts(flags);
 }
 
 /**************************************************************************
@@ -95,7 +92,8 @@ s32int map_page(u32int vir_addr, u32int phys_addr, u16int attribs) {
 	u32int i;
 	u32int flags;
 
-	disable_interrupts(flags);
+	disable_and_save_interrupts(flags);
+
 	// Round virtual & physical address to the page boundary
 	vir_addr = PAGE_ALIGN(vir_addr);
 	phys_addr = PAGE_ALIGN(phys_addr);
@@ -110,7 +108,7 @@ s32int map_page(u32int vir_addr, u32int phys_addr, u16int attribs) {
 		PTE = (u32int *)(pop_frame() * PAGE_SIZE);
 		if (PTE == NULL) {
 			// Out of memory
-			enable_interrupts(flags);
+			restore_interrupts(flags);
 			return(FALSE);
 		}
 
@@ -124,11 +122,6 @@ s32int map_page(u32int vir_addr, u32int phys_addr, u16int attribs) {
 		for (i=PAGE_DIR_ALIGN(vir_addr); i<PAGE_DIR_ALIGN_UP(vir_addr); i+=PAGE_SIZE) {
 			*VIRT_TO_PTE_ADDR(i) = NULL;
 		}
-
-		// Update master page directory
-		if (vir_addr >= VIRTUAL_KERNEL_START) {
-			K_PDBR[vir_addr/(PAGE_SIZE*1024)] = *VIRT_TO_PDE_ADDR(vir_addr);
-		}
 	}
 
 	// Store the physical address into the page table entry
@@ -137,12 +130,15 @@ s32int map_page(u32int vir_addr, u32int phys_addr, u16int attribs) {
 	// Invalidate the page in the TLB cache
 	invlpg(vir_addr);
 
-	enable_interrupts(flags);
+	restore_interrupts(flags);
 
 	return(TRUE);
 }
 
 
+/**************************************************************************
+*	Sets up everything we need for paging
+**************************************************************************/
 void initialize_paging() {
 
 	u32int addr;
@@ -161,17 +157,8 @@ void initialize_paging() {
 	// Map the physical addresses of the first 16 MB of memory to Virtual addresses 0xE0000000 to 0xE1000000
 	// V(0xE0000000, 0xE1000000)->P(0x00000000, 0x1000000)
 	for(addr = 0; addr < LOWER_MEMORY_SIZE ; addr+=PAGE_SIZE ){
-		map_page(VIRTUAL_LOWER_MEMORY_START+addr , addr, P_PRESENT | P_WRITE );
+		map_page(VIRTUAL_LOWER_MEMORY_START+addr , addr, P_PRESENT | P_WRITABLE );
 	}
-
-	// Initialize master page directory
-	// The master page directory is a manually maintained record of the kernel's page directory
-	// Processes will us it when they fork as a base of their page tables.
-	for (addr=0; addr<1024; addr++) {
-		K_PDBR[addr] = ((u32int *)VIRTUAL_PAGE_DIRECTORY_START)[addr];
-	}
-
-
 }
 
 // ---------- Debug functions ----------
