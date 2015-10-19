@@ -1,4 +1,4 @@
-/**************************************************************************
+/******************************************************************************
  *	bluefire-os
  *	Version: 00.00.05
  *	Author: David Davidson
@@ -6,7 +6,7 @@
  *	Created: Dec 7, 2011
  *	Purpose:
  *  Usage:
-***************************************************************************/
+******************************************************************************/
 #include <common_include.h>
 
 // declared in assembly/start.asm
@@ -16,14 +16,17 @@ extern u32int var_system_memory_amount, _start;
 void print_ok();
 void print_failed();
 
-/**************************************************************************
+/******************************************************************************
 *
-***************************************************************************/
+******************************************************************************/
 
-/**************************************************************************
+/******************************************************************************
 * Control arrives here from assembly/start.asm
-***************************************************************************/
+******************************************************************************/
 void k_main() {
+
+	// Paging must be initialized first so that video can use its proper address
+	initialize_paging();
 
 	initialize_video();
 
@@ -38,10 +41,9 @@ void k_main() {
 	kprintf("Kernel is running at virtual address: %#010x\n", (u32int)&_start);
 	kprintf("Total System memory is: %d MB\n\n", (var_system_memory_amount /(1024 * 1024)) );
 
-	kprintf("Initializing paging... ");
-	initialize_paging();
+	// There are now enough resources available to print to the screen.
+	kprintf("Paging and Video initialized successfully...");
 	print_ok();
-
 
 	// Reprogram the Programmable Interrupt Controller 8259
 	kprintf("Reprogramming PIC 8259...");
@@ -53,23 +55,19 @@ void k_main() {
 	initialize_GDT();
 	print_ok();
 
-
-
 	// Install the IDT
 	kprintf("Installing kernel IDT...");
 	initialize_IDT();
 	print_ok();
-
-	dbg("00.00.05 -> 0001")
 
 	dbg_brk();
 	// We must never reach this point.
 	PANIC("End of k_main reached.");
 }
 
-/**************************************************************************
+/******************************************************************************
 * Prints [ OK ] in green.
-***************************************************************************/
+******************************************************************************/
 void print_ok() {
 	kset_color( DEFAULT_COLOR );
 	kprintf( "\r\t\t\t\t\t\t[ " );
@@ -79,9 +77,9 @@ void print_ok() {
 	kprintf( " ]\n" );
 }
 
-/**************************************************************************
-* Prints [ Failed ] in green.
-***************************************************************************/
+/******************************************************************************
+* Prints [ Failed ] in red.
+******************************************************************************/
 void  print_failed() {
 	kset_color( DEFAULT_COLOR );
 	kprintf( "\r\t\t\t\t\t\t[ " );

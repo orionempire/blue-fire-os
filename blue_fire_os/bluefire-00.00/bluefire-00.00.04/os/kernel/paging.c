@@ -159,6 +159,13 @@ void initialize_paging() {
 	for(addr = 0; addr < LOWER_MEMORY_SIZE ; addr+=PAGE_SIZE ){
 		map_page(VIRTUAL_LOWER_MEMORY_START+addr , addr, P_PRESENT | P_WRITABLE );
 	}
+
+	// Lower memory was un-identity mapped and re-mapped to 0xE0000000, however right now V(0x1000)->P(0x1000)
+	// because the old TLB entries are still in the CPU, reloading cr3 empties this "cache". The other
+	// Other choice is to invlpg a address manually.
+	reload_CR3();
+
+	// Note for this early example video no longer works after this point (it is identity mapped in console.c)
 }
 
 // ---------- Debug functions ----------

@@ -12,11 +12,11 @@
 static console_t vir_cons[K_TOT_VIR_CONS+1];
 
 /**************************************************************************
-* The first 4 MB of memory where Identity Mapped by the boot loader so address 0xB8000 works.
-* This must be changed after init_paging unmaps lower memory.
+* initialize_paging re-mapped lower memory from starting at 0x0 to starting
+* at 0xE0000000 so V(0xE00B8000) -> P(0x000B8000)
 **************************************************************************/
 void initialize_boot_console() {
-	vir_cons[0].vid_buffer = (u16int *)0xB8000;
+	vir_cons[0].vid_buffer = (u16int *)0xE00B8000;
 	vir_cons[0].cursor_x = 0;
 	vir_cons[0].cursor_y = 0;
 	vir_cons[0].cur_color = DEFAULT_COLOR;
