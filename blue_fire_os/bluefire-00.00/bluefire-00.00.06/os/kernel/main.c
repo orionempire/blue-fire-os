@@ -16,14 +16,17 @@ extern u32int var_system_memory_amount, _start;
 void print_ok();
 void print_failed();
 
-/**************************************************************************
+/******************************************************************************
 *
-***************************************************************************/
+******************************************************************************/
 
-/**************************************************************************
+/******************************************************************************
 * Control arrives here from assembly/start.asm
-***************************************************************************/
+******************************************************************************/
 void k_main() {
+
+	// Paging must be initialized first so that video can use its proper address
+	initialize_paging();
 
 	initialize_video();
 
@@ -39,8 +42,8 @@ void k_main() {
 	kprintf("Kernel is running at virtual address: %#010x\n", (u32int)&_start);
 	kprintf("Total System memory is: %d MB\n\n", (var_system_memory_amount /(1024 * 1024)) );
 
-	kprintf("Initializing paging... ");
-	initialize_paging();
+	// There are now enough resources available to print to the screen.
+	kprintf("Paging and Video initialized successfully...");
 	print_ok();
 
 	// Reprogram the Programmable Interrupt Controller 8259
@@ -63,14 +66,18 @@ void k_main() {
 	initialize_clock();
 	print_ok();
 
-	dbg_brk();
+	kset_color( CYAN );
+	kprintf("\nTry typing on the keyboard. It should generate a interrupt\n");
+	kprintf("That shows what key was pressed and released.");
+	while(1);
+
 	// We must never reach this point.
 	PANIC("End of k_main reached.");
 }
 
-/**************************************************************************
+/******************************************************************************
 * Prints [ OK ] in green.
-***************************************************************************/
+******************************************************************************/
 void print_ok() {
 	kset_color( DEFAULT_COLOR );
 	kprintf( "\r\t\t\t\t\t\t[ " );
