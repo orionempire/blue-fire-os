@@ -12,12 +12,12 @@
 // declared in assembly/start.asm
 extern u32int var_system_memory_amount;
 // defined in kernel.ld
-extern u32int KERNEL_TOP;
+extern u32int KERNEL_END_CODE;
 
 // End of kernel virtual space
-u32int *K_VIR_END;
+u32int *VIRTUAL_KERNEL_END;
 // Free-frames stack is placed just above kernel memory
-u32int *free_frames = (u32int *)&KERNEL_TOP;
+u32int *free_frames = (u32int *)&KERNEL_END_CODE;
 
 /**************************************************************************
 *	Free frame stack. Basically one word of memory is recored to represent
@@ -52,7 +52,7 @@ void push_frame(u32int p_addr) {
 	disable_and_save_interrupts(flags);
 
 	// Push the frame into free frames stack
-	if ((u32int)free_frames > ((u32int)&KERNEL_TOP)) {
+	if ((u32int)free_frames > ((u32int)&KERNEL_END_CODE)) {
 		free_frames--;
 		*free_frames=p_addr;
 	}
@@ -75,15 +75,14 @@ void init_free_frames() {
 
 	// -> 0xC0015000 - 0xC0030FFC : 0x(1000-8000)
 	phys_addr = P_ADDR_16MB;		//0x1000 (0x1000 X Page size(0x1000) = 16 MB)
-
-	K_VIR_END = free_frames;	//(KERNEL_TOP, dynamic) 0xC0015000 in the current example
+	VIRTUAL_KERNEL_END = free_frames;	//(KERNEL_TOP, dynamic) 0xC0015000 in the current example
 	while (phys_addr < ADDR_TO_PAGE(var_system_memory_amount)) {
-		*(K_VIR_END++) = phys_addr++;
+		*(VIRTUAL_KERNEL_END++) = phys_addr++;
 	}
 
 	// Last frame is NULL => out of physical memory.
 	// Kernel virtual address space ends here:
-	*K_VIR_END=NULL;
+	*VIRTUAL_KERNEL_END=NULL;
 }
 
 // ---------- Actual map routine ----------
@@ -165,7 +164,6 @@ void initialize_paging() {
 	// because the old TLB entries are still in the CPU, reloading cr3 empties this "cache". The other
 	// Other choice is to invlpg a address manually.
 	reload_CR3();
-
 }
 
 // ---------- Debug functions ----------
@@ -192,7 +190,7 @@ void dump_free_frames() {
 	u32int *f = free_frames;
 	u32int display=1;
 
-	kprintf("\nFree frames list: (KERNEL_TOP=%X)\n", (u32int)&KERNEL_TOP);
+	kprintf("\nFree frames list: (KERNEL_TOP=%X)\n", (u32int)&KERNEL_END_CODE);
 	for(;;) 	{
 		if (*f == NULL) break;
 		if (!(++display % 24)){

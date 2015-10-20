@@ -46,6 +46,7 @@ typedef struct console
 
 // Public Function declarations
 void initialize_boot_console();
+void initialize_main_console();
 console_t *get_console_addr(s32int c);
 void kset_color(u08int attrib);
 s32int kprintf(const s08int *fmt, ...);

@@ -1,4 +1,4 @@
-/******************************************************************************
+/**************************************************************************
  *	bluefire-os
  *	Version: 00.00.05
  *	Author: David Davidson
@@ -6,7 +6,7 @@
  *	Created: Dec 7, 2011
  *	Purpose:
  *  Usage:
-******************************************************************************/
+***************************************************************************/
 #include <common_include.h>
 
 // declared in assembly/start.asm
@@ -60,7 +60,11 @@ void k_main() {
 	initialize_IDT();
 	print_ok();
 
-	dbg_brk();
+	kset_color( CYAN );
+	kprintf("\nTry typing on the keyboard. It should generate a interrupt\n");
+	kprintf("That shows what key was pressed and released.");
+	while(1);
+
 	// We must never reach this point.
 	PANIC("End of k_main reached.");
 }

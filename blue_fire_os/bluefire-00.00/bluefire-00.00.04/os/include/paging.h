@@ -61,8 +61,8 @@
 // ADDR_TO_PAGE(1000000) -> 0x1000
 #define P_ADDR_16MB		0x1000
 
-
 // Paging Procedures
+// Because this OS is didactic, global pages are not supported or accounted for.
 static __inline__ void invlpg(u32int page_addr) {
         __asm__ __volatile__ ("invlpg %0" : : "m" (page_addr));
 }
@@ -70,7 +70,6 @@ static __inline__ void invlpg(u32int page_addr) {
 static __inline__ void reload_CR3() {
 	__asm__ __volatile__ ("movl %%cr3,%%eax ; movl %%eax,%%cr3" : : : "memory");
 }
-
 
 // Public Function declarations
 void initialize_paging();
