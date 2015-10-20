@@ -268,3 +268,52 @@ At the end of start.asm the following entries are used.
 |     0x300     |	  0xC00		|0xXX300000	- 0xXX300FFF |  0x00002000	|
 |	  0x3FF		|	  0xFFC		|0xXX3FF000	- 0xXX3FFFFF |  0x00001000	|
 |---------------|---------------|------------------------|--------------|
+
+/*
+	kernel.ld
+	- BlueFire OS linker script - 
+*/ 
+OUTPUT_FORMAT("elf32-i386")
+
+K_VIR_START = 0xC0000000;
+K_PHYS_START = 0x100000;
+K_STACK_SIZE = 0x10000;
+PAGE_SIZE = 0x1000;
+
+ENTRY (_start)
+SECTIONS
+{
+	.text K_VIR_START : AT(K_PHYS_START)
+	{
+		KERNEL_TEXT = .;
+		*(.text*)
+		*(.rodata*)
+		. = ALIGN(PAGE_SIZE);
+		KERNEL_END_TEXT = .;
+	}
+
+	.data : AT(K_PHYS_START + (KERNEL_DATA - KERNEL_TEXT))
+	{
+		KERNEL_DATA = .;
+		*(.data*)
+		. = ALIGN(PAGE_SIZE);
+		KERNEL_END_DATA = .;
+	}
+
+	.bss : AT(K_PHYS_START + (KERNEL_BSS - KERNEL_TEXT))
+	{
+		_stack = .;
+		. += K_STACK_SIZE;
+		_stack_end = .;
+		K_STACK_END = .;
+
+		KERNEL_BSS = .;
+		*(.bss*)
+		*(COMMON*)
+		. = ALIGN(PAGE_SIZE);
+		KERNEL_END_BSS = .;
+	}
+	. = ALIGN(PAGE_SIZE);
+	KERNEL_END_CODE = .;
+}
+

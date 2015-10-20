@@ -34,6 +34,8 @@ void k_main() {
 
 	initialize_paging();
 
+	initialize_main_console();
+
 	dbg_brk();
 	// We must never reach this point.
 	PANIC("End of k_main reached.");

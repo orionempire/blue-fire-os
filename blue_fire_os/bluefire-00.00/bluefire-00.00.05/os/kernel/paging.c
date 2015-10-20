@@ -75,6 +75,7 @@ void init_free_frames() {
 
 	// -> 0xC0015000 - 0xC0030FFC : 0x(1000-8000)
 	phys_addr = P_ADDR_16MB;		//0x1000 (0x1000 X Page size(0x1000) = 16 MB)
+
 	K_VIR_END = free_frames;	//(KERNEL_TOP, dynamic) 0xC0015000 in the current example
 	while (phys_addr < ADDR_TO_PAGE(var_system_memory_amount)) {
 		*(K_VIR_END++) = phys_addr++;
@@ -164,6 +165,7 @@ void initialize_paging() {
 	// because the old TLB entries are still in the CPU, reloading cr3 empties this "cache". The other
 	// Other choice is to invlpg a address manually.
 	reload_CR3();
+
 }
 
 // ---------- Debug functions ----------

@@ -34,23 +34,23 @@ GLOBAL stage2_return_address
 ; defined in  kernel/main.c
 [EXTERN k_main]
 ; defined in kernel.ld
-[EXTERN K_STACK_END]
+[EXTERN KERNEL_END_STACK]
 
 
 ; Kernel virtual start address
-%define K_VIR_START		0xC0000000
+%define VIRTUAL_KERNEL_START	0xC0000000
 
 ;Kernel physiscal start address
-%define K_PHYS_START	0x100000
+%define PHYSICAL_KERNEL_START	0x100000
 
 ; Page directory and first 2 entires
-%define K_PAGE_DIR			0x1000	; Page directory
-%define K_PAGE_TAB			0x2000	; Kernel page table #0 (4MB)
-%define I_PAGE_TAB			0x3000	; First 4MB Identity-map page table
+%define KERNEL_PAGE_DIR			0x1000	; Page directory
+%define KERNEL_PAGE_TABLE		0x2000	; Kernel page table #0 (4MB)
+%define LOW_MEM_PAGE_TABLE		0x3000	; First 4MB Identity-map page table
 
 ; Paging constants
 %define	P_PRESENT 		0x01
-%define P_WRITE			0x02
+%define P_WRITABLE		0x02
 %define P_USER			0x04
 %define PAGE_SIZE		0x1000
 
@@ -100,7 +100,7 @@ entry:
 ;*****************************************************************************
 setup_and_enable_paging:
 	; -> 0x1000 - 0x1FFF : 0x0
-	memset K_PAGE_DIR, 0, PAGE_SIZE
+	memset KERNEL_PAGE_DIR, 0, PAGE_SIZE
 
 ;*****************************************************************************
 ; Set up the first 4MB as identity mapped memory.
@@ -110,9 +110,9 @@ setup_and_enable_paging:
 ;*****************************************************************************
 	;          Fill      :     With
 	; -> 0x3000 - 0x3FFF : 0x0(0 - 3FF)003
-	mov	eax, (P_PRESENT | P_WRITE)
+	mov	eax, (P_PRESENT | P_WRITABLE)
 	mov	ecx, 1024
-	mov	edi, I_PAGE_TAB
+	mov	edi, LOW_MEM_PAGE_TABLE
 	cld
 	; Fill the page table.
 Map_I_PAGE_TAB:
@@ -123,7 +123,7 @@ Map_I_PAGE_TAB:
 	; first page directory entry. (K_PAGE_DIR[0] = 1000)
 	; set the attributes to 0x7
 	; -> 0x1000 : 0x3007
-	mov dword [K_PAGE_DIR], I_PAGE_TAB | P_PRESENT | P_WRITE | P_USER
+	mov dword [KERNEL_PAGE_DIR], LOW_MEM_PAGE_TABLE | P_PRESENT | P_WRITABLE | P_USER
 
 ;*****************************************************************************
 ; Set up the kernel page table. The 4 MB starting at 1 MB as mapped to
@@ -134,9 +134,9 @@ Map_I_PAGE_TAB:
 ;*****************************************************************************
 	;          Fill      :     With
 	; -> 0x2000 - 0x2FFF : 0x0(100 - 4FF)003
-	mov	eax, (K_PHYS_START | P_PRESENT | P_WRITE)
+	mov	eax, (PHYSICAL_KERNEL_START | P_PRESENT | P_WRITABLE)
 	mov	ecx, 1024
-	mov	edi, K_PAGE_TAB
+	mov	edi, KERNEL_PAGE_TABLE
 	; Fill the page table.
 Map_K_PAGE_TAB:
 	stosd
@@ -146,7 +146,7 @@ Map_K_PAGE_TAB:
 	; 0x300 => K_VIR_START / PAGE_TABLE_REPRESENTS (0x1000 * 0x400)
 	; 0xC00 => 0x300 * 0x4
 	; -> 0x1C00 : 0x2007
-	mov dword [K_PAGE_DIR+(0xC00)], K_PAGE_TAB | P_PRESENT | P_WRITE | P_USER
+	mov dword [KERNEL_PAGE_DIR+(0xC00)], KERNEL_PAGE_TABLE | P_PRESENT | P_WRITABLE | P_USER
 
 ;*****************************************************************************
 ; Map page directory into itself. this allows no maintenance while ensuring
@@ -164,13 +164,13 @@ Map_K_PAGE_TAB:
 	; 0x3FF => 0xFFFFF000 /  PAGE_TABLE_REPRESENTS (0x1000 * 0x400)
 	; 0xFFC => 0x3FF * 0x4
 	; -> 0x1FFC : 0x1007
-	mov dword [K_PAGE_DIR+0xFFC], K_PAGE_DIR | P_PRESENT | P_WRITE | P_USER
+	mov dword [KERNEL_PAGE_DIR+0xFFC], KERNEL_PAGE_DIR | P_PRESENT | P_WRITABLE | P_USER
 
 ;*****************************************************************************
 ; Enable paging
 ;*****************************************************************************
 	; Setup the Page Directory Base Register
-	mov	eax, K_PAGE_DIR
+	mov	eax, KERNEL_PAGE_DIR
 	mov	cr3, eax
 	; enable
 	mov	eax, cr0
@@ -199,7 +199,7 @@ paging_enabled:
 	; Store system memory that was passed on the stack
 	pop DWORD [var_system_memory_amount]
 	; Initialize kernel stack pointer
-	mov	esp, K_STACK_END
+	mov	esp, KERNEL_END_STACK
 
 	; Jump to the kernel main in kernel/main.c
 	jmp	k_main

@@ -24,7 +24,10 @@ void initialize_boot_console() {
 	// Clear the screen.
 	video_clrscr( (console_t *)(&vir_cons[0]) );
 }
-
+// This is called after init_paging moves the virtual address of lower memory
+void initialize_main_console(){
+	vir_cons[0].vid_buffer = (u16int *)0xE00B8000;
+}
 /**************************************************************************
 * Put a character on the current console.
 * c - The ASCII value of the character.
