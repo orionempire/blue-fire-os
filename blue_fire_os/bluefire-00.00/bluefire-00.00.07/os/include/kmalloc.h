@@ -1,10 +1,10 @@
 /**************************************************************************
  *	bluefire-os
- *	Version: 00.00.00
+ *	Version: 00.00.07
  *	Author: David Davidson
  *	Name: kmalloc.h
- *	Created: Feb 6, 2012
- *	Last Update: Feb 6, 2012
+ *	Created: Oct 22, 2015
+ *	Last Update:
  *	Purpose:
  *  Usage:
 ***************************************************************************/
@@ -25,7 +25,6 @@ typedef struct MEMORY_BLOCK {
 
 // Public Function declarations
 void *kmalloc(u32int size);
-void kfree(void *ptr);
 void kmalloc_initialize();
 void dump_memory_map(void);
 

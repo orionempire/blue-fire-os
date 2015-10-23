@@ -87,7 +87,7 @@ static __inline__ void k_update_segment_regs() {
 * Memory manipulation procedures. Inline assembly used, it's less portable, but faster
 **************************************************************************/
 // sets all of destination specified to val 8 bits at a time
-// so memset8(X,0xFF,4) would write 0xFFFFFFFF at X
+// so memset08(X,0xFF,4) would write 0xFFFFFFFF at X
 static __inline__ void memset08(void *dest_ptr, u08int val, u32int count) {
 	__asm__ __volatile__ (	"cld\n"
 				"rep stosb": :"D"(dest_ptr), "c"(count), "a"(val));

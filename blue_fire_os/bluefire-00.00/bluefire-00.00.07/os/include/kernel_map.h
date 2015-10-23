@@ -14,29 +14,26 @@
 /**************************************************************************
  * 	Virtual address memory definitions
 **************************************************************************/
+// Lower Memory is the first 16 MB
+#define LOWER_MEMORY_SIZE	0x1000000
+
 // DMA memory (DON'T TOUCH)
 #define PHYSICAL_DMA_MEMORY_START			0x3000
 #define PHYSICAL_DMA_MEMORY_END				0x01000000
 
 // NOTE: Must be PAGE_SIZE*1024 aligned!!!
-#define VIRTUAL_KERNEL_START				0xC0000000
+#define VIRTUAL_KERNEL_START		0xC0000000
 
 // Kernel heap
 #define VIRTUAL_KERNEL_HEAP_START			0xD0000000
 #define VIRTUAL_KERNEL_HEAP_END				0xE0000000
 
 // the first 16MB of physical memory are mapped here
-#define VIRTUAL_ACTUAL_MEMORY_START			0xE0000000
-#define VIRTUAL_ACTUAL_MEMORY_END			0xE1000000
+#define VIRTUAL_LOWER_MEMORY_START	0xE0000000
+#define VIRTUAL_LOWER_MEMORY_END	VIRTUAL_LOWER_MEMORY_START + LOWER_MEMORY_SIZE	//0xE1000000
 
-// Temporary memory
-#define VIRTUAL_KERNEL_TEMP_MEMORY_START	0xF0000000
-#define VIRTUAL_KERNEL_TEMP_MEMORY_END		0xFFC00000
-
-// The page tables are self mapped here. The starting address of Virtual Memory
-// represented by the last (1024) entry in the PDE
-#define VIRTUAL_PAGE_TABLE_MAP				0xFFC00000
-//											(0xFFC00000	+ (0xFFC00000 		      / 1024 = 0x3FF000)) = 0xFFFFF000 (maps to 0x1000)
-#define VIRTUAL_PAGE_DIRECTORY_MAP			(0xFFC00000 + (VIRTUAL_PAGE_TABLE_MAP / 0x400))
+// the page tables are self mapped here.
+#define VIRTUAL_PAGE_TABLE_START		0xFFC00000
+#define VIRTUAL_PAGE_DIRECTORY_START	0xFFFFF000
 
 #endif /* KERNEL_MAP_H_ */

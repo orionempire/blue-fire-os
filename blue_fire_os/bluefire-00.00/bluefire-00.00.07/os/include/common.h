@@ -1,10 +1,10 @@
 /**************************************************************************
  *	bluefire-os
- *	Version: 00.00.07
+ *	Version: 00.00.04
  *	Author: David Davidson
  *	Name: common.h
  *	Created: Dec 14, 2011
- *	Purpose: Structures likely to be used all around the kernel.
+ *	Purpose:
  *  Usage:
 ***************************************************************************/
 
@@ -12,7 +12,7 @@
 #define COMMON_H_
 
 #define KERNEL_NAME	"BLUE FIRE (IA-32)"
-#define KERNEL_VERSION	"00.00.07"
+#define KERNEL_VERSION	"00.00.06"
 
 #define TRUE	1
 #define FALSE	0

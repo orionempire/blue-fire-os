@@ -115,15 +115,5 @@ static __inline__ void jmp_to_tss(u16int tss_sel) {
 
 // Public Function declarations
 s32int get_pid();
-void initialize_multitasking();
-s08int *get_pname();
-void sched_enter_critical_region();
-void sched_leave_critical_region();
-void do_idle();
-task_t *create_kthread(void *address, s08int *pname);
-task_t *create_process(void *address, void *buffer, s08int *pname);
-void auto_kill();
-void scheduler();
-void ps();
 
 #endif /* TASK_H_ */

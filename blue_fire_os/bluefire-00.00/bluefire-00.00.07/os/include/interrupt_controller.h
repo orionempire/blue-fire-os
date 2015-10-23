@@ -18,14 +18,6 @@
 #define SPURIOUS_IRQ	7
 #define SPURIOUS_IRQ_B	15
 
-// Interrupt enable Flag in EFLAGS
-#define EFLAGS_IF		0x200
-#define EFLAGS_IOPL3	0x3000
-#define EFLAGS_IOPL2	0x2000
-#define EFLAGS_IOPL1	0x3000
-#define EFLAGS_IOPL0	0x0000
-
-
 // 8259 Programmable Interrupt Controller ports
 #define MASTER_8259_COMMAND_PORT	0x20
 #define SLAVE_8259_COMMAND_PORT		0xA0

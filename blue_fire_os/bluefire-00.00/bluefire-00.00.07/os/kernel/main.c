@@ -1,6 +1,6 @@
 /**************************************************************************
  *	bluefire-os
- *	Version: 00.00.07
+ *	Version: 00.00.05
  *	Author: David Davidson
  *	Name: main.c
  *	Created: Dec 7, 2011
@@ -16,17 +16,13 @@ extern u32int var_system_memory_amount, _start;
 void print_ok();
 void print_failed();
 
-// temporary debug helpers
-void task_test();
-void sh_test();
-
-/**************************************************************************
+/******************************************************************************
 *
-***************************************************************************/
+******************************************************************************/
 
-/**************************************************************************
+/******************************************************************************
 * Control arrives here from assembly/start.asm
-***************************************************************************/
+******************************************************************************/
 void k_main() {
 
 	// Paging must be initialized first so that video can use its proper address
@@ -35,9 +31,6 @@ void k_main() {
 	initialize_video();
 
 	initialize_boot_console();
-
-	// There are now enough resources available to print to the screen.
-	kprintf("Paging and Video initialized successfully...\n");
 
 	// Print the welcome banner
 	kset_color(DEFAULT_COLOR);
@@ -49,7 +42,9 @@ void k_main() {
 	kprintf("Kernel is running at virtual address: %#010x\n", (u32int)&_start);
 	kprintf("Total System memory is: %d MB\n\n", (var_system_memory_amount /(1024 * 1024)) );
 
-
+	// There are now enough resources available to print to the screen.
+	kprintf("Paging and Video initialized successfully...");
+	print_ok();
 
 	// Reprogram the Programmable Interrupt Controller 8259
 	kprintf("Reprogramming PIC 8259...");
@@ -66,6 +61,11 @@ void k_main() {
 	initialize_IDT();
 	print_ok();
 
+	// Initialize the clock
+	kprintf("Initializing system clock...");
+	initialize_clock();
+	print_ok();
+
 	// Initialize memory manager.
 	kprintf("Initializing memory manager...");
 	kmalloc_initialize();
@@ -75,29 +75,16 @@ void k_main() {
 	initialize_DMA();
 	print_ok();
 
-	// Initialize multitasking
-	kprintf("Initializing multitasking...");
-	initialize_multitasking();
-	print_ok();
-
-	// Initialize the clock
-	kprintf("Initializing system clock...");
-	initialize_clock();
-	print_ok();
-
-	sh_test();
-
-	dbg_pause(1);
 	dump_memory_map();
-	ps();
 	dbg_brk();
+
 	// We must never reach this point.
 	PANIC("End of k_main reached.");
 }
 
-/**************************************************************************
+/******************************************************************************
 * Prints [ OK ] in green.
-***************************************************************************/
+******************************************************************************/
 void print_ok() {
 	kset_color( DEFAULT_COLOR );
 	kprintf( "\r\t\t\t\t\t\t[ " );
@@ -117,30 +104,4 @@ void  print_failed() {
 	kprintf( "Failed" );
 	kset_color( DEFAULT_COLOR );
 	kprintf( " ]\n" );
-}
-
-
-/**************************************************************************
-* Used for multitasking debugging. These will be moved to the shell
-* when it exists.
-***************************************************************************/
-void task_test() {
-	register u32int cr3;
-
-	u32int *temp = kmalloc(sizeof(temp));
-
-	__asm__ __volatile__ ("movl %%cr3, %0" : "=r"(cr3) : );
-	kprintf("\nWelcome from task %u!!!My kmalloc was %X. Here is my PDBR %X", get_pid(),temp, cr3);
-	kfree(temp);
-	auto_kill();
-}
-
-void sh_test() {
-
-	#define TOT_TASK_TEST	16
-	u32int i;
-
-	kprintf("\nCreating %u tasks. Please wait... ", TOT_TASK_TEST);
-	for(i = 0; i < TOT_TASK_TEST; i++)
-		create_process(&task_test, &task_test, "sh_task_test");
 }

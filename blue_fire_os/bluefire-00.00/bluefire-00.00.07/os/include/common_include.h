@@ -18,15 +18,12 @@
 #include <i386.h>
 #include <interrupt_controller.h>
 #include <interrupt_handler.h>
-#include <kernel.h>
 #include <kernel_map.h>
 #include <kmalloc.h>
 #include <mem.h>
 #include <paging.h>
-#include <queue.h>
 #include <stdarg.h>
 #include <task.h>
-#include <v86.h>
 #include <drivers/dma/dma.h>
 #include <drivers/video/video.h>
 #include <lib/ctype.h>

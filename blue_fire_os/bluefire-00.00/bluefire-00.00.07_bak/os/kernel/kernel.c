@@ -7,7 +7,7 @@
  *	Purpose:
  *  Usage:
 ***************************************************************************/
-#include <common_include.h>
+#include "../../../bluefire-00.00.07_bak/os/include/common_include.h"
 
 void error(const char *msg) {
 	disable_interrupts();

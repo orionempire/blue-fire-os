@@ -1,14 +1,13 @@
-/**************************************************************************
+/******************************************************************************
  *	bluefire-os
- *	Version: 00.00.00
+ *	Version: 00.00.07
  *	Author: David Davidson
  *	Name: kmalloc.c
- *	Created: Feb 6, 2012
+ *	Created: Oct 22, 2015
  *	Purpose:
  *  Usage:
-***************************************************************************/
+******************************************************************************/
 #include <common_include.h>
-
 
 // ---------- Memory operators for kernel ----------
 void *kmalloc(u32int size) {
@@ -89,75 +88,6 @@ void *kmalloc(u32int size) {
 	return ((void *)p_best);
 }
 
-void kfree(void *ptr) {
-//TODO get rid of the nested function!
-	void deallocate(memory_block_t *ptr) {
-		// Try to release physical frames occupied by the freed block
-		u32int start = PAGE_ALIGN_UP((u32int)((void *)ptr + sizeof(memory_block_t)));
-		u32int end = PAGE_ALIGN((u32int)((void *)ptr + sizeof(memory_block_t) + ptr->size));
-
-		while(start < end)
-		{
-			if (*ADDR_TO_PDE(start) != NULL)
-			{
-				delete_page(start);
-				start += PAGE_SIZE;
-			}
-			else
-				start = PAGE_DIR_ALIGN_UP(start);
-		}
-	}
-	memory_block_t *p, *p2;
-
-	if (ptr == NULL) return;
-
-	u32int flags;
-	disable_and_save_interrupts(flags);
-
-	// Point to the header
-	p = (void *)ptr - sizeof(memory_block_t);
-
-	if (p->magic != KMALLOC_MAGIC) return; // Is the process crazy?
-	if (p->flags != KMALLOC_ALLOC) return; // Crazy again?
-
-	// Free the block
-	p->flags = KMALLOC_FREE;
-	p->owner = 0;
-
-	// Try to combine the block with the next one...
-	p2 = (void *)p + p->size + sizeof(memory_block_t);
-
-	if (p2 < (memory_block_t *)VIRTUAL_KERNEL_HEAP_END) {
-		if (p2->flags == KMALLOC_FREE) {
-			// Let's merge the two blocks!
-			p->size += p2->size + sizeof(memory_block_t);
-			p2->magic = NULL;
-		}
-	}
-
-	// Try to combine the block with the previous one...
-	if (p != (memory_block_t *)VIRTUAL_KERNEL_HEAP_START) {
-		// Find the previous block
-		p2 = (void *)VIRTUAL_KERNEL_HEAP_START;
-		for(;;) {
-			if (((void *)p2 + p2->size + sizeof(memory_block_t)) == p) {
-				// Block found! Check if it's a free block
-				if (p2->flags == KMALLOC_FREE) {
-					// Let's merge the two blocks!
-					p2->size += (p->size + sizeof(memory_block_t));
-					p->magic = NULL;
-					p = p2;
-				}
-				break;
-			}
-			p2 = (void *)p2 + p2->size + sizeof(memory_block_t);
-		}
-	}
-	deallocate(p);
-
-	restore_interrupts(flags);
-}
-
 
 void kmalloc_initialize() {
 
@@ -193,8 +123,7 @@ void dump_memory_map(void) {
 
 		if (p >= (memory_block_t *)VIRTUAL_KERNEL_HEAP_END) break;
 
-		// Wait for a key... //
-		//if( kgetchar() == CTRL_C ) break;
+		// No keyboard yet so can't pause
 		dbg_pause(1);
 	}
 }

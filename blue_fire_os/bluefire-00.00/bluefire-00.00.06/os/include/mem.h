@@ -124,5 +124,8 @@ static __inline__ void memcpy32(void *dest_ptr, const void *org_ptr, u32int coun
 	__asm__("": : :"%ecx", "%edi", "%esi");
 }
 // Public Function declarations
+void initialize_GDT();
+u16int setup_GDT_entry(u16int limit, u32int base, u08int attribs0_7, u08int attribs8_15);
+void remove_GDT_entry(u16int sel);
 
 #endif /* MEM_H_ */
