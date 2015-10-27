@@ -15,6 +15,11 @@
 #define KMALLOC_FREE		0
 #define KMALLOC_ALLOC		1
 
+// Allocate normal kernel ram.
+#define GFP_KERNEL	1
+// Use inside interrupt
+#define GFP_ATOMIC	2
+
 // Structures
 typedef struct MEMORY_BLOCK {
 	u32int	magic;

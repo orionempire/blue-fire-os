@@ -1117,10 +1117,10 @@ file blue_fire_kernel32.elf
 
 define hook-stop
 	if ($rip == exc_0E)
-		printf "page fault caught in gdb_bochs_scheme_32 at  0x%08X ", $rip
+		printf "page fault caught at exc_0E(0x%08X) in gdb_bochs_scheme_32.\n", $rip
 		continue
 	else
-		print "hook-stop caught in gdb_bochs_scheme_32"
+		printf "hook-stop at 0x%08X in gdb_bochs_scheme_32\n.", $rip
 	end
 end
 

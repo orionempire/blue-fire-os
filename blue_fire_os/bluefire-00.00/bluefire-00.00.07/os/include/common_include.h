@@ -22,8 +22,11 @@
 #include <kmalloc.h>
 #include <mem.h>
 #include <paging.h>
+#include <semaphore.h>
+#include <spinlock.h>
 #include <stdarg.h>
 #include <task.h>
+#include <umalloc.h>
 #include <drivers/dma/dma.h>
 #include <drivers/video/video.h>
 #include <lib/ctype.h>

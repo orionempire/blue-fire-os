@@ -49,7 +49,5 @@ if [ -e $COM1_LOG ]; then
     rm -f $COM1_LOG
 fi
 
-rm $BOCHS_CONFIG
-
 exit 0
 

@@ -75,7 +75,13 @@ void k_main() {
 	initialize_DMA();
 	print_ok();
 
-	dump_memory_map();
+	// Initialize multitasking
+	kprintf("Initializing multitasking...");
+	initialize_multitasking();
+	print_ok();
+
+	//dump_memory_map();
+	dbg("--->0002")
 	dbg_brk();
 
 	// We must never reach this point.

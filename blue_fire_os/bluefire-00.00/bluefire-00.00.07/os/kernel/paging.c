@@ -135,6 +135,95 @@ s32int map_page(u32int vir_addr, u32int phys_addr, u16int attribs) {
 	return(TRUE);
 }
 
+void delete_page(u32int addr) {
+	// Unmap the page and destroy the physical frame where the address is mapped
+	u32int temp;
+
+	// Align address to the page boundary
+	addr = PAGE_ALIGN(addr);
+
+	if (*VIRT_TO_PDE_ADDR(addr) == NULL) return;
+	if (*VIRT_TO_PTE_ADDR(addr) == NULL) return;
+
+	u32int flags;
+	disable_and_save_interrupts(flags);
+
+
+	// Push the physical frame into the free frames stack
+	if ((virtual_to_physical_address(addr) > PHYSICAL_DMA_MEMORY_END) && (virtual_to_physical_address(addr) < var_system_memory_amount))
+		push_frame(virtual_to_physical_address(addr)/PAGE_SIZE);
+
+	// Unmap the page
+	*VIRT_TO_PTE_ADDR(addr) = NULL;
+
+	// Invalidate the page in the TLB cache
+	invlpg(addr);
+
+	// Check if it is possible to deallocate the frame
+	// of the page table used to map the address
+	// So let's examine all entries in the page table
+	// where the address is mapped.
+	for( temp = PAGE_DIR_ALIGN(addr); temp < PAGE_DIR_ALIGN_UP(addr); temp += PAGE_SIZE ) {
+		if (*VIRT_TO_PTE_ADDR(temp) != NULL){
+			restore_interrupts(flags);
+			return;
+		}
+	}
+
+	// No PTEs found... deallocate the page table!
+	push_frame(*VIRT_TO_PDE_ADDR(addr)/PAGE_SIZE);
+	*VIRT_TO_PDE_ADDR(addr) = NULL;
+
+	// Invalidate the self-mapping page
+	invlpg((u32int)VIRT_TO_PTE_ADDR(addr));
+
+	restore_interrupts(flags);
+}
+
+// Spinlock for mutual exclusion of temporary pages.
+DECLARE_SPINLOCK( mem_temp_lock );
+
+void *get_temp_page() {
+	u08int *p = (u08int *)VIRTUAL_KERNEL_TMP_MEMORY_START;
+	size_t frame;
+	u32int flags;
+
+	spin_lock_irqsave( &mem_temp_lock, flags );
+
+	while( TRUE ) {
+		if( *VIRT_TO_PDE_ADDR((size_t)p) ) {
+			if( *VIRT_TO_PTE_ADDR((size_t)p) ) {
+				p += PAGE_SIZE;
+				if( p >= (u08int *)VIRTUAL_KERNEL_TMP_MEMORY_END ) {
+					// Out of temporary memory!
+					spin_unlock_irqrestore( &mem_temp_lock, flags );
+					return( NULL );
+				}
+				continue;
+			}
+		}
+		// OK! A free temporary page has been found!
+		// Now map this page to a free frame and return the
+		// virtual address of this page, or NULL if there is
+		// no free frame.
+		frame = pop_frame();
+		if ( frame==NULL ) {
+			p = NULL;
+		} else if( !map_page((u32int)p, frame, P_PRESENT | P_WRITABLE) ){
+			p = NULL;
+		}
+		spin_unlock_irqrestore( &mem_temp_lock, flags );
+		return( (void *)p );
+	}
+}
+
+// ---------- Generic operators ----------
+u32int virtual_to_physical_address(u32int vir_addr) {
+	// Returns the physical address associated with the virtual address
+	if (*VIRT_TO_PDE_ADDR(vir_addr) == NULL) return(NULL);
+	return ((*VIRT_TO_PTE_ADDR(vir_addr) & -PAGE_SIZE) + (vir_addr % PAGE_SIZE));
+}
+
 /**************************************************************************
 *	---------- Page fault handler ----------
 *	This function is hardcoded in the IDT and called on a page fault exception.

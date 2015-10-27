@@ -61,6 +61,29 @@
 // ADDR_TO_PAGE(1000000) -> 0x1000
 #define P_ADDR_16MB		0x1000
 
+// TODO
+//! Determine the page size.
+#define PAGE_SHIFT	12
+
+//! Determine the memory area covered by a page directory entry.
+#define PAGE_DIR_SHIFT	22
+//! Get the page directory index of the current address.
+#define PDE_INDEX( addr ) \
+	( ((addr) >> PAGE_DIR_SHIFT) & 1023 )
+
+//! Get the page table index of the current address.
+#define PTE_INDEX( addr ) \
+	( ((addr) >> PAGE_SHIFT) & 1023 )
+
+//! Get the offset of a page directory entry.
+#define PDE_OFFSET( pd, addr ) \
+	( (u32int *)(pd) + PDE_INDEX( addr ) )
+
+//! Get the offset of a page table entry.
+#define PTE_OFFSET( pt, addr ) \
+	( (u32int *)(pt) + PTE_INDEX( addr ) )
+// \TODO
+
 // Paging Procedures
 // Because this OS is didactic, global pages are not supported or accounted for.
 static __inline__ void invlpg(u32int page_addr) {
@@ -69,6 +92,21 @@ static __inline__ void invlpg(u32int page_addr) {
 
 static __inline__ void reload_CR3() {
 	__asm__ __volatile__ ("movl %%cr3,%%eax ; movl %%eax,%%cr3" : : : "memory");
+}
+
+// Translate a virtual address into the physical address.
+// vir_addr The virtual address to be translated.
+static __inline__ size_t vir_to_phys(size_t vir_addr) {
+	if (*VIRT_TO_PDE_ADDR(vir_addr) == NULL)
+		return(NULL);
+	return( (*VIRT_TO_PTE_ADDR(vir_addr) & -PAGE_SIZE) + (vir_addr % PAGE_SIZE) );
+}
+
+// Switch into a new virtual address space.
+// pdbr is the physical address of the page directory!
+static __inline__ void switch_mmu( u32int pdbr ) {
+	// Switch to the new virtual space.
+	__asm__ __volatile__ ( "mov %0, %%cr3" : : "r"(pdbr) );
 }
 
 // Public Function declarations
