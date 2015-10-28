@@ -80,10 +80,17 @@ void k_main() {
 	initialize_multitasking();
 	print_ok();
 
-	//dump_memory_map();
-	dbg("--->0002")
-	dbg_brk();
+	// Initialize the clock
+	kprintf("Initializing system clock...");
+	//initialize_clock();
+	print_ok();
 
+	//sh_test();
+
+	dbg_pause(1);
+	dump_memory_map();
+	//ps();
+	dbg_brk();
 	// We must never reach this point.
 	PANIC("End of k_main reached.");
 }

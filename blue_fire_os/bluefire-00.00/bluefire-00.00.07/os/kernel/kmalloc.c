@@ -153,7 +153,7 @@ void kfree(void *ptr) {
 }
 
 
-void *kmemalign(size_t alignment, size_t size, int flags) {
+void *kmemalign(size_t alignment, size_t size, s32int flags) {
 	memory_block_t *p, *p2;
 
 	// Cannot allocate memory with a size of zero.
@@ -177,7 +177,7 @@ void *kmemalign(size_t alignment, size_t size, int flags) {
 		// Align the pointer p to the boundary.
 		u32int flags;
 
-		local_irq_save( flags );
+		disable_and_save_interrupts( flags );
 
 		// Allocate the new block.
 		p2 = p + 2;
@@ -190,7 +190,7 @@ void *kmemalign(size_t alignment, size_t size, int flags) {
 		// Free the unused space.
 		(p-1)->size = (size_t)p2 - (size_t)p;
 
-		local_irq_restore( flags );
+		restore_interrupts( flags );
 
 		kfree( p );
 

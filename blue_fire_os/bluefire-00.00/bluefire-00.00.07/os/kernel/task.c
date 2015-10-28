@@ -15,7 +15,26 @@ task_t	*curr_task = NULL;
 //declared in assembly/exit.asm
 extern void __task_exit_point;
 
-int get_pid() {
+
+// Last used pid.
+s32int last_pid = 0;
+
+// A spinlock used to generate new pids.
+DECLARE_SPINLOCK( pid_lock );
+// Create a new pid. return The new pid created.
+
+//This routine generate a pid using an atomic increment.
+__inline__ s32int new_pid() {
+	s32int ret;
+
+	spin_lock( &pid_lock );
+	ret = ++last_pid;
+	spin_unlock( &pid_lock );
+
+	return( ret );
+}
+
+s32int get_pid() {
 	// Return the current task pid if there is a curr_task
 	if (!curr_task) return NULL;
 	return(curr_task->pid);
@@ -53,7 +72,7 @@ static void new_vspace( task_t *t ) {
 }
 
 //TODO
-static inline u32int *task_setup_stack( int argc, char **argv, size_t stack_start ) {
+static __inline__ u32int *task_setup_stack( int argc, char **argv, size_t stack_start ) {
 	u32int *stack = (u32int *)( ALIGN_DOWN(stack_start, sizeof(u32int)) - sizeof(u32int) );
 	u32int *user_argv;
 	int i;
@@ -91,7 +110,7 @@ static inline u32int *task_setup_stack( int argc, char **argv, size_t stack_star
 }
 
 //TODO
-task_t *create_process(void *routine, int argc, char **argv, char *pname, int privilege) {
+task_t *create_process(void *routine, s32int argc, s08int **argv, s08int *pname, s32int privilege) {
 	task_t *new_task;
 
 	sched_enter_critical_region();
@@ -179,6 +198,75 @@ task_t *create_process(void *routine, int argc, char **argv, char *pname, int pr
 	// Initialize the user heap.
 	umalloc_init( new_task, VIRTUAL_TASK_HEAP_START, VIRTUAL_TASK_HEAP_SIZE );
 
+	// Restore the old address space.
+	if( curr_task != NULL ) { task_switch_mmu( new_task, curr_task ); }
+
+	// Setup the IO port mapping.
+	new_task->tss.io_map_addr = sizeof(tss_t);
+	memsetl( new_task->tss.io_map, 0xffffffff, IO_MAP_SIZE );
+
+	// Setup general registers.
+	if ( privilege == KERNEL_PRIVILEGE ) {
+		new_task->tss.ds = new_task->tss.es =
+		new_task->tss.fs = new_task->tss.gs = KERNEL_DATA;
+	} else {
+		new_task->tss.ds = new_task->tss.es =
+		new_task->tss.fs = new_task->tss.gs = USER_DATA | 3;
+	}
+
+	// Setup the eflags register.
+	new_task->tss.eflags = EFLAGS_IOPL0 | EFLAGS_IF | 0x02;
+
+	// Setup starting address (program counter).
+	new_task->tss.cs = (privilege == KERNEL_PRIVILEGE) ? KERNEL_CODE : USER_CODE | 3;
+	new_task->tss.eip = (size_t)routine;
+
+	// Store the process name.
+	// The last character must be ever '\0' (end of string).
+	strncpy( new_task->name, pname, sizeof(new_task->name) - 2 );
+
+	// Set the current working directory.
+	new_task->cwd = 0;
+
+	// Set the process credentials.
+	new_task->pid = new_pid();
+	if( privilege == KERNEL_PRIVILEGE ) {
+		new_task->uid = new_task->euid =
+		new_task->suid = new_task->fsuid = 0;
+		new_task->gid = new_task->egid =
+		new_task->sgid = new_task->fsgid = 0;
+	} else {
+		new_task->uid = new_task->euid =
+		new_task->suid = new_task->fsuid = 1;
+		new_task->gid = new_task->egid =
+		new_task->sgid = new_task->fsgid = 1;
+	}
+
+	// Set the parent.
+	new_task->father = curr_task;
+
+	// Set the console.
+	if( curr_task != NULL ) {
+		new_task->console = curr_task->console;
+	}
+
+	// Setup the priority.
+	new_task->priority = new_task->counter = HIGH_PRIORITY;
+
+	// Insert the task into the ready queue.
+	rem_queue( &zombie_queue, new_task );
+	add_queue( &ready_queue, new_task );
+	new_task->state = TASK_READY;
+
+	sched_leave_critical_region();
+
+	// This is a little trick... Because we exit
+	// from a very long critical region we call
+	// the scheduler to enforce a new task selection.
+	if( curr_task != NULL )
+		schedule();
+
+	return( new_task );
 }
 
 /**************************************************************************
@@ -199,4 +287,13 @@ void sched_leave_critical_region() {
 void initialize_multitasking() {
 	// Create the "init" task.
 	curr_task = create_process( NULL, 0, NULL, "init", KERNEL_PRIVILEGE );
+
+	// Set the console.
+	curr_task->console = 1;
+
+	// After the init thread is out it will become the idle task.
+	idle_task = curr_task;
+
+	// Load task register.
+	__asm__ __volatile__ ("ltr %0" : : "a" (curr_task->tss_sel));
 }

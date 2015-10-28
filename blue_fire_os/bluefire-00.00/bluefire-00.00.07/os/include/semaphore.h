@@ -14,13 +14,12 @@
 // Spinlock semaphore structure.
 typedef struct semaphore {
 	atomic_t count;
-	int sleepers;
+	s32int sleepers;
 	queue_t *waitq;
 } semaphore_t;
 
 // Initialize a spinlock semaphore.
-static __inline__ void init_MUTEX( semaphore_t *sem )
-{
+static __inline__ void initialize_MUTEX( semaphore_t *sem ){
 	atomic_set( &(sem->count), 1 );
 	sem->sleepers = 0;
 	sem->waitq = NULL;

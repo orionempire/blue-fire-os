@@ -1,4 +1,4 @@
-/**************************************************************************
+/******************************************************************************
  *	bluefire-os
  *	Version: 00.00.07
  *	Author: David Davidson
@@ -6,7 +6,7 @@
  *	Created: Oct 22, 2015
  *	Purpose:
  *  Usage:
-***************************************************************************/
+******************************************************************************/
 #include <common_include.h>
 
 void umalloc_init(task_t *t, size_t heap_start, size_t heap_size)
@@ -24,7 +24,7 @@ void umalloc_init(task_t *t, size_t heap_start, size_t heap_size)
 	// Setup the heap in the task structure.
 	t->heap_start = heap_start;
 	t->heap_size = heap_size;
-	init_MUTEX( &(t->heap_sem) );
+	initialize_MUTEX( &(t->heap_sem) );
 
 	// Create only one hudge block.
 	p = (umem_block_t *)heap_start;

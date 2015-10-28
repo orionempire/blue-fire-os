@@ -30,6 +30,37 @@
 #define THREAD_TYPE		0x00 //!< A kernel thread type.
 #define PROCESS_TYPE		0x01 //!< A task type.
 
+//! TSS without I/O bit map.
+typedef struct tss
+{
+	uint32_t	link;
+	uint32_t	esp0;
+	uint16_t	ss0, __ss0h;
+	uint32_t	esp1;
+	uint16_t	ss1, __ss1h;
+	uint32_t	esp2;
+	uint16_t	ss2, __ss2h;
+	uint32_t	cr3;
+	uint32_t	eip;
+	uint32_t	eflags;
+	uint32_t	eax, ecx, edx, ebx;
+	uint32_t	esp;
+	uint32_t	ebp;
+	uint32_t	esi;
+	uint32_t	edi;
+	uint16_t	es, __esh;
+	uint16_t	cs, __csh;
+	uint16_t	ss, __ssh;
+	uint16_t	ds, __dsh;
+	uint16_t	fs, __fsh;
+	uint16_t	gs, __gsh;
+	uint16_t	ldtr, __ldtrh;
+	uint16_t	trace, io_map_addr;
+} tss_t;
+
+
+// Size in double-words of the I/O bit map.
+#define IO_MAP_SIZE	2048
 
 // Task state segment with I/O bit map
 typedef struct TSS_IO {
@@ -158,7 +189,8 @@ void sched_enter_critical_region();
 void sched_leave_critical_region();
 //void do_idle();
 //task_t *create_kthread(void *address, s08int *pname);
-task_t *create_process(void *address, void *buffer, s08int *pname);
+//task_t *create_process(void *address, void *buffer, s08int *pname);
+task_t *create_process(void *routine, s32int argc, s08int **argv, s08int *pname, s32int privilege);
 //void auto_kill();
 //void scheduler();
 //void ps();

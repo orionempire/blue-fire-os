@@ -75,4 +75,18 @@ static __inline__ void atomic_dec(atomic_t *v) {
 	__asm__ __volatile__ (	"lock; decl %0" : "=m"(v->counter) : "m"(v->counter));
 }
 
+//TODO
+static __inline__ void jmp_to_tss(word tss_sel) {
+	static struct {
+	unsigned eip : 32; // 32 bit
+	unsigned cs  : 16; // 16 bit
+	} __attribute__ ((packed)) tss_link = {0, 0};
+
+	// Set the TSS link						//
+	tss_link.cs = tss_sel;
+
+	// Jump to the task						//
+	__asm__ __volatile__ ("ljmp *(%0)" : : "m" (tss_link));
+}
+
 #endif /* I386_H_ */

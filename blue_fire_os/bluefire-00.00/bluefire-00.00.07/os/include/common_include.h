@@ -10,8 +10,8 @@
 #ifndef COMMON_INCLUDE_H_
 #define COMMON_INCLUDE_H_
 
+#include <atomic.h>
 #include <common.h>
-
 #include <clock.h>
 #include <console.h>
 #include <exception_handler.h>
@@ -22,6 +22,7 @@
 #include <kmalloc.h>
 #include <mem.h>
 #include <paging.h>
+#include <sched.h>
 #include <semaphore.h>
 #include <spinlock.h>
 #include <stdarg.h>

@@ -32,5 +32,6 @@ typedef struct MEMORY_BLOCK {
 void *kmalloc(u32int size);
 void kmalloc_initialize();
 void dump_memory_map(void);
+void *kmemalign(size_t alignment, size_t size, s32int flags);
 
 #endif /* KMALLOC_H_ */
