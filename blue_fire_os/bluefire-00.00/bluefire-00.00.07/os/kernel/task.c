@@ -10,11 +10,18 @@
 #include <common_include.h>
 
 // Current running task
-task_t	*curr_task = NULL;
+//task_t	*current_task = NULL;
 
 //declared in assembly/exit.asm
-extern void __task_exit_point;
+extern size_t __task_exit_point;
+//extern void __task_exit_point;
 
+
+// Declared in sched.c
+extern queue_t *ready_queue;
+extern task_t	*current_task;
+extern task_t *idle_task;
+extern queue_t *zombie_queue;
 
 // Last used pid.
 s32int last_pid = 0;
@@ -36,8 +43,8 @@ __inline__ s32int new_pid() {
 
 s32int get_pid() {
 	// Return the current task pid if there is a curr_task
-	if (!curr_task) return NULL;
-	return(curr_task->pid);
+	if (!current_task) return NULL;
+	return(current_task->pid);
 }
 
 //TODO
@@ -52,22 +59,22 @@ static void new_vspace( task_t *t ) {
 	}
 
 	// Initialize PDBR.
-	memset( t->pdbr, 0, VIRT_TO_PDE_IDX(VIRTUAL_KERNEL_START) * sizeof(u32int) );
+	memset32( t->pdbr, 0, VIRT_TO_PDE_IDX(VIRTUAL_KERNEL_START) * sizeof(u32int) );
 
-	if( curr_task ) {
+	if( current_task ) {
 		for( i = VIRT_TO_PDE_IDX(VIRTUAL_KERNEL_START); i < 1023; i++ )
-			t->pdbr[ i ] = curr_task->pdbr[ i ];
+			t->pdbr[ i ] = current_task->pdbr[ i ];
 	} else {
 		for( i = VIRT_TO_PDE_IDX(VIRTUAL_KERNEL_START); i < 1023; i++ )
 			t->pdbr[ i ] = ((u32int *)VIRTUAL_PAGE_DIRECTORY_START)[ i ];
 	}
 	// Map page directory into itself.
-	t->pdbr[ 1023 ] =  vir_to_phys((size_t)(t->pdbr)) | P_PRESENT | P_WRITABLE;
+	t->pdbr[ 1023 ] =  virtual_to_physical_address((size_t)(t->pdbr)) | P_PRESENT | P_WRITABLE;
 
 	// Get the pdbr counter of the father
 	// (we've just made the update!)
-	if( curr_task ) {
-		t->pdbr_update_counter = curr_task->pdbr_update_counter;
+	if( current_task ) {
+		t->pdbr_update_counter = current_task->pdbr_update_counter;
 	}
 }
 
@@ -80,7 +87,7 @@ static __inline__ u32int *task_setup_stack( int argc, char **argv, size_t stack_
 	// Copy external parameters strings.
 	for( i = 0; i < argc; i++ ) {
 		stack = (u32int *)((size_t)stack - strlen(argv[i]) - 1);
-		strcpy( (char *)stack, argv[i] );
+		strcpy08( (char *)stack, argv[i] );
 		argv[i] = (char *)stack;
 	}
 
@@ -141,7 +148,7 @@ task_t *create_process(void *routine, s32int argc, s08int **argv, s08int *pname,
 		return( NULL );
 	}
 	// Null the stack to enforce the page mapping
-	memset( (void *)(new_task->pl0_stack), 0, STACK_SIZE );
+	memset32( (void *)(new_task->pl0_stack), 0, STACK_SIZE );
 	// Setup the privileged stack.
 	new_task->tss.ss0 = KERNEL_STACK;
 	new_task->tss.esp0 = ALIGN_DOWN( (size_t)(new_task->pl0_stack) + STACK_SIZE - sizeof(u32int), sizeof(u32int) );
@@ -178,11 +185,11 @@ task_t *create_process(void *routine, s32int argc, s08int **argv, s08int *pname,
 	}
 
 	// Setup the task page directory address.
-	new_task->tss.cr3 = vir_to_phys( (size_t)(new_task->pdbr) );
+	new_task->tss.cr3 = virtual_to_physical_address( (size_t)(new_task->pdbr) );
 
 	// Temporary switch to the new address space.
-	if( curr_task != NULL )
-		task_switch_mmu( curr_task, new_task );
+	if( current_task != NULL )
+		task_switch_mmu( current_task, new_task );
 	else
 		switch_mmu( new_task->tss.cr3 );
 
@@ -199,11 +206,11 @@ task_t *create_process(void *routine, s32int argc, s08int **argv, s08int *pname,
 	umalloc_init( new_task, VIRTUAL_TASK_HEAP_START, VIRTUAL_TASK_HEAP_SIZE );
 
 	// Restore the old address space.
-	if( curr_task != NULL ) { task_switch_mmu( new_task, curr_task ); }
+	if( current_task != NULL ) { task_switch_mmu( new_task, current_task ); }
 
 	// Setup the IO port mapping.
 	new_task->tss.io_map_addr = sizeof(tss_t);
-	memsetl( new_task->tss.io_map, 0xffffffff, IO_MAP_SIZE );
+	memset32( new_task->tss.io_map, 0xffffffff, IO_MAP_SIZE );
 
 	// Setup general registers.
 	if ( privilege == KERNEL_PRIVILEGE ) {
@@ -223,7 +230,7 @@ task_t *create_process(void *routine, s32int argc, s08int **argv, s08int *pname,
 
 	// Store the process name.
 	// The last character must be ever '\0' (end of string).
-	strncpy( new_task->name, pname, sizeof(new_task->name) - 2 );
+	strncpy08( new_task->name, pname, sizeof(new_task->name) - 2 );
 
 	// Set the current working directory.
 	new_task->cwd = 0;
@@ -243,11 +250,11 @@ task_t *create_process(void *routine, s32int argc, s08int **argv, s08int *pname,
 	}
 
 	// Set the parent.
-	new_task->father = curr_task;
+	new_task->father = current_task;
 
 	// Set the console.
-	if( curr_task != NULL ) {
-		new_task->console = curr_task->console;
+	if( current_task != NULL ) {
+		new_task->console = current_task->console;
 	}
 
 	// Setup the priority.
@@ -263,7 +270,7 @@ task_t *create_process(void *routine, s32int argc, s08int **argv, s08int *pname,
 	// This is a little trick... Because we exit
 	// from a very long critical region we call
 	// the scheduler to enforce a new task selection.
-	if( curr_task != NULL )
+	if( current_task != NULL )
 		schedule();
 
 	return( new_task );
@@ -286,14 +293,14 @@ void sched_leave_critical_region() {
 
 void initialize_multitasking() {
 	// Create the "init" task.
-	curr_task = create_process( NULL, 0, NULL, "init", KERNEL_PRIVILEGE );
+	current_task = create_process( NULL, 0, NULL, "init", KERNEL_PRIVILEGE );
 
 	// Set the console.
-	curr_task->console = 1;
+	current_task->console = 1;
 
 	// After the init thread is out it will become the idle task.
-	idle_task = curr_task;
+	idle_task = current_task;
 
 	// Load task register.
-	__asm__ __volatile__ ("ltr %0" : : "a" (curr_task->tss_sel));
+	__asm__ __volatile__ ("ltr %0" : : "a" (current_task->tss_sel));
 }

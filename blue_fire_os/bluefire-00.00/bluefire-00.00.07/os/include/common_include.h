@@ -10,10 +10,13 @@
 #ifndef COMMON_INCLUDE_H_
 #define COMMON_INCLUDE_H_
 
-#include <atomic.h>
+//should go first for use by all other headers.
 #include <common.h>
+
+#include <atomic.h>
 #include <clock.h>
 #include <console.h>
+#include <errorno.h>
 #include <exception_handler.h>
 #include <i386.h>
 #include <interrupt_controller.h>
@@ -22,6 +25,7 @@
 #include <kmalloc.h>
 #include <mem.h>
 #include <paging.h>
+#include <queue.h>
 #include <sched.h>
 #include <semaphore.h>
 #include <spinlock.h>

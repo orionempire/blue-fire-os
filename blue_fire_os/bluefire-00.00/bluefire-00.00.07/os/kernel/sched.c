@@ -20,18 +20,23 @@ DECLARE_QUEUE( wait_queue );
 DECLARE_QUEUE( zombie_queue );
 
  // Current running task.
-task_t	*curr_task = NULL;
+task_t	*current_task = NULL;
 
 // IDLE task structure.
 task_t *idle_task = NULL;
+
+// Spinlock to enable/disable scheduling.
+DECLARE_SPINLOCK( sched_enabled );
 
 int sched_is_disabled( void ) {
 	return( spin_is_locked(&sched_enabled) );
 }
 
+//! A flag to invoke a refresh of the task queues.
+atomic_t refresh_queues_flag = atomic_init( 0 );
+
 //! Update all task queue.
-static __inline__ void do_refresh_queues()
-{
+static __inline__ void do_refresh_queues(){
 	queue_t *t, *t2;
 	task_t *p;
 	int n;
@@ -71,8 +76,7 @@ static __inline__ void do_refresh_queues()
 /*!
  *	This routine supplies to change the context of the tasks.
  */
-static __inline__ void switch_to( task_t *prev, task_t *next )
-{
+static __inline__ void switch_to( task_t *prev, task_t *next ) {
 	// Perform the context switch only if it is necessary.
 	if( prev != next ) {
 		// Update the page directory for kernel address
@@ -91,7 +95,7 @@ static __inline__ void switch_to( task_t *prev, task_t *next )
 				// Ok... we have to update now!
 				memcpy08( PDE_OFFSET(next->pdbr, VIRTUAL_KERNEL_START),
 					PDE_OFFSET(prev->pdbr, VIRTUAL_KERNEL_START),
-					( PDE_INDEX(PAGE_DIR_MAP) - PDE_INDEX(VIRTUAL_KERNEL_START) ) * sizeof(uint32_t) );
+					( PDE_INDEX(VIRTUAL_PAGE_DIRECTORY_START) - PDE_INDEX(VIRTUAL_KERNEL_START) ) * sizeof(u32int) );
 			}
 			// Update the pdbr counter.
 			next->pdbr_update_counter = prev->pdbr_update_counter;
@@ -103,11 +107,11 @@ static __inline__ void switch_to( task_t *prev, task_t *next )
 
 
 void schedule( void ) {
-	s32int min_counter = INT_MAX;
+	s32int min_counter = INT_MAX;	\
 	task_t *prev, *next;
 	queue_t *entry;
 	s32int n;
-	uint32_t flags;
+	u32int flags;
 
 	if( sched_is_disabled() ){
 		// We can't switch to another process!
@@ -123,18 +127,18 @@ void schedule( void ) {
 	}
 
 	// Save the previous task.
-	prev = curr_task;
+	prev = current_task;
 
 	// Set the idle task as the default candidate to run.
-	curr_task = idle_task;
+	current_task = idle_task;
 
 	// The scheduler's body.
 	prev->counter = prev->priority;
 	queue_for_each( entry, n, ready_queue ) {
 		next = queue_get_entry( entry );
 		if( next->counter < min_counter ) {
-			curr_task = next;
-			min_counter = curr_task->counter;
+			current_task = next;
+			min_counter = current_task->counter;
 		}
 		if( next->counter > (HIGH_PRIORITY << 1) ) {
 			(next->counter)--;
@@ -142,7 +146,7 @@ void schedule( void ) {
 	}
 
 	// Switch from the previous to the next process.
-	switch_to( prev, curr_task );
+	switch_to( prev, current_task );
 
 	restore_interrupts( flags );
 }

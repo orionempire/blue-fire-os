@@ -18,5 +18,8 @@
 // Priority level for real-time tasks.
 #define REAL_TIME_PRIORITY	( -64 )
 
-
+/******************************************************************************
+ *			--------- PUBLIC FUNCTION DECLARATIONS ----------
+******************************************************************************/
+void schedule( void );
 #endif /* SCHED_H_ */

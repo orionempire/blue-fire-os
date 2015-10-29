@@ -22,4 +22,9 @@ typedef struct UMEM_BLOCK {
 	u32int	size;
 	u32int	owner;
 } umem_block_t;
+
+/******************************************************************************
+ *		--------- Public function decelerations ----------
+******************************************************************************/
+void umalloc_init(task_t *t, size_t heap_start, size_t heap_size);
 #endif /* UMALLOC_H_ */

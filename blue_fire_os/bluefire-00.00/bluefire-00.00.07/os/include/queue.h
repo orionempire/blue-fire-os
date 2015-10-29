@@ -38,8 +38,7 @@ static __inline__ void __queue_del_entry( queue_t **q, queue_t *entry ) {
 }
 
 //! Delete the current entry into the queue safe against empty queues.
-static __inline__ int queue_del_entry( queue_t **q, queue_t *entry )
-{
+static __inline__ int queue_del_entry( queue_t **q, queue_t *entry ) {
 	if( *q == NULL )
 		return( -1 );
 
@@ -95,7 +94,7 @@ static __inline__ s32int count_queue(queue_t **q) {
 	if( head != NULL ) {
 		while( (tmp != head) || !(count) ){
 			tmp = tmp->next;
-			prefetch( tmp->next );
+			prefetch_cpu_cache( tmp->next );
 			count++;
 		}
 	}
@@ -112,9 +111,9 @@ static __inline__ s32int count_queue(queue_t **q) {
 
 #define queue_for_each( pos, c, head ) \
 	if( (head) != NULL ) \
-		for( pos = (head), c = 0, prefetch(pos->next); \
+		for( pos = (head), c = 0, prefetch_cpu_cache(pos->next); \
 			(pos != (head)) || !(c); \
-			pos = pos->next, prefetch(pos->next), ++c )
+			pos = pos->next, prefetch_cpu_cache(pos->next), ++c )
 
 static __inline__ s32int add_queue( queue_t **q, void *v ) {
 	queue_t *p;
@@ -150,6 +149,10 @@ static __inline__ s32int rem_queue( queue_t **q, void *v ){
 	}
 	return( -1 );
 }
+
+/******************************************************************************
+ *			--------- PUBLIC FUNCTION DECLARATIONS ----------
+******************************************************************************/
 
 
 #endif /* QUEUE_H_ */

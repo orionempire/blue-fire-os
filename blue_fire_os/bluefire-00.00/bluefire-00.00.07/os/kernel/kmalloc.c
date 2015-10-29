@@ -9,22 +9,22 @@
 ******************************************************************************/
 #include <common_include.h>
 
+extern task_t	*current_task;
 // ---------- Memory operators for kernel ----------
-void *kmalloc(u32int size) {
+void *kmalloc(u32int size, u32int mflag) {
 	// This is a best-fit like allocator.
 	memory_block_t *p, *p_best=NULL;
+	u32int flags;
 
 	if (!size) return NULL; // Short Circuit zero size requests
-	u32int flags;
-	disable_and_save_interrupts(flags);
 
 	// Round the size up to sizeof(mem_block_t); the
 	// sizeof(mem_block_t) is the unit of allocation.
-	if (size%sizeof(memory_block_t))
-		size += (sizeof(memory_block_t) - size%sizeof(memory_block_t));
+	size = ( size & -(sizeof(memory_block_t)) ) + sizeof(memory_block_t);
+	p = (memory_block_t *)VIRTUAL_KERNEL_HEAP_START;
 
-	// Explore the heap for the best-fit hole
-	p=(memory_block_t *)VIRTUAL_KERNEL_HEAP_START;
+	disable_and_save_interrupts(flags);
+
 	while(p < (memory_block_t *)VIRTUAL_KERNEL_HEAP_END) {
 		// Find a free block //
 		if (p->flags == KMALLOC_FREE) {
@@ -33,16 +33,6 @@ void *kmalloc(u32int size) {
 				// Best fit block found! You're lucky! //
 				p_best = p;
 				break;
-			}
-
-			if (p->size > size) {
-				// The hole is bigger than size... 	//
-				// ...check if it's the best-fit hole!	//
-				if (p_best==NULL)
-					p_best = p;
-				else
-					if (p_best->size > p->size)
-						p_best = p;
 			}
 		}
 		// Examine the next memory block //
@@ -55,6 +45,37 @@ void *kmalloc(u32int size) {
 		return NULL;
 	}
 
+	// If the block does not cover perfectly the size,
+	// split the hole in two blocks
+	if( p_best->size != size ){
+		p = (void *)p_best + sizeof(memory_block_t) + size;
+		p->magic = KMALLOC_MAGIC;
+		p->flags = KMALLOC_FREE;
+		p->size = p_best->size - size - sizeof(memory_block_t);
+		p->owner = NULL;
+
+		p_best->size = size;
+	}
+
+	// Allocate the block.
+	p_best->magic = KMALLOC_MAGIC;
+	p_best->flags = KMALLOC_ALLOC;
+	if( mflag == GFP_KERNEL ) {
+		p_best->owner = current_task->pid;
+	} else {
+		// kmalloc() during interrupt! the owner
+		// is ambiguous.
+		p_best->owner = NULL;
+	}
+
+	// Return the first-fit pointer.
+	p_best = (void *)p_best + sizeof(memory_block_t);
+
+	restore_interrupts(flags);
+
+	return( (void *)p_best );
+
+	/*
 	// If you do, allocate it! //
 	p_best->magic = KMALLOC_MAGIC;
 	p_best->flags = KMALLOC_ALLOC;
@@ -81,6 +102,7 @@ void *kmalloc(u32int size) {
 	restore_interrupts(flags);
 	// Return the best-fit pointer
 	return ((void *)p_best);
+	*/
 }
 
 static void deallocate(memory_block_t *ptr){
@@ -152,7 +174,23 @@ void kfree(void *ptr) {
 	restore_interrupts( flags );
 }
 
+s32int mem_sizeof(void *ptr) {
+	memory_block_t *p = ((memory_block_t *)ptr-1);
+	u32int flags;
+	s32int __ret;
 
+	disable_and_save_interrupts( flags );
+
+	if ( (p->magic == KMALLOC_MAGIC) && (p->flags == KMALLOC_ALLOC) ) {
+		__ret =  p->size;
+	} else {
+		__ret = NULL;
+	}
+
+	restore_interrupts( flags );
+
+	return( __ret );
+}
 void *kmemalign(size_t alignment, size_t size, s32int flags) {
 	memory_block_t *p, *p2;
 

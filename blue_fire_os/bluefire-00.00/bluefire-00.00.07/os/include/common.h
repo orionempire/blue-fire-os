@@ -1,4 +1,4 @@
-/**************************************************************************
+/******************************************************************************
  *	bluefire-os
  *	Version: 00.00.04
  *	Author: David Davidson
@@ -6,7 +6,7 @@
  *	Created: Dec 14, 2011
  *	Purpose:
  *  Usage:
-***************************************************************************/
+******************************************************************************/
 
 #ifndef COMMON_H_
 #define COMMON_H_
@@ -30,6 +30,36 @@ typedef unsigned long long  u64int;
 typedef          long long  s64int;
 
 typedef u32int 				size_t;
+
+// TODO FIX ?
+#define CHAR_MIN	(-128)
+#define CHAR_MAX	127
+#define UCHAR_MAX	255
+
+#define SHRT_MAX	((short)(~0U>>1))
+#define SHRT_MIN	(-SHRT_MAX - 1)
+#define USHRT_MAX	((short)(~0U>>1))
+
+#define INT_MAX         ((int)(~0U>>1))
+#define INT_MIN         (-INT_MAX - 1)
+#define UINT_MAX        (~0U)
+
+#define LONG_MAX        ((long)(~0UL>>1))
+#define LONG_MIN        (-LONG_MAX - 1)
+#define ULONG_MAX       (~0UL)
+
+//! This macro returns the minimum value between \a a and \a b.
+#define MIN(a, b)	((a) < (b) ? (a) : (b))
+//! This macro returns the maximum value between \a a and \a b.
+#define MAX(a, b)	((a) > (b) ? (a) : (b))
+//! This macro returns the absolute value of \a a.
+#define ABS(a)		((a) < 0 ? -(a) : (a))
+//! This macro truncates \a addr to the \a align boundary.
+#define TRUNC(addr, align)	((addr) & ~((align) - 1))
+//! This macro rounds down \a addr to the \a align boundary.
+#define ALIGN_DOWN(addr, align)	TRUNC(addr, align)
+//! This macro rounds up \a addr to the \a align boundary.
+#define ALIGN_UP(addr, align)	( ((addr) + (align) - 1) & (~((align) - 1)) )
 
 #define PANIC(msg)  kprintf("\nKERNEL PANIC (%s) \n\tin %s at line %d",msg,__FILE__,__LINE__); asm volatile("cli");for(;;);
 #define ASSERT(itm) if(!itm){ PANIC("ASSERTION FAILED") }

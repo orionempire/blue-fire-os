@@ -216,14 +216,14 @@ void *get_temp_page() {
 		return( (void *)p );
 	}
 }
-
+/*
 // ---------- Generic operators ----------
 u32int virtual_to_physical_address(u32int vir_addr) {
 	// Returns the physical address associated with the virtual address
 	if (*VIRT_TO_PDE_ADDR(vir_addr) == NULL) return(NULL);
 	return ((*VIRT_TO_PTE_ADDR(vir_addr) & -PAGE_SIZE) + (vir_addr % PAGE_SIZE));
 }
-
+*/
 /**************************************************************************
 *	---------- Page fault handler ----------
 *	This function is hardcoded in the IDT and called on a page fault exception.

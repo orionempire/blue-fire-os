@@ -1,4 +1,4 @@
-/**************************************************************************
+/******************************************************************************
  *	bluefire-os
  *	Version: 00.00.07
  *	Author: David Davidson
@@ -7,7 +7,7 @@
  *	Last Update:
  *	Purpose:
  *  Usage:
-***************************************************************************/
+******************************************************************************/
 #ifndef KMALLOC_H_
 #define KMALLOC_H_
 
@@ -16,9 +16,9 @@
 #define KMALLOC_ALLOC		1
 
 // Allocate normal kernel ram.
-#define GFP_KERNEL	1
+#define GFP_KERNEL			1
 // Use inside interrupt
-#define GFP_ATOMIC	2
+#define GFP_ATOMIC			2
 
 // Structures
 typedef struct MEMORY_BLOCK {
@@ -29,7 +29,8 @@ typedef struct MEMORY_BLOCK {
 } memory_block_t;
 
 // Public Function declarations
-void *kmalloc(u32int size);
+void *kmalloc(u32int size, u32int mflag);
+void kfree(void *ptr);
 void kmalloc_initialize();
 void dump_memory_map(void);
 void *kmemalign(size_t alignment, size_t size, s32int flags);

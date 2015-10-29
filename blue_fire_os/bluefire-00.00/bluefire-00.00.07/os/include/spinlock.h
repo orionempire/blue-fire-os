@@ -24,6 +24,14 @@ typedef struct spinlock {
 // Declare a simple spinlock unlocked.
 #define DECLARE_SPINLOCK( name ) 	spinlock_t name = SPINLOCK_UNLOCKED
 
+//! Check if a spinlock is locked.
+#define spin_is_locked( s ) \
+	( *(volatile signed char *)(&((s)->lock))<=0 )
+
+//! Initialize a spinlock.
+#define spin_lock_init( x ) \
+	do { *(x) = (spinlock_t)SPINLOCK_UNLOCKED; } while( 0 )
+
 // Lock the semaphore.
 static __inline__ __attribute__((__always_inline__)) void spin_lock( spinlock_t *lock ) {
 	__asm__ __volatile__(

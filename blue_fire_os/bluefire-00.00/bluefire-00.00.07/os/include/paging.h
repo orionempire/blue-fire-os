@@ -96,7 +96,7 @@ static __inline__ void reload_CR3() {
 
 // Translate a virtual address into the physical address.
 // vir_addr The virtual address to be translated.
-static __inline__ size_t vir_to_phys(size_t vir_addr) {
+static __inline__ size_t virtual_to_physical_address(size_t vir_addr) {
 	if (*VIRT_TO_PDE_ADDR(vir_addr) == NULL)
 		return(NULL);
 	return( (*VIRT_TO_PTE_ADDR(vir_addr) & -PAGE_SIZE) + (vir_addr % PAGE_SIZE) );
@@ -109,10 +109,14 @@ static __inline__ void switch_mmu( u32int pdbr ) {
 	__asm__ __volatile__ ( "mov %0, %%cr3" : : "r"(pdbr) );
 }
 
-// Public Function declarations
+/******************************************************************************
+ *			--------- PUBLIC FUNCTION DECLARATIONS ----------
+******************************************************************************/
 s32int page_fault_handler(u32int err_code, u32int cr2);
 void initialize_paging();
 void dump_free_frames();
 void dump_dirty_pages();
+void delete_page(u32int addr);
+void *get_temp_page();
 
 #endif /* PAGING_H_ */
