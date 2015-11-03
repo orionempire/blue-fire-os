@@ -50,16 +50,16 @@ s32int get_pid() {
 //TODO
 static void new_vspace( task_t *t ) {
 	int i;
-
 	// Create the virtual space of the task.
 	t->pdbr = (u32int *)get_temp_page();
+
 	if( t->pdbr == NULL ) {
 		kprintf("%s:Out of virtual memory!!!", __FUNCTION__);
 		return;
 	}
 
 	// Initialize PDBR.
-	memset32( t->pdbr, 0, VIRT_TO_PDE_IDX(VIRTUAL_KERNEL_START) * sizeof(u32int) );
+	memset08( t->pdbr, 0, VIRT_TO_PDE_IDX(VIRTUAL_KERNEL_START) * sizeof(u32int) );
 
 	if( current_task ) {
 		for( i = VIRT_TO_PDE_IDX(VIRTUAL_KERNEL_START); i < 1023; i++ )
@@ -147,11 +147,15 @@ task_t *create_process(void *routine, s32int argc, s08int **argv, s08int *pname,
 		sched_leave_critical_region();
 		return( NULL );
 	}
+
 	// Null the stack to enforce the page mapping
-	memset32( (void *)(new_task->pl0_stack), 0, STACK_SIZE );
+	//memset32( (void *)(new_task->pl0_stack), 0, STACK_SIZE );
+	memset08( (void *)(new_task->pl0_stack), 0, STACK_SIZE );
+
 	// Setup the privileged stack.
 	new_task->tss.ss0 = KERNEL_STACK;
 	new_task->tss.esp0 = ALIGN_DOWN( (size_t)(new_task->pl0_stack) + STACK_SIZE - sizeof(u32int), sizeof(u32int) );
+
 
 	// Setup the TSS.
 	new_task->tss_sel = setup_GDT_entry(sizeof(tss_IO_t), (size_t)&(new_task->tss), TSS_SEG, 0 );
@@ -187,12 +191,12 @@ task_t *create_process(void *routine, s32int argc, s08int **argv, s08int *pname,
 	// Setup the task page directory address.
 	new_task->tss.cr3 = virtual_to_physical_address( (size_t)(new_task->pdbr) );
 
+
 	// Temporary switch to the new address space.
 	if( current_task != NULL )
 		task_switch_mmu( current_task, new_task );
 	else
 		switch_mmu( new_task->tss.cr3 );
-
 
 	// Create the task stack.
 	new_task->tss.ss = (privilege == KERNEL_PRIVILEGE) ? KERNEL_STACK : USER_STACK | 3;
@@ -208,9 +212,10 @@ task_t *create_process(void *routine, s32int argc, s08int **argv, s08int *pname,
 	// Restore the old address space.
 	if( current_task != NULL ) { task_switch_mmu( new_task, current_task ); }
 
+
 	// Setup the IO port mapping.
 	new_task->tss.io_map_addr = sizeof(tss_t);
-	memset32( new_task->tss.io_map, 0xffffffff, IO_MAP_SIZE );
+	memset08( new_task->tss.io_map, 0xffffffff, IO_MAP_SIZE );
 
 	// Setup general registers.
 	if ( privilege == KERNEL_PRIVILEGE ) {
@@ -231,6 +236,7 @@ task_t *create_process(void *routine, s32int argc, s08int **argv, s08int *pname,
 	// Store the process name.
 	// The last character must be ever '\0' (end of string).
 	strncpy08( new_task->name, pname, sizeof(new_task->name) - 2 );
+
 
 	// Set the current working directory.
 	new_task->cwd = 0;
@@ -266,6 +272,9 @@ task_t *create_process(void *routine, s32int argc, s08int **argv, s08int *pname,
 	new_task->state = TASK_READY;
 
 	sched_leave_critical_region();
+
+
+
 
 	// This is a little trick... Because we exit
 	// from a very long critical region we call

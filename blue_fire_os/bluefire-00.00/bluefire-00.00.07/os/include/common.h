@@ -12,7 +12,7 @@
 #define COMMON_H_
 
 #define KERNEL_NAME	"BLUE FIRE (IA-32)"
-#define KERNEL_VERSION	"00.00.06"
+#define KERNEL_VERSION	"00.00.07"
 
 #define TRUE	1
 #define FALSE	0

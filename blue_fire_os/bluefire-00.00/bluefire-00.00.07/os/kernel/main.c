@@ -87,8 +87,6 @@ void k_main() {
 
 	//sh_test();
 
-	dbg_pause(1);
-	dump_memory_map();
 	//ps();
 	dbg_brk();
 	// We must never reach this point.

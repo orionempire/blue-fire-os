@@ -1122,7 +1122,7 @@ define hook-stop
 	else
 		printf "hook-stop at 0x%08X in gdb_bochs_scheme_32\n.", $rip
 	end
-end
+#end
 
 
 #set a break point at start.asm

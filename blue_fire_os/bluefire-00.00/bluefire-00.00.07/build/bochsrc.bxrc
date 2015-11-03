@@ -9,4 +9,3 @@ log:            	bochs_log.txt
 clock: 				sync=none, time0=local
 cpu: 				count=1, ips=4000000, reset_on_triple_fault=1, ignore_bad_msrs=1
 com1:           	enabled=0, mode=file, dev=com1.out
-gdbstub: enabled=1, port=1234, text_base=0, data_base=0, bss_base=0
