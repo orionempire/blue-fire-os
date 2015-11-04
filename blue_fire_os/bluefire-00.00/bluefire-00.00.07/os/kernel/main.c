@@ -15,10 +15,9 @@ extern u32int var_system_memory_amount, _start;
 // Function Declarations
 void print_ok();
 void print_failed();
-
-/******************************************************************************
-*
-******************************************************************************/
+// temporary debug helpers
+void task_test();
+void sh_test();
 
 /******************************************************************************
 * Control arrives here from assembly/start.asm
@@ -29,6 +28,7 @@ void k_main() {
 	initialize_paging();
 
 	initialize_video();
+	// Now debug functions can be used.
 
 	initialize_boot_console();
 
@@ -61,11 +61,6 @@ void k_main() {
 	initialize_IDT();
 	print_ok();
 
-	// Initialize the clock
-	kprintf("Initializing system clock...");
-	initialize_clock();
-	print_ok();
-
 	// Initialize memory manager.
 	kprintf("Initializing memory manager...");
 	kmalloc_initialize();
@@ -74,6 +69,7 @@ void k_main() {
 	kprintf("Initializing Direct Memory Access...");
 	initialize_DMA();
 	print_ok();
+	dbg_brk();
 
 	// Initialize multitasking
 	kprintf("Initializing multitasking...");
@@ -82,10 +78,10 @@ void k_main() {
 
 	// Initialize the clock
 	kprintf("Initializing system clock...");
-	//initialize_clock();
+	initialize_clock();
 	print_ok();
 
-	//sh_test();
+	sh_test();
 
 	//ps();
 	dbg_brk();
@@ -115,4 +111,30 @@ void  print_failed() {
 	kprintf( "Failed" );
 	kset_color( DEFAULT_COLOR );
 	kprintf( " ]\n" );
+}
+
+/**************************************************************************
+* Used for multitasking debugging. These will be moved to the shell
+* when it exists.
+***************************************************************************/
+void task_test() {
+	register u32int cr3;
+
+	u32int *temp = kmalloc(sizeof(temp),GFP_KERNEL);
+
+	__asm__ __volatile__ ("movl %%cr3, %0" : "=r"(cr3) : );
+	kprintf("\nWelcome from task %u!!!My kmalloc was %X. Here is my PDBR %X", get_pid(),temp, cr3);
+	kfree(temp);
+	do_idle();
+}
+
+void sh_test() {
+	#define TOT_TASK_TEST	16
+	u32int i;
+
+	kprintf("\nCreating %u tasks. Please wait... ", TOT_TASK_TEST);
+	for(i = 0; i < TOT_TASK_TEST; i++) {
+		//create_process(&task_test, 0, &task_test, "sh_task_test",KERNEL_PRIVILEGE);
+		create_process(&task_test, 0, NULL, "sh_task_test",KERNEL_PRIVILEGE);
+	}
 }

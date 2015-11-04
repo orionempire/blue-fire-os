@@ -15,7 +15,8 @@ void umalloc_init(task_t *t, size_t heap_start, size_t heap_size){
 	if( t == NULL )
 		return;
 
-	if( t->flags.type == THREAD_TYPE ){
+
+	if( t->flags.type == KERNEL_THREAD_TYPE ){
 		kprintf("%s(): threads share the father's heap.\n", __FUNCTION__);
 		return;
 	}
@@ -23,6 +24,7 @@ void umalloc_init(task_t *t, size_t heap_start, size_t heap_size){
 	// Setup the heap in the task structure.
 	t->heap_start = heap_start;
 	t->heap_size = heap_size;
+
 	initialize_MUTEX( &(t->heap_sem) );
 
 	// Create only one hudge block.

@@ -57,7 +57,7 @@ void clock_handler(irq_context_t *context) {
 	//floppy_thread();
 
 	// Call the scheduler.
-	//schedule();
+	schedule();
 
 	enable_IRQ(context->IRQ);
 }

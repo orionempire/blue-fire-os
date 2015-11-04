@@ -234,6 +234,8 @@ s32int page_fault_handler(u32int err_code, u32int cr2) {
 
 	phys_addr = pop_frame() * PAGE_SIZE;
 
+	kprintf("\n allocated 0x%x -> 0x%x\n",cr2,phys_addr);
+
 	// If out of memory return with a marked page fault panic
 	if (phys_addr == NULL) 	{
 		kset_color(LIGHT_RED);
@@ -273,6 +275,11 @@ s32int page_fault_handler(u32int err_code, u32int cr2) {
 *	Sets up everything we need for paging
 ******************************************************************************/
 void initialize_paging() {
+	//Set by the linker using kernel.ld
+	extern size_t KERNEL_TEXT, KERNEL_END_TEXT;
+	// Declared in assembly/exit.asm
+	//extern void __task_exit_point;
+	extern size_t __task_exit_point;
 
 	u32int addr;
 
@@ -286,11 +293,31 @@ void initialize_paging() {
 	// -> 0xFFFFF000 : 0x0
 	*VIRT_TO_PDE_ADDR(0x0) = NULL;
 
+	// The kernel already has it's paging entries entered by start.asm. Two things are needed..
+	// - Mark every frame containing kernel code read only
+	// - Mark the one page containing the function declared in exit.asm (and linked in to the kernel code)
+	//		as user accessible, as all exiting processes will end up there. (it is aligned to a page/frame so
+	//		by definition one entry need be marked.)
+	for( addr = (size_t)&KERNEL_TEXT; addr < (size_t)&KERNEL_END_TEXT; addr += PAGE_SIZE )
+		if( *VIRT_TO_PDE_ADDR(addr) )
+			*VIRT_TO_PTE_ADDR( addr ) &= ~P_WRITABLE;
+
+	// Make only the exit point address available for users. (entire PDE but only one frame)
+	*VIRT_TO_PDE_ADDR( (size_t)&__task_exit_point ) |= P_USER;
+	*VIRT_TO_PTE_ADDR( (size_t)&__task_exit_point ) |= P_USER;
+
 	// Map physical memory into the kernel address space
 	// Map the physical addresses of the first 16 MB of memory to Virtual addresses 0xE0000000 to 0xE1000000
 	// V(0xE0000000, 0xE1000000)->P(0x00000000, 0x1000000)
 	for(addr = 0; addr < LOWER_MEMORY_SIZE ; addr+=PAGE_SIZE ){
 		map_page(VIRTUAL_LOWER_MEMORY_START+addr , addr, P_PRESENT | P_WRITABLE );
+	}
+
+	// Initialize temporary memory area.
+	for( addr = VIRTUAL_KERNEL_TMP_MEMORY_START; addr < VIRTUAL_KERNEL_TMP_MEMORY_END; addr += PAGE_SIZE ){
+		if( *VIRT_TO_PDE_ADDR(addr) ) {
+			*VIRT_TO_PTE_ADDR(addr) = NULL;
+		}
 	}
 
 	// Lower memory was un-identity mapped and re-mapped to 0xE0000000, however right now V(0x1000)->P(0x1000)

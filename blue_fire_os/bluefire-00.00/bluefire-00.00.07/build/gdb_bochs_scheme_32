@@ -1122,14 +1122,14 @@ define hook-stop
 	else
 		printf "hook-stop at 0x%08X in gdb_bochs_scheme_32\n.", $rip
 	end
-#end
+end
 
 
 #set a break point at start.asm
 #bp *0x100000
 
 #Set a break at the start of the kernel. (at the beginning of main.c after start.asm)
-#bp k_main
+bp k_main
 
 #continue until then
 continue

@@ -27,7 +27,7 @@
 #define TASK_ZOMBIE			4 		// The task is dying.
 
 // --------------------------------TASK STATE------------------------------- //
-#define THREAD_TYPE			0x00 	// A kernel thread type.
+#define KERNEL_THREAD_TYPE	0x00 	// A kernel thread type.
 #define PROCESS_TYPE		0x01 	// A task type.
 
 //! TSS without I/O bit map.
@@ -187,5 +187,6 @@ void initialize_multitasking();
 void sched_enter_critical_region();
 void sched_leave_critical_region();
 task_t *create_process(void *routine, s32int argc, s08int **argv, s08int *pname, s32int privilege);
+void do_idle();
 
 #endif /* TASK_H_ */

@@ -28,7 +28,9 @@ typedef struct MEMORY_BLOCK {
 	u32int	owner;
 } memory_block_t;
 
-// Public Function declarations
+/******************************************************************************
+ *			--------- PUBLIC FUNCTION DECLARATIONS ----------
+******************************************************************************/
 void *kmalloc(u32int size, u32int mflag);
 void kfree(void *ptr);
 void kmalloc_initialize();

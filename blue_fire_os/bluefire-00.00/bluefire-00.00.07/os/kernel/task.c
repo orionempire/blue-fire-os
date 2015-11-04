@@ -156,7 +156,6 @@ task_t *create_process(void *routine, s32int argc, s08int **argv, s08int *pname,
 	new_task->tss.ss0 = KERNEL_STACK;
 	new_task->tss.esp0 = ALIGN_DOWN( (size_t)(new_task->pl0_stack) + STACK_SIZE - sizeof(u32int), sizeof(u32int) );
 
-
 	// Setup the TSS.
 	new_task->tss_sel = setup_GDT_entry(sizeof(tss_IO_t), (size_t)&(new_task->tss), TSS_SEG, 0 );
 	if( new_task->tss_sel == NULL ) {
@@ -191,7 +190,6 @@ task_t *create_process(void *routine, s32int argc, s08int **argv, s08int *pname,
 	// Setup the task page directory address.
 	new_task->tss.cr3 = virtual_to_physical_address( (size_t)(new_task->pdbr) );
 
-
 	// Temporary switch to the new address space.
 	if( current_task != NULL )
 		task_switch_mmu( current_task, new_task );
@@ -212,10 +210,9 @@ task_t *create_process(void *routine, s32int argc, s08int **argv, s08int *pname,
 	// Restore the old address space.
 	if( current_task != NULL ) { task_switch_mmu( new_task, current_task ); }
 
-
 	// Setup the IO port mapping.
 	new_task->tss.io_map_addr = sizeof(tss_t);
-	memset08( new_task->tss.io_map, 0xffffffff, IO_MAP_SIZE );
+	memset32( new_task->tss.io_map, 0xffffffff, IO_MAP_SIZE );
 
 	// Setup general registers.
 	if ( privilege == KERNEL_PRIVILEGE ) {
@@ -283,6 +280,20 @@ task_t *create_process(void *routine, s32int argc, s08int **argv, s08int *pname,
 		schedule();
 
 	return( new_task );
+}
+
+/**************************************************************************
+* ---------- Task's routines ----------
+**************************************************************************/
+/**************************************************************************
+* ---------- Task's routines ----------
+**************************************************************************/
+// Simply do nothing...
+void do_idle() {
+	while(TRUE) {
+		enable_interrupts();
+		idle();
+	}
 }
 
 /**************************************************************************
