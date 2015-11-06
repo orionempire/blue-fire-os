@@ -86,10 +86,11 @@
 
 // Paging Procedures
 // Because this OS is didactic, global pages are not supported or accounted for.
+// clear tlb of one address
 static __inline__ void invlpg(u32int page_addr) {
         __asm__ __volatile__ ("invlpg %0" : : "m" (page_addr));
 }
-
+// clear tlb of all address
 static __inline__ void reload_CR3() {
 	__asm__ __volatile__ ("movl %%cr3,%%eax ; movl %%eax,%%cr3" : : : "memory");
 }

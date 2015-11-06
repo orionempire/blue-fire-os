@@ -191,10 +191,11 @@ task_t *create_process(void *routine, s32int argc, s08int **argv, s08int *pname,
 	new_task->tss.cr3 = virtual_to_physical_address( (size_t)(new_task->pdbr) );
 
 	// Temporary switch to the new address space.
-	if( current_task != NULL )
+	if( current_task != NULL ) {
 		task_switch_mmu( current_task, new_task );
-	else
+	} else {
 		switch_mmu( new_task->tss.cr3 );
+	}
 
 	// Create the task stack.
 	new_task->tss.ss = (privilege == KERNEL_PRIVILEGE) ? KERNEL_STACK : USER_STACK | 3;
@@ -270,21 +271,16 @@ task_t *create_process(void *routine, s32int argc, s08int **argv, s08int *pname,
 
 	sched_leave_critical_region();
 
-
-
-
 	// This is a little trick... Because we exit
 	// from a very long critical region we call
 	// the scheduler to enforce a new task selection.
-	if( current_task != NULL )
+	if( current_task != NULL ) {
 		schedule();
-
+	}
+dbg_brk()
 	return( new_task );
 }
 
-/**************************************************************************
-* ---------- Task's routines ----------
-**************************************************************************/
 /**************************************************************************
 * ---------- Task's routines ----------
 **************************************************************************/

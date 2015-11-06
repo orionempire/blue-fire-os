@@ -12,6 +12,7 @@
 extern task_t	*current_task;
 // ---------- Memory operators for kernel ----------
 void *kmalloc(u32int size, u32int mflag) {
+
 	// This is a best-fit like allocator.
 	memory_block_t *p_current_block, *p_best_block = NULL;
 	u32int flags;
@@ -61,8 +62,11 @@ void *kmalloc(u32int size, u32int mflag) {
 	// Allocate the block.
 	p_best_block->magic = KMALLOC_MAGIC;
 	p_best_block->flags = KMALLOC_ALLOC;
+
 	if( mflag == GFP_KERNEL ) {
-		p_best_block->owner = current_task->pid;
+		if(current_task) {	//TODO change to assessor
+			p_best_block->owner = current_task->pid;
+		}
 	} else {
 		// kmalloc() during interrupt! the owner
 		// is ambiguous.
@@ -253,7 +257,6 @@ void kmalloc_initialize() {
 	p->flags = KMALLOC_FREE;
 	p->size = VIRTUAL_KERNEL_HEAP_END - VIRTUAL_KERNEL_HEAP_START - sizeof(memory_block_t);		//(0x0FFFFFF0)
 	p->owner = 0;
-
 }
 
 void dump_memory_map(void) {

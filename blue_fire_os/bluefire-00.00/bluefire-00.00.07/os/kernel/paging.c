@@ -76,6 +76,7 @@ void init_free_frames() {
 	// -> 0xC0015000 - 0xC0030FFC : 0x(1000-8000)
 	phys_addr = P_ADDR_16MB;		//0x1000 (0x1000 X Page size(0x1000) = 16 MB)
 	VIRTUAL_KERNEL_END = free_frames;	//(KERNEL_TOP, dynamic) 0xC0015000 in the current example
+
 	while (phys_addr < ADDR_TO_PAGE(var_system_memory_amount)) {
 		*(VIRTUAL_KERNEL_END++) = phys_addr++;
 	}
@@ -234,7 +235,7 @@ s32int page_fault_handler(u32int err_code, u32int cr2) {
 
 	phys_addr = pop_frame() * PAGE_SIZE;
 
-	kprintf("\n allocated 0x%x -> 0x%x\n",cr2,phys_addr);
+	kprintf("\nFault > allocated 0x%x -> 0x%x",cr2,phys_addr);
 
 	// If out of memory return with a marked page fault panic
 	if (phys_addr == NULL) 	{
@@ -275,6 +276,7 @@ s32int page_fault_handler(u32int err_code, u32int cr2) {
 *	Sets up everything we need for paging
 ******************************************************************************/
 void initialize_paging() {
+
 	//Set by the linker using kernel.ld
 	extern size_t KERNEL_TEXT, KERNEL_END_TEXT;
 	// Declared in assembly/exit.asm

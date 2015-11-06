@@ -69,11 +69,11 @@ void k_main() {
 	kprintf("Initializing Direct Memory Access...");
 	initialize_DMA();
 	print_ok();
-	dbg_brk();
 
 	// Initialize multitasking
 	kprintf("Initializing multitasking...");
 	initialize_multitasking();
+	dbg_brk()
 	print_ok();
 
 	// Initialize the clock

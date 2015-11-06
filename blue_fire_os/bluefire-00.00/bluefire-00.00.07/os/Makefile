@@ -52,7 +52,7 @@ blue_fire_kernel32.elf: $(OBJECTS)
 
 # Every file used by SOURCES must be accounted for here.
 clean:
-	rm -f kernel/*.o assembly/*.o kernel/lib/*.o kernel/drivers/video/*.o kernel/drivers/dma/*.0
+	rm -f kernel/*.o assembly/*.o kernel/lib/*.o kernel/drivers/video/*.o kernel/drivers/dma/*.o
 	
 # A clean up that wont be called from our build script
 scrub: clean
