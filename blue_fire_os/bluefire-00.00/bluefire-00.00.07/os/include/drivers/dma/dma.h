@@ -19,6 +19,8 @@
 // The DMA-memory frame is marked as busy.
 #define DMA_BUSY_FRAME	1
 
+
+
 // Normalize the physical address to the dma base address.
 #define DMA_FRAME_ADDR( i ) \
 	(((i) < PHYSICAL_DMA_MEMORY_START) ? 0 : ((size_t)(i) - PHYSICAL_DMA_MEMORY_START))
