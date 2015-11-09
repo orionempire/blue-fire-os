@@ -23,32 +23,40 @@ void initialize_DMA(){
 	dma_pointer = 0;
 
 	// Initialize the DMA free frames vector.
-	dma_free_frames = (u32int *)kmalloc(((DMA_MEMORY_DIMINSION / PAGE_SIZE) * sizeof(u32int)), GFP_KERNEL); //0x3ff4
+	// Should one day become a bitset.
+	//0x4000 frames
+	dma_free_frames = (u32int *)kmalloc(DMA_PHYSICAL_TO_IDX(PHYSICAL_DMA_MEMORY_END) * sizeof(u32int), GFP_KERNEL);
 
-	//dma_free_frames[0x0..0xFFD]
-	for( i = 0; i < DMA_MEMORY_DIMINSION / PAGE_SIZE; i++ ) { //0x0 - 0xFFD
+	//dma_free_frames[0x0..0x1000] -> (0x00000000, 0x01000000)
+	for( i = 0; i < DMA_PHYSICAL_TO_IDX(PHYSICAL_DMA_MEMORY_END); i++ ) {
 		dma_free_frames[ i ] = DMA_FREE_FRAME;
 	}
 
+	// Automatically reserve the first 4k (0x0 - 0x2FFF) as it is used by the IVT and original page table
+	//dma_free_frames[0x0..0x2] -> (0x00000000,0x0002FFF)
+	for( i = 0; i < (DMA_PHYSICAL_TO_IDX(PHYSICAL_DMA_MEMORY_START) - 1 ); i++ ){
+		dma_free_frames[ i ] = DMA_RESERVED_FRAME;
+	}
+
 	// Set the video buffer memory busy.
-	//dma_free_frames[0x09D..0x0BC] -> (0x000A0000,0x000C0000)
-	for( i = DMA_FRAME_ADDR(PHYSICAL_VIDEO_BUFFFER_START) / PAGE_SIZE; i < DMA_FRAME_ADDR(PHYSICAL_VIDEO_BUFFFER_END) / PAGE_SIZE; i++ ) {//0x9D - 0xBC
-		dma_free_frames[ i ] = DMA_BUSY_FRAME;
+	//dma_free_frames[0x0A0..0x0BF] -> (0x000A0000,0x000BFFF)
+	for( i = DMA_PHYSICAL_TO_IDX(PHYSICAL_VIDEO_BUFFFER_START); i < (DMA_PHYSICAL_TO_IDX(PHYSICAL_VIDEO_BUFFFER_END) - 1); i++ ) {
+		dma_free_frames[ i ] = DMA_RESERVED_FRAME;
 	}
 
-	//dma_free_frames[0x0BD..0x0FC] -> (0x000C0000,0x00100000)
+	//dma_free_frames[0x0C0..0x0FF] -> (0x000C0000,0x000FFFFF)
 	// Set the BIOS ROM memory busy.
-	for( i = DMA_FRAME_ADDR(PHYSICAL_BIOS_ROM_START) / PAGE_SIZE; i < (DMA_FRAME_ADDR(PHYSICAL_BIOS_ROM_END) / PAGE_SIZE); i++ ) { //0xBD - 0xFC
-		dma_free_frames[ i ] = DMA_BUSY_FRAME;
+	for( i = DMA_PHYSICAL_TO_IDX(PHYSICAL_BIOS_ROM_START); i < (DMA_PHYSICAL_TO_IDX(PHYSICAL_BIOS_ROM_END) - 1 ); i++ ) {
+		dma_free_frames[ i ] = DMA_RESERVED_FRAME;
 	}
-
 
 	//Amount of frames that the kernel takes up. KERNEL_END_CODE is set in the linker script (kernel.ld)
 	u32int kernel_code_frame_count = (((u32int)&KERNEL_END_CODE - VIRTUAL_KERNEL_START) / PAGE_SIZE);
 
-	//Mark the kernel physical space taken.
-	//dma_free_frames[0x0FC..0x129] -> (0x00100000,0x00128000) //TODO - will change as code grows
-	for( i = 0; i <= kernel_code_frame_count; i++) {//0xFD - 0x129
-		dma_free_frames[ (DMA_FRAME_ADDR(PHYSICAL_KERNEL_START) / PAGE_SIZE) + i ] = DMA_BUSY_FRAME;
+	//Mark the kernel physical space taken. <will change as code grows>
+	//dma_free_frames[0x100..<0x12b>] -> (0x00100000,<c002b000>)
+	for( i = 0; i <= (kernel_code_frame_count - 1); i++) {
+		dma_free_frames[ (DMA_PHYSICAL_TO_IDX(PHYSICAL_KERNEL_START) + i) ] = DMA_RESERVED_FRAME;
 	}
+	//dbg((DMA_PHYSICAL_TO_IDX(PHYSICAL_KERNEL_START) + i)); dbg_brk()
 }

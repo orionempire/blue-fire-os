@@ -122,7 +122,12 @@ task_t *create_process(void *routine, s32int argc, s08int **argv, s08int *pname,
 
 	sched_enter_critical_region();
 
+	//dump_memory_map();
 	new_task = kmemalign( PAGE_SIZE, sizeof(task_t), GFP_KERNEL );
+	//dbg(new_task)
+	//dbg(sizeof(task_t))
+	//dump_memory_map();
+	//dbg_brk()
 
 	if( new_task == NULL ) {
 		// Out of virtual memory!!!
