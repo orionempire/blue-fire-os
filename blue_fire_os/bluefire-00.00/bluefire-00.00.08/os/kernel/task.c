@@ -3,304 +3,298 @@
  *	Version: 00.00.07
  *	Author: David Davidson
  *	Name: task.c
- *	Created: Feb 8, 2012
+ *	Created: Oct 22, 2015
  *	Purpose:
  *  Usage:
 ***************************************************************************/
 #include <common_include.h>
 
 // Current running task
-task_t	*curr_task = NULL;
+//task_t	*current_task = NULL;
 
-// IDLE task structure
-task_t *idle_task = NULL;
+//declared in assembly/exit.asm
+extern size_t __task_exit_point;
+//extern void __task_exit_point;
 
-// Ready-queue: tasks are ready to the CPU
-queue_t *ready_queue = NULL;
-// Wait-queue: tasks are waiting for I/O
-queue_t *wait_queue = NULL;
-// Zombie-queue: tasks are dying!
-queue_t *zombie_queue = NULL;
 
-// Last used pid
-atomic_t last_pid;
+// Declared in sched.c
+extern queue_t *ready_queue;
+extern queue_t *wait_queue;
+extern queue_t *zombie_queue;
+
+// Declared in sched.c
+extern task_t *idle_task;
+extern task_t	*current_task;
+
+
+// Last used pid.
+s32int last_pid = 0;
+
+// A spinlock used to generate new pids.
+DECLARE_SPINLOCK( pid_lock );
+// Create a new pid. return The new pid created.
+
+//This routine generate a pid using an atomic increment.
+__inline__ s32int new_pid() {
+	s32int ret;
+
+	spin_lock( &pid_lock );
+	ret = ++last_pid;
+	spin_unlock( &pid_lock );
+
+	return( ret );
+}
+
+s32int get_pid() {
+	// Return the current task pid if there is a curr_task
+	if (!current_task) return NULL;
+	return(current_task->pid);
+}
+
+//TODO
+static void new_vspace( task_t *t ) {
+	int i;
+	// Create the virtual space of the task.
+	t->pdbr = (u32int *)get_temp_page();
+
+	if( t->pdbr == NULL ) {
+		kprintf("%s:Out of virtual memory!!!", __FUNCTION__);
+		return;
+	}
+
+	// Initialize PDBR.
+	memset08( t->pdbr, 0, VIRT_TO_PDE_IDX(VIRTUAL_KERNEL_START) * sizeof(u32int) );
+
+	if( current_task ) {
+		for( i = VIRT_TO_PDE_IDX(VIRTUAL_KERNEL_START); i < 1023; i++ )
+			t->pdbr[ i ] = current_task->pdbr[ i ];
+	} else {
+		for( i = VIRT_TO_PDE_IDX(VIRTUAL_KERNEL_START); i < 1023; i++ )
+			t->pdbr[ i ] = ((u32int *)VIRTUAL_PAGE_DIRECTORY_START)[ i ];
+	}
+	// Map page directory into itself.
+	t->pdbr[ 1023 ] =  virtual_to_physical_address((size_t)(t->pdbr)) | P_PRESENT | P_WRITABLE;
+
+	// Get the pdbr counter of the father
+	// (we've just made the update!)
+	if( current_task ) {
+		t->pdbr_update_counter = current_task->pdbr_update_counter;
+	}
+}
+
+//TODO
+static __inline__ u32int *task_setup_stack( int argc, char **argv, size_t stack_start ) {
+	u32int *stack = (u32int *)( ALIGN_DOWN(stack_start, sizeof(u32int)) - sizeof(u32int) );
+	u32int *user_argv;
+	int i;
+
+	// Copy external parameters strings.
+	for( i = 0; i < argc; i++ ) {
+		stack = (u32int *)((size_t)stack - strlen(argv[i]) - 1);
+		strcpy08( (char *)stack, argv[i] );
+		argv[i] = (char *)stack;
+	}
+
+	// Round down the stack pointer to the stack boundaries.
+	stack = (u32int *)( ALIGN_DOWN((size_t)stack, sizeof(u32int)) );
+
+	// Copy parameter string pointers.
+	*(--stack) = NULL;
+	for( i = 0; i < argc; i++ ) {
+		*(--stack) = (u32int)(argv[argc-i-1]);
+	}
+
+	// Set the process argv pointer.
+	user_argv = stack;
+	*(--stack) = (u32int)user_argv;
+	// Copy number of parameters value.
+	*(--stack) = argc;
+
+	// Copy the exit point address.
+	*(--stack) = (size_t)(&__task_exit_point);
+
+	// Insert a NULL into the stack.
+	*(stack - 1) = NULL;
+
+	// Return the initial stack pointer.
+	return( stack );
+}
+
+//TODO
+task_t *create_process(void *routine, s32int argc, s08int **argv, s08int *pname, s32int privilege) {
+	task_t *new_task;
+
+	sched_enter_critical_region();
+
+	new_task = kmemalign( PAGE_SIZE, sizeof(task_t), GFP_KERNEL );
+
+	if( new_task == NULL ) {
+		// Out of virtual memory!!!
+		kprintf("%s:Out of virtual memory!!! Cannot create task [%s].", __FUNCTION__, pname);
+		sched_leave_critical_region();
+		return( NULL );
+	}
+
+	// Add the task into the zombie queue, so if the current task
+	// is killed the space allocated until now can be freed by the
+	// kpager daemon.
+	add_queue( &zombie_queue, new_task );
+	new_task->state = TASK_NEW;
+
+	// Create the pl0-stack.
+	new_task->pl0_stack = (size_t)kmalloc( STACK_SIZE, GFP_KERNEL );
+	if( new_task->pl0_stack == NULL ) {
+		// Out of virtual memory!!!
+		kprintf("%s:Out of virtual memory!!! Cannot create p10 stack [%s].", __FUNCTION__, pname);
+		kfree( new_task );
+
+		sched_leave_critical_region();
+		return( NULL );
+	}
+
+	// Null the stack to enforce the page mapping
+	//memset32( (void *)(new_task->pl0_stack), 0, STACK_SIZE );
+	memset08( (void *)(new_task->pl0_stack), 0, STACK_SIZE );
+
+	// Setup the privileged stack.
+	new_task->tss.ss0 = KERNEL_STACK;
+	new_task->tss.esp0 = ALIGN_DOWN( (size_t)(new_task->pl0_stack) + STACK_SIZE - sizeof(u32int), sizeof(u32int) );
+
+	// Setup the TSS.
+	new_task->tss_sel = setup_GDT_entry(sizeof(tss_IO_t), (size_t)&(new_task->tss), TSS_SEG, 0 );
+	if( new_task->tss_sel == NULL ) {
+		kprintf("%s:Out of virtual memory!!! Cannot create GDT entry [%s].", __FUNCTION__, pname);
+		kfree( new_task );
+		kfree( (void *)(new_task->pl0_stack) );
+
+		sched_leave_critical_region();
+		return( NULL );
+	}
+
+	// Set the privilege level.
+	new_task->privilege = privilege;
+
+	// Set the task type.
+	new_task->flags.type = PROCESS_TYPE;
+
+	// Create the virtual space of the task.
+	new_vspace( new_task );
+
+	if ( new_task->pdbr == NULL ) {
+		// Out of virtual memory!!!
+		kprintf("%s:Out of virtual memory!!! Cannot create page table [%s].", __FUNCTION__, pname);
+
+		kfree( new_task );
+		kfree( (void *)(new_task->pl0_stack) );
+		remove_GDT_entry( new_task->tss_sel );
+
+		sched_leave_critical_region();
+		return( NULL );
+	}
+
+	// Setup the task page directory address.
+	new_task->tss.cr3 = virtual_to_physical_address( (size_t)(new_task->pdbr) );
+
+	// Temporary switch to the new address space.
+	if( current_task != NULL ) {
+		task_switch_mmu( current_task, new_task );
+	} else {
+		switch_mmu( new_task->tss.cr3 );
+	}
+
+	// Create the task stack.
+	new_task->tss.ss = (privilege == KERNEL_PRIVILEGE) ? KERNEL_STACK : USER_STACK | 3;
+	if ( privilege == KERNEL_PRIVILEGE ) {
+		new_task->tss.esp = (size_t) task_setup_stack( argc, argv, new_task->tss.esp0 + sizeof(u32int) );
+	} else {
+		new_task->tss.esp = (size_t) task_setup_stack( argc, argv, VIRTUAL_TASK_HEAP_START );
+	}
+
+	// Initialize the user heap.
+	umalloc_init( new_task, VIRTUAL_TASK_HEAP_START, VIRTUAL_TASK_HEAP_SIZE );
+
+	// Restore the old address space.
+	if( current_task != NULL ) { task_switch_mmu( new_task, current_task ); }
+
+	// Setup the IO port mapping.
+	new_task->tss.io_map_addr = sizeof(tss_t);
+
+	memset32( new_task->tss.io_map, 0xffffffff, IO_MAP_SIZE );
+	// Setup general registers.
+	if ( privilege == KERNEL_PRIVILEGE ) {
+		new_task->tss.ds = new_task->tss.es =
+		new_task->tss.fs = new_task->tss.gs = KERNEL_DATA;
+	} else {
+		new_task->tss.ds = new_task->tss.es =
+		new_task->tss.fs = new_task->tss.gs = USER_DATA | 3;
+	}
+
+	// Setup the eflags register.
+	new_task->tss.eflags = EFLAGS_IOPL0 | EFLAGS_IF | 0x02;
+
+	// Setup starting address (program counter).
+	new_task->tss.cs = (privilege == KERNEL_PRIVILEGE) ? KERNEL_CODE : USER_CODE | 3;
+	new_task->tss.eip = (size_t)routine;
+
+	// Store the process name.
+	// The last character must be ever '\0' (end of string).
+	strncpy08( new_task->name, pname, sizeof(new_task->name) - 2 );
+
+
+	// Set the current working directory.
+	new_task->cwd = 0;
+
+	// Set the process credentials.
+	new_task->pid = new_pid();
+	if( privilege == KERNEL_PRIVILEGE ) {
+		new_task->uid = new_task->euid =
+		new_task->suid = new_task->fsuid = 0;
+		new_task->gid = new_task->egid =
+		new_task->sgid = new_task->fsgid = 0;
+	} else {
+		new_task->uid = new_task->euid =
+		new_task->suid = new_task->fsuid = 1;
+		new_task->gid = new_task->egid =
+		new_task->sgid = new_task->fsgid = 1;
+	}
+
+	// Set the parent.
+	new_task->father = current_task;
+
+	// Set the console.
+	if( current_task != NULL ) {
+		new_task->console = current_task->console;
+	}
+
+	// Setup the priority.
+	new_task->priority = new_task->counter = HIGH_PRIORITY;
+
+	// Insert the task into the ready queue.
+	rem_queue( &zombie_queue, new_task );
+	add_queue( &ready_queue, new_task );
+	new_task->state = TASK_READY;
+
+	sched_leave_critical_region();
+
+	// This is a little trick... Because we exit
+	// from a very long critical region we call
+	// the scheduler to enforce a new task selection.
+	if( current_task != NULL ) {
+		schedule();
+	}
+	return( new_task );
+}
 
 /**************************************************************************
 * ---------- Process info ----------
 **************************************************************************/
 // Return the current task name if there is a curr_task
 s08int *get_pname() {
-	if (!curr_task) {
+	if (!current_task) {
 		return NULL;
 	}
 
-	return(curr_task->name);
-}
-/**************************************************************************
-* ---------- Task's routines ----------
-**************************************************************************/
-// Simply do nothing...
-void do_idle() {
-	while(TRUE) {
-		enable_interrupts();
-		idle();
-	}
-}
-
-/**************************************************************************
-* ---------- PID operators ----------
-**************************************************************************/
-int new_pid() {
-	// Create a new pid
-	atomic_inc(&last_pid);
-	return(atomic_read(&last_pid));
-}
-
-int get_pid() {
-	// Return the current task pid if there is a curr_task
-	if (!curr_task) return NULL;
-	return(curr_task->pid);
-}
-
-// Create a new process
-task_t *create_process(void *address, void *buffer, s08int *pname) {
-	//defined in os/kernel/paging.c
-	extern u32int K_PDBR[PAGE_SIZE/sizeof(u32int)];
-	task_t *new_task;
-	u08int *pl0_stack;
-	u32int *PDBR;
-	u32int cr3, PDBR_frame, i;
-
-	sched_enter_critical_region();
-
-	// --- Create the task structure ---
-	new_task = kmalloc(sizeof(task_t));
-	if (new_task == NULL) {
-		// Out of virtual memory!!! //
-		kset_color(LIGHT_RED);
-		kprintf("\n\rOut of virtual memory!!! Cannot create task [%s].", pname);
-		kset_color(DEFAULT_COLOR);
-
-		sched_leave_critical_region();
-		return(NULL);
-	}
-	memset08(new_task, 0, sizeof(task_t));
-
-	// --- Create the pl0-stack --- //
-	pl0_stack = kmalloc(STACK_SIZE);
-	if (pl0_stack == NULL) {
-		// Out of virtual memory!!!
-		kset_color(LIGHT_RED);
-		kprintf("\n\rOut of virtual memory!!! Cannot create task [%s].", pname);
-		kset_color(DEFAULT_COLOR);
-		// Free the previous allocated space
-		kfree((void *)new_task);
-
-		sched_leave_critical_region();
-		return(NULL);
-	}
-	// Null the stack to enforce the page mapping
-	memset08(pl0_stack, 0, STACK_SIZE);
-
-	// Setup the pl0-stack
-	new_task->tss.ss0 = KERNEL_STACK;
-	new_task->tss.esp0 = new_task->pl0_stack = (u32int)(pl0_stack + STACK_SIZE);
-
-	// --- Setup the TSS ---
-	new_task->tss_sel = setup_GDT_entry(sizeof(tss_IO_t), (u32int)&(new_task->tss), TSS_SEG, 0);
-
-	// --- Create the virtual space of the task ---
-	PDBR_frame = (pop_frame()*PAGE_SIZE);
-	if (PDBR_frame == NULL)	{
-		// Out of memory!!! Free the previous allocated memory. //
-		kset_color(LIGHT_RED);
-		kprintf("\n\rOut of physical memory!!! Cannot create task [%s].", pname);
-		kset_color(DEFAULT_COLOR);
-		// Free the previous allocated space //
-		kfree((void *)(pl0_stack));
-		kfree((void *)new_task);
-
-		sched_leave_critical_region();
-		return(NULL);
-	}
-
-	// Get the frame... now we can intialize the task page directory
-	if (!(map_page(VIRTUAL_KERNEL_TEMP_MEMORY_START, PDBR_frame, P_PRESENT | P_WRITE)))	{
-		// Out of memory!!! Free the previous allocated memory.
-		kset_color(LIGHT_RED);
-		kprintf("\n\rOut of physical memory!!! Cannot create task [%s].", pname);
-		kset_color(DEFAULT_COLOR);
-		// Free the previous allocated space //
-		kfree((void *)(pl0_stack));
-		kfree((void *)new_task);
-		push_frame(PDBR_frame / PAGE_SIZE);
-
-		sched_leave_critical_region();
-		return(NULL);
-	}
-
-	// Initialize PDBR
-	PDBR = (u32int *)VIRTUAL_KERNEL_TEMP_MEMORY_START;
-	memset08(PDBR, 0, PAGE_SIZE);
-	for (i = VIRTUAL_KERNEL_START/(PAGE_SIZE*1024); i < 1024; i++) {
-		PDBR[i] = K_PDBR[i];
-	}
-
-	// Map page directory into itself
-	PDBR[1023] = PDBR_frame | P_PRESENT | P_WRITE;
-
-	// Temporary switch to the new address space
-	__asm__ __volatile__ ("movl %%cr3, %0" : "=r"(cr3) : );
-	__asm__ __volatile__ ("movl %0, %%cr3" : : "r"(PDBR_frame));
-
-	// --- Create the user space ---
-
-	// Create the task stack
-	#define TASK_STACK_START 0x80000000
-	memset08((void *)TASK_STACK_START, 0, STACK_SIZE);
-	new_task->tss.ss = KERNEL_STACK;
-	new_task->tss.esp = (u32int)(TASK_STACK_START + STACK_SIZE);
-
-	// Map the user code and data space
-	// ("address" is the virtual task space, "buffer" is the kernel space where the task-code is located)
-	#define TASK_SPACE_DIM	512
-	if (address != buffer) {
-		memcpy08(address, buffer, TASK_SPACE_DIM);
-	}
-
-	// Restore the old address space //
-	__asm__ __volatile__ ("movl %0, %%cr3" : : "r"(cr3));
-
-	// Setup the task PDBR
-	new_task->tss.cr3 = PDBR_frame;
-
-	// Setup the IO port mapping
-	new_task->tss.io_map_addr = sizeof(tss_t);
-
-	// Setup general registers
-	new_task->tss.ds = new_task->tss.es = KERNEL_DATA;
-	new_task->tss.fs = new_task->tss.gs = KERNEL_DATA;
-	new_task->tss.eflags = EFLAGS_IF | 0x02;
-
-	// Initialize general purpose registers
-	new_task->tss.eax = new_task->tss.ebx = 0;
-	new_task->tss.ecx = new_task->tss.edx = 0;
-	new_task->tss.esi = new_task->tss.edi = 0;
-
-	// Initialize LDTR (Local Descriptor Table Register)
-	// No LDTs for now...
-	new_task->tss.ldtr = 0;
-
-	// Initialize debug trap //
-	// If set to 1 the processor generate a debug exception when a task switch to this task occurs...
-	new_task->tss.trace = 0;
-
-	// Setup starting address
-	new_task->tss.cs = KERNEL_CODE;
-	new_task->tss.eip = (u32int)address;
-
-	// --- Get a pid ---
-	new_task->pid = new_pid();
-
-	// --- Store the name ---
-	new_task->name = pname;
-
-	// --- Set the type ---
-	new_task->type = PROCESS_T;
-
-	// --- Insert the task into the ready queue ---
-	new_task->state = READY;
-	add_queue(&ready_queue, new_task);
-
-	sched_leave_critical_region();
-
-	return (new_task);
-}
-
-// Create a new kernel thread
-task_t *create_kthread(void *address, s08int *pname) {
-
-	task_t *new_task;
-	u08int *pl0_stack;
-
-	sched_enter_critical_region();
-
-	// --- Create the task structure ---
-	new_task = kmalloc(sizeof(task_t));
-	if (new_task == NULL) {
-		// Out of virtual memory!!!
-		kset_color(LIGHT_RED);
-		kprintf("\n\rOut of virtual memory!!! Cannot create task [%s].", pname);
-		kset_color(DEFAULT_COLOR);
-
-		sched_leave_critical_region();
-		return(NULL);
-	}
-	memset08(new_task, 0, sizeof(task_t));
-	// --- Create the pl0-stack ---
-	pl0_stack = kmalloc(STACK_SIZE);
-	if (pl0_stack == NULL) {
-		// Out of virtual memory!!!
-		kset_color(LIGHT_RED);
-		kprintf("\n\rOut of virtual memory!!! Cannot create task [%s].", pname);
-		kset_color(DEFAULT_COLOR);
-		// Free the previous allocated space
-		kfree((void *)new_task);
-
-		sched_leave_critical_region();
-		return(NULL);
-	}
-	// Null the stack to enforce the page mapping
-	memset08(pl0_stack, 0, STACK_SIZE);
-
-	// Setup the pl0-stack
-	new_task->tss.ss0 = new_task->tss.ss = KERNEL_STACK;
-	new_task->tss.esp0 = new_task->tss.esp = new_task->pl0_stack = (u32int)(pl0_stack+STACK_SIZE);
-
-	// --- Setup the TSS ---
-	new_task->tss_sel = setup_GDT_entry(sizeof(tss_IO_t), (u32int)&(new_task->tss), TSS_SEG, 0);
-
-	// Setup the task PDBR => get the kernel PDBR
-	new_task->tss.cr3 = GET_PDBR();
-
-
-	// Setup the IO port mapping
-	new_task->tss.io_map_addr = sizeof(tss_t);
-
-	// Setup general registers
-	new_task->tss.ds = new_task->tss.es = KERNEL_DATA;
-	new_task->tss.fs = new_task->tss.gs = KERNEL_DATA;
-	new_task->tss.eflags = EFLAGS_IF | 0x02;
-
-	// Initialize general purpose registers
-	new_task->tss.eax = new_task->tss.ebx = new_task->tss.ecx =
-	new_task->tss.edx =	new_task->tss.esi = new_task->tss.edi = 0;
-
-	// Initialize debug trap
-	// If set to 1 the processor generates a debug exception when a task switch to this task occurs...
-	new_task->tss.trace = 0;
-
-	// Setup starting address
-	new_task->tss.cs = KERNEL_CODE;
-	new_task->tss.eip = (u32int)address;
-
-	// --- Get a pid ---
-	new_task->pid = new_pid();
-
-	// --- Store the name --- //
-	new_task->name = pname;
-
-	// --- Set the type --- //
-	new_task->type = KTHREAD_T;
-
-	// --- Insert the task into the ready queue --- //
-	new_task->state = READY;
-
-	add_queue(&ready_queue, new_task);
-
-	sched_leave_critical_region();
-
-	return (new_task);
+	return(current_task->name);
 }
 /**************************************************************************
 * ---------- Task's routines ----------
@@ -309,20 +303,26 @@ task_t *create_kthread(void *address, s08int *pname) {
 // NOTE: if a kthread kills itself it becomes an idle task
 void auto_kill() {
 	// Kill the task only if it is not a kthread
-	if (curr_task->type!=KTHREAD_T)
-	{
+	//if ( current_task->type != KERNEL_THREAD_TYPE) {
 		sched_enter_critical_region();
 
 		// Move the task from the ready queue to the zombie queue //
-		rem_queue(&ready_queue, curr_task);
-		add_queue(&zombie_queue, curr_task);
-		curr_task->state = ZOMBIE;
+		rem_queue(&ready_queue, current_task);
+		add_queue(&zombie_queue, current_task);
+		current_task->state = TASK_ZOMBIE;
 
 		sched_leave_critical_region();
-	}
+	//}
 
 	// Waiting for the dispatcher... //
 	do_idle();
+}
+// Simply do nothing...
+void do_idle() {
+	while(TRUE) {
+		enable_interrupts();
+		idle();
+	}
 }
 
 /**************************************************************************
@@ -340,163 +340,28 @@ void sched_leave_critical_region() {
 	atomic_set(&sched_enabled, TRUE);
 }
 
-// Simple round robin scheduler
-//static __inline__ void scheduler() {
-void scheduler() {
-	//defined in os/kernel/paging.c
-	extern u32int K_PDBR[1024];
-
-	u32int flags;
-	disable_and_save_interrupts(flags);
-
-	task_t	*prev_task;
-
-	u32int addr;
-
-	// Can we switch to another process?!
-	if ( atomic_read(&sched_enabled) ) {
-		// Remember about previous task
-		prev_task = curr_task;
-
-		// Select a new task
-		curr_task = pick_queue(&ready_queue);
-
-		if (curr_task == NULL) {
-			curr_task = idle_task;
-		}
-
-		if( prev_task != curr_task ){
-
-			// Update shared virtual address space of the new selected task
-			if( !(map_page(VIRTUAL_KERNEL_TEMP_MEMORY_START, curr_task->tss.cr3, P_PRESENT | P_WRITE)) ) {
-				// If there's no free pages return to the previous task
-				curr_task = prev_task;
-				restore_interrupts(flags);
-				return;
-			}
-
-			for ( addr = VIRTUAL_KERNEL_START; addr < VIRTUAL_PAGE_TABLE_MAP; addr += (PAGE_SIZE * 1024)) {
-				((u32int *)VIRTUAL_KERNEL_TEMP_MEMORY_START)[(addr / (PAGE_SIZE * 1024))] = K_PDBR[ (addr / (PAGE_SIZE * 1024))];
-
-			}
-
-			// Invalidate all the TLB entries
-			reload_CR3();
-			// Perform the task switch
-			jmp_to_tss(curr_task->tss_sel);
-
-		}
-	}
-	restore_interrupts(flags);
-}
-
-
-// ---------- Kernel tasks & threads ----------
-// This special process provides to free the kernel space used by zombie tasks
-void kpager() {
-	task_t *t;
-	u32int addr, PDBR;
-
-	while(TRUE)	{
-		t = pick_queue(&zombie_queue);
-		if (t == NULL) {
-			// No task in the zombie queue => IDLE!
-			enable_interrupts();
-			idle();
-		} else {
-			sched_enter_critical_region();
-
-			PDBR = t->tss.cr3;
-
-			// Temporary switch to the task address space
-			__asm__ __volatile__ ("movl %0, %%cr3" : : "r"(t->tss.cr3));
-
-			// Free the user address space
-			for(addr=0; addr<VIRTUAL_KERNEL_START; addr+=PAGE_SIZE) {
-				if (*ADDR_TO_PDE(addr) != NULL) {
-					delete_page(addr);
-				} else {
-					addr = PAGE_DIR_ALIGN_UP(addr);
-				}
-			}
-
-			// Free the pl0-stack
-			kfree((void *)((u32int)(t->pl0_stack) - STACK_SIZE));
-
-			// Destroy the TSS
-			remove_GDT_entry(t->tss_sel);
-
-			// The task is dead
-			rem_queue(&zombie_queue, t);
-
-			// Free the task structure
-			kfree((void *)t);
-
-			// Restore the kpager address space
-			__asm__ __volatile__ ("movl %0, %%cr3" : : "r"(curr_task->tss.cr3));
-
-			// Free the task page directory
-			push_frame( PDBR / PAGE_SIZE);
-
-			sched_leave_critical_region();
-		}
-	}
-}
 void initialize_multitasking() {
-	// Initialize the multitasking management
-	// Initialize pid counter
-	atomic_set(&last_pid, -1);
+	// Create the "init" task.
+	current_task = create_process( NULL, 0, NULL, "init", KERNEL_PRIVILEGE );
 
-	// Initialize scheduler critical region flag
-	atomic_set(&sched_enabled, TRUE);
+	// Set the console.
+	current_task->console = 1;
 
-	// Create kernel task Process Control Block
-	curr_task = (task_t *)kmalloc(sizeof(task_t));
+	// After the init thread is out it will become the idle task.
+	idle_task = current_task;
 
-	memset08(curr_task, 0, sizeof(task_t));
-
-	// Setup the kernel TSS
-	curr_task->tss_sel = setup_GDT_entry(sizeof(tss_IO_t), (u32int)&(curr_task->tss), TSS_SEG, 0);
-
-	// Setup the kernel address space
-	curr_task->tss.cr3 = GET_PDBR();
-
-	// Setup the kernel registers
-	curr_task->tss.ss0 = KERNEL_STACK;
-	curr_task->tss.eflags = 0x02;
-	curr_task->tss.ldtr = 0;
-	curr_task->tss.trace = 0;
-	curr_task->tss.io_map_addr = sizeof(tss_t);
-
-	// Get a pid
-	curr_task->pid = new_pid();
-
-	// Store the name
-	curr_task->name = "init";
-	// Insert the current task into the ready queue
-	add_queue(&ready_queue, curr_task);
-
-	curr_task->state = READY;
-
-	// Load task register
-	__asm__ __volatile__ ("ltr %0" : : "r" ((u16int)curr_task->tss_sel));
-	// Initialize the IDLE task
-	// The IDLE task is a special task,
-	// it's always ready but never present in the ready queue.
-	idle_task = create_kthread(&do_idle, "idle");
-	rem_queue(&ready_queue, idle_task);
-
-	create_kthread(&kpager, "kpager");
+	// Load task register.
+	__asm__ __volatile__ ("ltr %0" : : "a" (current_task->tss_sel));
 }
 
 // Print the state of every process from the ready, wait, and zombie queues.
 void ps() {
 	task_t *p, *ps;
 
-	if ((ps = p = curr_task)==NULL) return;
+	if ((ps = p = current_task)==NULL) return;
 	// Header.
 	kset_color( WHITE );
-	kprintf("PID\tSTATE\tCOMMAND\n");
+	kprintf("\nPID\tSTATE\tCOMMAND\n");
 	kset_color( DEFAULT_COLOR );
 
 	sched_enter_critical_region();
@@ -507,7 +372,7 @@ void ps() {
 		kprintf("%d\tReady\t%s\n",p->pid,p->name);
 		// Get the next task in the ready queue
 		p = pick_queue(&ready_queue);
-		if (p == curr_task) break;
+		if (p == current_task) break;
 	}
 
 	if ((ps = p = pick_queue(&wait_queue)) != NULL) {
@@ -534,3 +399,4 @@ void ps() {
 	}
 	sched_leave_critical_region();
 }
+

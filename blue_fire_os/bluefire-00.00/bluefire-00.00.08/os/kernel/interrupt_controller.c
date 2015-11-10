@@ -37,7 +37,6 @@ void reprogram_PIC_8259() {
 	// you just reset them. As part of the reset routine you need to specify what IRQ you want that specific
 	// chip to start at. You send it a reset command and then 4 ICWS specifying what features and configurations you want.
 
-
 	// ICW1 (interrupt control word)
 	// Write the reset command (0x11) to PIC1's command port (0x20).
 	outport08(MASTER_8259_COMMAND_PORT, 0x11);

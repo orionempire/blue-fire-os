@@ -57,7 +57,7 @@ void clock_handler(irq_context_t *context) {
 	//floppy_thread();
 
 	// Call the scheduler.
-	scheduler();
+	schedule();
 
 	enable_IRQ(context->IRQ);
 }
@@ -79,5 +79,4 @@ void initialize_clock() {
 	register_interrupt_handler(TIMER_IRQ, &clock_handler);
 
 	restore_interrupts(flags);
-
 }

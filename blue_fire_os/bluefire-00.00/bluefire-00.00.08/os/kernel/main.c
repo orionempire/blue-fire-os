@@ -1,6 +1,6 @@
 /**************************************************************************
  *	bluefire-os
- *	Version: 00.00.08
+ *	Version: 00.00.05
  *	Author: David Davidson
  *	Name: main.c
  *	Created: Dec 7, 2011
@@ -15,29 +15,21 @@ extern u32int var_system_memory_amount, _start;
 // Function Declarations
 void print_ok();
 void print_failed();
-
 // temporary debug helpers
 void task_test();
-void sh_test();
 
-/**************************************************************************
-*
-***************************************************************************/
-
-/**************************************************************************
+/******************************************************************************
 * Control arrives here from assembly/start.asm
-***************************************************************************/
+******************************************************************************/
 void k_main() {
 
 	// Paging must be initialized first so that video can use its proper address
 	initialize_paging();
 
 	initialize_video();
+	// Now debug functions can be used.
 
 	initialize_boot_console();
-
-	// There are now enough resources available to print to the screen.
-	kprintf("Paging and Video initialized successfully...\n");
 
 	// Print the welcome banner
 	kset_color(DEFAULT_COLOR);
@@ -49,7 +41,9 @@ void k_main() {
 	kprintf("Kernel is running at virtual address: %#010x\n", (u32int)&_start);
 	kprintf("Total System memory is: %d MB\n\n", (var_system_memory_amount /(1024 * 1024)) );
 
-
+	// There are now enough resources available to print to the screen.
+	kprintf("Paging and Video initialized successfully...");
+	print_ok();
 
 	// Reprogram the Programmable Interrupt Controller 8259
 	kprintf("Reprogramming PIC 8259...");
@@ -80,7 +74,7 @@ void k_main() {
 	initialize_multitasking();
 	print_ok();
 
-	// Initialize the clock, will start scheduling
+	// Initialize the clock
 	kprintf("Initializing system clock...");
 	initialize_clock();
 	print_ok();
@@ -90,21 +84,19 @@ void k_main() {
 	initialize_keyboard();
 	print_ok();
 
-
 	int del;
 	while(1){
 		del = kgetchar();
 		kprintf("%c",del);
 	}
 
-	dbg_brk();
 	// We must never reach this point.
 	PANIC("End of k_main reached.");
 }
 
-/**************************************************************************
+/******************************************************************************
 * Prints [ OK ] in green.
-***************************************************************************/
+******************************************************************************/
 void print_ok() {
 	kset_color( DEFAULT_COLOR );
 	kprintf( "\r\t\t\t\t\t\t[ " );
@@ -126,7 +118,6 @@ void  print_failed() {
 	kprintf( " ]\n" );
 }
 
-
 /**************************************************************************
 * Used for multitasking debugging. These will be moved to the shell
 * when it exists.
@@ -134,20 +125,10 @@ void  print_failed() {
 void task_test() {
 	register u32int cr3;
 
-	u32int *temp = kmalloc(sizeof(temp));
+	u32int *temp = kmalloc(sizeof(temp),GFP_KERNEL);
 
 	__asm__ __volatile__ ("movl %%cr3, %0" : "=r"(cr3) : );
-	kprintf("\nWelcome from task %u!!!My kmalloc was %X. Here is my PDBR %X", get_pid(),temp, cr3);
+	kprintf("\nWelcome from task %u!!! My kmalloc was %X. Here is my PDBR %X", get_pid(), temp, cr3);
 	kfree(temp);
-	auto_kill();
-}
-
-void sh_test() {
-
-	#define TOT_TASK_TEST	4
-	u32int i;
-
-	kprintf("\nCreating %u tasks. Please wait... ", TOT_TASK_TEST);
-	for(i = 0; i < TOT_TASK_TEST; i++)
-		create_process(&task_test, &task_test, "sh_task_test");
+	do_idle();
 }

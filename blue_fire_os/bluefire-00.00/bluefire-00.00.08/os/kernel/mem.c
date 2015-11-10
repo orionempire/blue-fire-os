@@ -1,4 +1,4 @@
-/**************************************************************************
+ /**************************************************************************
  *	bluefire-os
  *	Version: 00.00.04
  *	Author: David Davidson
@@ -48,7 +48,7 @@ u16int setup_GDT_entry(u16int limit, u32int base, u08int attribs0_7, u08int attr
 }
 
 
-void remove_GDT_entry(u16int sel) {
+void remove_GDT_entry(u16int sel){
 	u32int flags;
 
 	disable_and_save_interrupts(flags);

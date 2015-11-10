@@ -24,8 +24,9 @@
 
 #define TIMER_COUNT (unsigned) (TIMER_FREQ/HZ) // Value to initialize timer
 
-
-// Public Function declarations
+/******************************************************************************
+ *			--------- PUBLIC FUNCTION DECLARATIONS ----------
+******************************************************************************/
 void delay(u32int millisec);
 void initialize_clock();
 void stop_clock();
