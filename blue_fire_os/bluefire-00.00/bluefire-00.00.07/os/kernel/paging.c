@@ -235,8 +235,6 @@ s32int page_fault_handler(u32int err_code, u32int cr2) {
 
 	phys_addr = pop_frame() * PAGE_SIZE;
 
-	kprintf("\nFault > allocated 0x%x -> 0x%x",cr2,phys_addr);
-
 	// If out of memory return with a marked page fault panic
 	if (phys_addr == NULL) 	{
 		kset_color(LIGHT_RED);
@@ -250,6 +248,7 @@ s32int page_fault_handler(u32int err_code, u32int cr2) {
 
 	// Map page with correct attributes
 	if (cr2 >= VIRTUAL_KERNEL_START) {
+		//kset_color(LIGHT_GREEN);kprintf("\nK_Fault > allocated 0x%x -> 0x%x",cr2,phys_addr);kset_color(DEFAULT_COLOR);//dbg
 		if (!(map_page(cr2, phys_addr, P_PRESENT | P_WRITABLE))) {
 			// Out of memory
 			kset_color(LIGHT_RED);
@@ -258,6 +257,7 @@ s32int page_fault_handler(u32int err_code, u32int cr2) {
 			return TRUE;
 		}
 	} else {
+		//kset_color(LIGHT_BLUE); kprintf("\nU_Fault > allocated 0x%x -> 0x%x",cr2,phys_addr);kset_color(DEFAULT_COLOR);//dbg
 		if (!(map_page(cr2, phys_addr, P_PRESENT | P_WRITABLE | P_USER))) {
 			// Out of memory
 			kset_color(LIGHT_RED);

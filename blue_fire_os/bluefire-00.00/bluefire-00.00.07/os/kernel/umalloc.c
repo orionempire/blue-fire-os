@@ -10,6 +10,7 @@
 #include <common_include.h>
 
 void umalloc_init(task_t *t, size_t heap_start, size_t heap_size){
+
 	umem_block_t *p;
 
 	if( t == NULL )
@@ -27,7 +28,7 @@ void umalloc_init(task_t *t, size_t heap_start, size_t heap_size){
 
 	initialize_MUTEX( &(t->heap_sem) );
 
-	// Create only one hudge block.
+	// Create only one huge block.
 	p = (umem_block_t *)heap_start;
 	p->magic = UMALLOC_MAGIC;
 	p->flags = UMALLOC_FREE;

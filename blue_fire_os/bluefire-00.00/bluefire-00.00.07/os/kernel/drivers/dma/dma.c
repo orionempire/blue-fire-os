@@ -27,8 +27,8 @@ void initialize_DMA(){
 	//0x4000 frames
 	dma_free_frames = (u32int *)kmalloc(DMA_PHYSICAL_TO_IDX(PHYSICAL_DMA_MEMORY_END) * sizeof(u32int), GFP_KERNEL);
 
-	//dma_free_frames[0x0..0x1000] -> (0x00000000, 0x01000000)
-	for( i = 0; i < DMA_PHYSICAL_TO_IDX(PHYSICAL_DMA_MEMORY_END); i++ ) {
+	//dma_free_frames[0x0..0xFFF] -> (0x00000000, 0x00FFFFFF)
+	for( i = 0; i < (DMA_PHYSICAL_TO_IDX(PHYSICAL_DMA_MEMORY_END) - 1); i++ ) {
 		dma_free_frames[ i ] = DMA_FREE_FRAME;
 	}
 
@@ -58,5 +58,5 @@ void initialize_DMA(){
 	for( i = 0; i <= (kernel_code_frame_count - 1); i++) {
 		dma_free_frames[ (DMA_PHYSICAL_TO_IDX(PHYSICAL_KERNEL_START) + i) ] = DMA_RESERVED_FRAME;
 	}
-	//dbg((DMA_PHYSICAL_TO_IDX(PHYSICAL_KERNEL_START) + i)); dbg_brk()
+	//dbg((DMA_PHYSICAL_TO_IDX(PHYSICAL_KERNEL_START) + i)); dump_memory_map();dbg_brk()
 }

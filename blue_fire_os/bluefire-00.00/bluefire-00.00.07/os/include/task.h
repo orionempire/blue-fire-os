@@ -188,5 +188,6 @@ void sched_enter_critical_region();
 void sched_leave_critical_region();
 task_t *create_process(void *routine, s32int argc, s08int **argv, s08int *pname, s32int privilege);
 void do_idle();
+void ps() ;
 
 #endif /* TASK_H_ */

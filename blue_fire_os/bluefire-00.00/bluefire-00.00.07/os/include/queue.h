@@ -149,7 +149,23 @@ static __inline__ s32int rem_queue( queue_t **q, void *v ){
 	}
 	return( -1 );
 }
+//! \brief Get the first element in the queue and update the head.
+//! \param q The queue pointer.
+//! \return The next element in the queue.
+//! \exception NULL The queue is empty or not allocated.
+static inline void *pick_queue(queue_t **q) {
+	void *__ret;
 
+	if ( *q==NULL )
+		return( NULL );
+
+	__ret = (*q)->value;
+	*q = (*q)->next;
+
+	return( __ret );
+}
+
+//! \brie
 /******************************************************************************
  *			--------- PUBLIC FUNCTION DECLARATIONS ----------
 ******************************************************************************/

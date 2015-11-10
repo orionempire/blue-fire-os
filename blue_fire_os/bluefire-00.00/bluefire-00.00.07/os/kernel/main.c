@@ -17,7 +17,6 @@ void print_ok();
 void print_failed();
 // temporary debug helpers
 void task_test();
-void sh_test();
 
 /******************************************************************************
 * Control arrives here from assembly/start.asm
@@ -73,7 +72,6 @@ void k_main() {
 	// Initialize multitasking
 	kprintf("Initializing multitasking...");
 	initialize_multitasking();
-	dbg_brk()
 	print_ok();
 
 	// Initialize the clock
@@ -81,9 +79,10 @@ void k_main() {
 	initialize_clock();
 	print_ok();
 
-	sh_test();
+	//needs to work one day
+	//create_process(&task_test, 0, NULL, "test_process_01",KERNEL_PRIVILEGE);
 
-	//ps();
+	ps();
 	dbg_brk();
 	// We must never reach this point.
 	PANIC("End of k_main reached.");
@@ -123,18 +122,7 @@ void task_test() {
 	u32int *temp = kmalloc(sizeof(temp),GFP_KERNEL);
 
 	__asm__ __volatile__ ("movl %%cr3, %0" : "=r"(cr3) : );
-	kprintf("\nWelcome from task %u!!!My kmalloc was %X. Here is my PDBR %X", get_pid(),temp, cr3);
+	kprintf("\nWelcome from task %u!!! My kmalloc was %X. Here is my PDBR %X", get_pid(), temp, cr3);
 	kfree(temp);
 	do_idle();
-}
-
-void sh_test() {
-	#define TOT_TASK_TEST	16
-	u32int i;
-
-	kprintf("\nCreating %u tasks. Please wait... ", TOT_TASK_TEST);
-	for(i = 0; i < TOT_TASK_TEST; i++) {
-		//create_process(&task_test, 0, &task_test, "sh_task_test",KERNEL_PRIVILEGE);
-		create_process(&task_test, 0, NULL, "sh_task_test",KERNEL_PRIVILEGE);
-	}
 }

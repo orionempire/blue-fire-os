@@ -262,6 +262,8 @@ void kmalloc_initialize() {
 void dump_memory_map(void) {
 
 	memory_block_t *p = (memory_block_t *)VIRTUAL_KERNEL_HEAP_START;
+	u32int display=1;
+
 
 	for( ; ; ) {
 		kprintf("\np        = %#010x "
@@ -280,6 +282,8 @@ void dump_memory_map(void) {
 		if (p >= (memory_block_t *)VIRTUAL_KERNEL_HEAP_END) break;
 
 		// No keyboard yet so can't pause
-		dbg_pause(1);
+		if ( !(++display % 10) ) {
+			dbg_pause(1);
+		}
 	}
 }

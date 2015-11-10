@@ -19,9 +19,13 @@ extern size_t __task_exit_point;
 
 // Declared in sched.c
 extern queue_t *ready_queue;
-extern task_t	*current_task;
-extern task_t *idle_task;
+extern queue_t *wait_queue;
 extern queue_t *zombie_queue;
+
+// Declared in sched.c
+extern task_t *idle_task;
+extern task_t	*current_task;
+
 
 // Last used pid.
 s32int last_pid = 0;
@@ -122,12 +126,7 @@ task_t *create_process(void *routine, s32int argc, s08int **argv, s08int *pname,
 
 	sched_enter_critical_region();
 
-	//dump_memory_map();
 	new_task = kmemalign( PAGE_SIZE, sizeof(task_t), GFP_KERNEL );
-	//dbg(new_task)
-	//dbg(sizeof(task_t))
-	//dump_memory_map();
-	//dbg_brk()
 
 	if( new_task == NULL ) {
 		// Out of virtual memory!!!
@@ -180,6 +179,7 @@ task_t *create_process(void *routine, s32int argc, s08int **argv, s08int *pname,
 
 	// Create the virtual space of the task.
 	new_vspace( new_task );
+
 	if ( new_task->pdbr == NULL ) {
 		// Out of virtual memory!!!
 		kprintf("%s:Out of virtual memory!!! Cannot create page table [%s].", __FUNCTION__, pname);
@@ -218,8 +218,8 @@ task_t *create_process(void *routine, s32int argc, s08int **argv, s08int *pname,
 
 	// Setup the IO port mapping.
 	new_task->tss.io_map_addr = sizeof(tss_t);
-	memset32( new_task->tss.io_map, 0xffffffff, IO_MAP_SIZE );
 
+	memset32( new_task->tss.io_map, 0xffffffff, IO_MAP_SIZE );
 	// Setup general registers.
 	if ( privilege == KERNEL_PRIVILEGE ) {
 		new_task->tss.ds = new_task->tss.es =
@@ -282,7 +282,6 @@ task_t *create_process(void *routine, s32int argc, s08int **argv, s08int *pname,
 	if( current_task != NULL ) {
 		schedule();
 	}
-dbg_brk()
 	return( new_task );
 }
 
@@ -325,3 +324,50 @@ void initialize_multitasking() {
 	// Load task register.
 	__asm__ __volatile__ ("ltr %0" : : "a" (current_task->tss_sel));
 }
+
+// Print the state of every process from the ready, wait, and zombie queues.
+void ps() {
+	task_t *p, *ps;
+
+	if ((ps = p = current_task)==NULL) return;
+	// Header.
+	kset_color( WHITE );
+	kprintf("\nPID\tSTATE\tCOMMAND\n");
+	kset_color( DEFAULT_COLOR );
+
+	sched_enter_critical_region();
+
+	// Ready processes
+	while(TRUE)	{
+		// Print process informations
+		kprintf("%d\tReady\t%s\n",p->pid,p->name);
+		// Get the next task in the ready queue
+		p = pick_queue(&ready_queue);
+		if (p == current_task) break;
+	}
+
+	if ((ps = p = pick_queue(&wait_queue)) != NULL) {
+		// Wait processes
+		while(TRUE)	{
+			// Print process informations
+			kprintf("%d\tWait\t%s\n",p->pid,p->name);
+			// Get the next task in the ready queue
+			p = pick_queue(&wait_queue);
+			if (p == ps) break;
+		}
+	}
+
+	// Zombie processes
+	if ((ps = p = pick_queue(&zombie_queue)) != NULL) {
+		while(TRUE)	{
+			// Print process informations
+			kprintf("%d\tZombie\t%s\n",p->pid,p->name);
+			// Get the next task in the ready queue
+			// Get the next task in the ready queue //
+			p = pick_queue(&zombie_queue);
+			if (p==ps) break;
+		}
+	}
+	sched_leave_critical_region();
+}
+
