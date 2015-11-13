@@ -9,13 +9,10 @@
 ***************************************************************************/
 #include <common_include.h>
 
-// Current running task
-//task_t	*current_task = NULL;
+
 
 //declared in assembly/exit.asm
 extern size_t __task_exit_point;
-//extern void __task_exit_point;
-
 
 // Declared in sched.c
 extern queue_t *ready_queue;
@@ -24,7 +21,7 @@ extern queue_t *zombie_queue;
 
 // Declared in sched.c
 extern task_t *idle_task;
-extern task_t	*current_task;
+extern task_t	*current_task;	// Current running task
 
 
 // Last used pid.
@@ -51,7 +48,10 @@ s32int get_pid() {
 	return(current_task->pid);
 }
 
-//TODO
+/******************************************************************************
+ *	---------  ----------
+ *	<TODO>
+******************************************************************************/
 static void new_vspace( task_t *t ) {
 	int i;
 	// Create the virtual space of the task.
@@ -82,7 +82,10 @@ static void new_vspace( task_t *t ) {
 	}
 }
 
-//TODO
+/******************************************************************************
+ *	---------  ----------
+ *	<TODO>
+******************************************************************************/
 static __inline__ u32int *task_setup_stack( int argc, char **argv, size_t stack_start ) {
 	u32int *stack = (u32int *)( ALIGN_DOWN(stack_start, sizeof(u32int)) - sizeof(u32int) );
 	u32int *user_argv;
@@ -120,7 +123,10 @@ static __inline__ u32int *task_setup_stack( int argc, char **argv, size_t stack_
 	return( stack );
 }
 
-//TODO
+/******************************************************************************
+ *	---------  ----------
+ *	<TODO>
+******************************************************************************/
 task_t *create_process(void *routine, s32int argc, s08int **argv, s08int *pname, s32int privilege) {
 	task_t *new_task;
 
@@ -311,6 +317,9 @@ void sched_leave_critical_region() {
 	atomic_set(&sched_enabled, TRUE);
 }
 
+/******************************************************************************
+ *	--------- SETUP MULTITASKING ----------
+******************************************************************************/
 void initialize_multitasking() {
 	// Create the "init" task.
 	current_task = create_process( NULL, 0, NULL, "init", KERNEL_PRIVILEGE );

@@ -10,7 +10,31 @@
 #include <common_include.h>
 
 extern task_t	*current_task;
-// ---------- Memory operators for kernel ----------
+
+/******************************************************************************
+ *	--------- SIZE OF ALLOCATED MEMORY BLOCK ----------
+******************************************************************************/
+s32int mem_sizeof(void *ptr) {
+	memory_block_t *p = ((memory_block_t *)ptr-1);
+	u32int flags;
+	s32int __ret;
+
+	disable_and_save_interrupts( flags );
+
+	if ( (p->magic == KMALLOC_MAGIC) && (p->flags == KMALLOC_ALLOC) ) {
+		__ret =  p->size;
+	} else {
+		__ret = NULL;
+	}
+
+	restore_interrupts( flags );
+
+	return( __ret );
+}
+
+/******************************************************************************
+ *	--------- ALLOCATE VIRTUAL MEMORY BLOCK ----------
+******************************************************************************/
 void *kmalloc(u32int size, u32int mflag) {
 
 	// This is a best-fit like allocator.
@@ -79,37 +103,64 @@ void *kmalloc(u32int size, u32int mflag) {
 	restore_interrupts(flags);
 
 	return( (void *)p_best_block );
-
-	/*
-	// If you do, allocate it! //
-	p_best->magic = KMALLOC_MAGIC;
-	p_best->flags = KMALLOC_ALLOC;
-	p_best->owner = get_pid();
-	p_best->owner = NULL;
-
-	if (p_best->size == size) {
-		p_best = (void *)p_best + sizeof(memory_block_t);
-		restore_interrupts(flags);
-		// The block cover the size perfectly //
-		return ((void *)p_best);
-	}
-
-	// Otherwise split the hole in two blocks //
-	p = (void *)p_best + sizeof(memory_block_t) + size;
-	p->magic = KMALLOC_MAGIC;
-	p->flags = KMALLOC_FREE;
-	p->size = p_best->size - size - sizeof(memory_block_t);
-	p->owner = NULL;
-
-	p_best->size = size;
-	p_best = (void *)p_best + sizeof(memory_block_t);
-
-	restore_interrupts(flags);
-	// Return the best-fit pointer
-	return ((void *)p_best);
-	*/
 }
 
+/******************************************************************************
+ *	--------- ALLOCATE ALLIGNED VIRTUAL MEMORY BLOCK ----------
+******************************************************************************/
+void *kmemalign(size_t alignment, size_t size, s32int flags) {
+	memory_block_t *p, *p2;
+
+	// Cannot allocate memory with a size of zero.
+	if( !size ) {
+		return( NULL );
+	}
+
+	// Allocate the pointer.
+	p = kmalloc(size + alignment + 2 * sizeof(memory_block_t), flags);
+	if( p == NULL ) {
+		return( NULL );
+	}
+
+	// An alignment of zero is intended as a simple kmalloc(size).
+	if ( alignment == 0 ) {
+		return( p );
+	}
+
+	// Check if the pointer is correctly aligned.
+	if( (size_t)p % alignment ) {
+
+		// Align the pointer p to the boundary.
+		u32int flags;
+
+		disable_and_save_interrupts( flags );
+
+		// Allocate the new block.
+		p2 = p + 2;
+		p2 = (memory_block_t *)ALIGN_UP((size_t)p2, alignment)  - 1;
+
+		p2->magic = KMALLOC_MAGIC;
+		p2->flags = (p-1)->flags;
+		p2->owner = (p-1)->owner;
+		p2->size = mem_sizeof(p) - ((size_t)(p2+1) - (size_t)p);
+
+		// Free the unused space.
+		(p-1)->size = (size_t)p2 - (size_t)p;
+
+		restore_interrupts( flags );
+
+		kfree( p );
+
+		return( p2 + 1 );
+	}
+
+	// The pointer p is already aligned to the boundary.
+	return( p );
+}
+/******************************************************************************
+ *	--------- DE-ALLOCATE VIRTUAL MEMORY BLOCK ----------
+******************************************************************************/
+// Helper for kfree
 static void deallocate(memory_block_t *ptr){
 	size_t start = PAGE_ALIGN_UP( (size_t)((void *)ptr + sizeof(memory_block_t)) );
 	size_t end = PAGE_ALIGN( (size_t)((void *)ptr + sizeof(memory_block_t) + ptr->size) );
@@ -179,73 +230,10 @@ void kfree(void *ptr) {
 	restore_interrupts( flags );
 }
 
-s32int mem_sizeof(void *ptr) {
-	memory_block_t *p = ((memory_block_t *)ptr-1);
-	u32int flags;
-	s32int __ret;
 
-	disable_and_save_interrupts( flags );
-
-	if ( (p->magic == KMALLOC_MAGIC) && (p->flags == KMALLOC_ALLOC) ) {
-		__ret =  p->size;
-	} else {
-		__ret = NULL;
-	}
-
-	restore_interrupts( flags );
-
-	return( __ret );
-}
-void *kmemalign(size_t alignment, size_t size, s32int flags) {
-	memory_block_t *p, *p2;
-
-	// Cannot allocate memory with a size of zero.
-	if( !size ) {
-		return( NULL );
-	}
-
-	// Allocate the pointer.
-	p = kmalloc(size + alignment + 2 * sizeof(memory_block_t), flags);
-	if( p == NULL ) {
-		return( NULL );
-	}
-
-	// An alignment of zero is intended as a simple kmalloc(size).
-	if ( alignment == 0 ) {
-		return( p );
-	}
-
-	// Check if the pointer is correctly aligned.
-	if( (size_t)p % alignment ) {
-
-		// Align the pointer p to the boundary.
-		u32int flags;
-
-		disable_and_save_interrupts( flags );
-
-		// Allocate the new block.
-		p2 = p + 2;
-		p2 = (memory_block_t *)ALIGN_UP((size_t)p2, alignment)  - 1;
-
-		p2->magic = KMALLOC_MAGIC;
-		p2->flags = (p-1)->flags;
-		p2->owner = (p-1)->owner;
-		p2->size = mem_sizeof(p) - ((size_t)(p2+1) - (size_t)p);
-
-		// Free the unused space.
-		(p-1)->size = (size_t)p2 - (size_t)p;
-
-		restore_interrupts( flags );
-
-		kfree( p );
-
-		return( p2 + 1 );
-	}
-
-	// The pointer p is already aligned to the boundary.
-	return( p );
-}
-
+/******************************************************************************
+ *	--------- INITIALIZE MEMORY BLOCK ----------
+******************************************************************************/
 void kmalloc_initialize() {
 
 	// Initialize the memory allocator
@@ -259,6 +247,9 @@ void kmalloc_initialize() {
 	p->owner = 0;
 }
 
+/******************************************************************************
+ *	--------- MEMORY BLOCK DEBUG ----------
+******************************************************************************/
 void dump_memory_map(void) {
 
 	memory_block_t *p = (memory_block_t *)VIRTUAL_KERNEL_HEAP_START;

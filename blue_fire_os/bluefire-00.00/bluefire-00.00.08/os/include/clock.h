@@ -22,7 +22,7 @@
 
 #define HZ		200	// Clock Frequency (User set-able, default=200Hz)
 
-#define TIMER_COUNT (unsigned) (TIMER_FREQ/HZ) // Value to initialize timer
+#define TIMER_COUNT (unsigned) (TIMER_FREQ/HZ) // Value to initialize timer (5,965)
 
 /******************************************************************************
  *			--------- PUBLIC FUNCTION DECLARATIONS ----------

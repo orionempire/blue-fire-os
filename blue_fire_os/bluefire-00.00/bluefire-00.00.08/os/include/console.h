@@ -38,8 +38,7 @@
 #define K_TOT_VIR_CONS		2
 
 // Virtual console structure.
-typedef struct console
-{
+typedef struct console {
 	// --- VIDEO ---
 	u16int 	*vid_buffer;	// Video buffer.
 	u08int 	cursor_x;		// Current x position.
@@ -56,7 +55,7 @@ typedef struct console
 	// The keyboard circular buffer.
 	u16int	keyb_buffer[KEYBOARD_BUFFER_DIMENSION];
 
-}console_t;
+} console_t;
 
 // Public Function declarations
 void initialize_boot_console();

@@ -12,7 +12,7 @@
 #define PAGING_H_
 
 // Paging Constants
-#define PAGE_SIZE	4096U	//A unsigned c literal decimal
+#define PAGE_SIZE	4096U	//A unsigned c literal decimal (bytes)
 
 #define P_PRESENT			0x01
 #define P_WRITABLE			0x02

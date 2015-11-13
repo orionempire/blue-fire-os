@@ -115,8 +115,7 @@ void video_put_char( u08int c, console_t *console) {
 
 	disable_and_save_interrupts(flags);
 
-	switch (c)
-	{
+	switch (c) {
 		case '\n':		//New line
 			(console->cursor_y) += 1;	//Move down a line
 			(console->cursor_x) = 0; 	//And back to the start of the line
@@ -126,13 +125,13 @@ void video_put_char( u08int c, console_t *console) {
 			break;
 		case '\b':		//handle a backspaced request.
 			if(console->cursor_x == 0){	// If we are at the beginning of a line
-				if(console->cursor_y == 0){	//first check whether we are at the top left of screen
+				if(console->cursor_y == 0) {	//first check whether we are at the top left of screen
 					return;
 				}
 				//move the cursor to the end of the last line
 				(console->cursor_y) -= 1;
 				console->cursor_x = crt_width;
-			}else{
+			} else {
 				//If we are in the middle of a line just move the cursor back
 				(console->cursor_x) += 1;
 				// and "erase" what is there by over writing it with a space.
@@ -167,7 +166,7 @@ void video_put_char( u08int c, console_t *console) {
 	video_scroll_console(console);
 
 	// Update the cursor position only for current console.
-	if( console==get_console_addr(0) ) {
+	if( console == get_console_addr(0) ) {
 		video_move_cursor(console->cursor_x, console->cursor_y);
 	}
 

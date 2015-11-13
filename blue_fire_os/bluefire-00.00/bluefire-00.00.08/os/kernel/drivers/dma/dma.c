@@ -14,6 +14,10 @@
 u32int *dma_free_frames;
 s32int dma_pointer;
 
+/******************************************************************************
+ *	--------- DMA FRAME STACK INIALIZATION  ----------
+ *  <TODO> Convert to bit set.
+******************************************************************************/
 void initialize_DMA(){
 
 	s32int i;
@@ -58,5 +62,4 @@ void initialize_DMA(){
 	for( i = 0; i <= (kernel_code_frame_count - 1); i++) {
 		dma_free_frames[ (DMA_PHYSICAL_TO_IDX(PHYSICAL_KERNEL_START) + i) ] = DMA_RESERVED_FRAME;
 	}
-	//dbg((DMA_PHYSICAL_TO_IDX(PHYSICAL_KERNEL_START) + i)); dump_memory_map();dbg_brk()
 }

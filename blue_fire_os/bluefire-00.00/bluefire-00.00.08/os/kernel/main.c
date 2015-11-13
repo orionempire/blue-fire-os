@@ -19,7 +19,8 @@ void print_failed();
 void task_test();
 
 /******************************************************************************
-* Control arrives here from assembly/start.asm
+ *	---------  ----------
+ *	Control arrives here from assembly/start.asm
 ******************************************************************************/
 void k_main() {
 

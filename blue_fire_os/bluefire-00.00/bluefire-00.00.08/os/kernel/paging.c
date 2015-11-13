@@ -19,13 +19,9 @@ u32int *VIRTUAL_KERNEL_END;
 // Free-frames stack is placed just above kernel memory
 u32int *free_frames = (u32int *)&KERNEL_END_CODE;
 
-/**************************************************************************
-*	Free frame stack. Basically one word of memory is recored to represent
-*	every physical group (page) of memory not used. Later on a more efficient
-*	bitset algorithm will be used but for now things are kept simple as there
-*	arn't to many kernel resources available for debugging.
-**************************************************************************/
-// ---------- Free frames stack operators ----------
+/******************************************************************************
+ *	--------- POP/PUSH FRAME TO STACK ----------
+******************************************************************************/
 u32int pop_frame() {
 	u32int ret;
 	u32int flags;
@@ -60,16 +56,17 @@ void push_frame(u32int p_addr) {
 	restore_interrupts(flags);
 }
 
-/**************************************************************************
-*	---------- Mapping operators ----------
-*	Associates a Virtual address with a physical address
-**************************************************************************/
-// ---------- Initialization routine ----------
-// Creates a list of all frames of physical memory available for use and stores
-// the list at the virtual address starting above the end of the kernel.
-// For our OS the list is all frames above 16 MB (below is reserved for BIOS,DMA,
-// and Kernel) so for example the first available frame is 0x1000 and that is
-// recorded at 0xC0015000
+/******************************************************************************
+ *	--------- PHYSICAL FRAME STACK INIALIZATION  ----------
+ * Free frame stack. One word of memory is recored to represent every physical
+ * group (page) of memory not used. Things are kept simple for now
+ * as there arn't to many kernel resources available for debugging.
+ * Creates a list of all frames of physical memory available for use
+ * (all frames above 16 MB (below is reserved for BIOS,DMA, and Kernel))
+ * and stores it at the virtual address starting above the end of the kernel.
+ * For example the first available frame is 0x1000 and that is recorded at 0xC0015000
+ * <TODO> Convert to bit set.
+******************************************************************************/
 void init_free_frames() {
 	u32int phys_addr;
 
@@ -86,7 +83,9 @@ void init_free_frames() {
 	*VIRTUAL_KERNEL_END=NULL;
 }
 
-// ---------- Actual map routine ----------
+/******************************************************************************
+ *	--------- MAP PAGE TO FRAME  ----------
+******************************************************************************/
 s32int map_page(u32int vir_addr, u32int phys_addr, u16int attribs) {
 	// Perform a page mapping for the current address space
 	u32int *PTE;
@@ -135,7 +134,9 @@ s32int map_page(u32int vir_addr, u32int phys_addr, u16int attribs) {
 
 	return(TRUE);
 }
-
+/******************************************************************************
+ *	--------- UNMAP PAGE TO FRAME  ----------
+******************************************************************************/
 void delete_page(u32int addr) {
 	// Unmap the page and destroy the physical frame where the address is mapped
 	u32int temp;
@@ -181,16 +182,25 @@ void delete_page(u32int addr) {
 	restore_interrupts(flags);
 }
 
-// Spinlock for mutual exclusion of temporary pages.
-DECLARE_SPINLOCK( mem_temp_lock );
 
+/******************************************************************************
+ *	--------- MAP TEMPORARY PAGE ----------
+ *	- Find the next available free page in the kernel temporary space (0xE10000000)
+ *	  and map it to a frame from the free frame stack. For a temporary page the
+ *	  next available proper virtual address is picked ( for generic page request a
+ *	  virtual address is specified).
+ *	-> Pointer to virtual address allocated.
+ *	<error> out of resources - returns NULL.
+******************************************************************************/
+DECLARE_SPINLOCK( mem_temp_lock ); //spin lock ensures mutual exclusion
 void *get_temp_page() {
 	u08int *p = (u08int *)VIRTUAL_KERNEL_TMP_MEMORY_START;
-	size_t frame;
+	u32int frame;
 	u32int flags;
 
 	spin_lock_irqsave( &mem_temp_lock, flags );
 
+	//check whether any virtual addresses are unused.
 	while( TRUE ) {
 		if( *VIRT_TO_PDE_ADDR((size_t)p) ) {
 			if( *VIRT_TO_PTE_ADDR((size_t)p) ) {
@@ -203,33 +213,49 @@ void *get_temp_page() {
 				continue;
 			}
 		}
-		// OK! A free temporary page has been found!
-		// Now map this page to a free frame and return the
-		// virtual address of this page, or NULL if there is
-		// no free frame.
+
+		//A unused address has been found. Map it to a frame and return the
+		// virtual address.
 		frame = pop_frame();
 		if ( frame==NULL ) {
-			p = NULL;
+			p = NULL;	// out of physical memory
 		} else if( !map_page((u32int)p, frame, P_PRESENT | P_WRITABLE) ){
-			p = NULL;
+			p = NULL;	// problem allocating PTE
 		}
 		spin_unlock_irqrestore( &mem_temp_lock, flags );
 		return( (void *)p );
 	}
 }
-/*
-// ---------- Generic operators ----------
-u32int virtual_to_physical_address(u32int vir_addr) {
-	// Returns the physical address associated with the virtual address
-	if (*VIRT_TO_PDE_ADDR(vir_addr) == NULL) return(NULL);
-	return ((*VIRT_TO_PTE_ADDR(vir_addr) & -PAGE_SIZE) + (vir_addr % PAGE_SIZE));
+/******************************************************************************
+ *	--------- FREE TEMPORARY PAGE ----------
+ *	- Free up a previously allocated temporary page.
+ *	<- Pointer to virtual address being freed.
+ *	<error> Page not in temporary memory - Ignores.
+ *	<error> Page not previously allocated - <TBD>
+******************************************************************************/
+void free_temp_page(void *p){
+	u32int flags;
+
+	spin_lock_irqsave( &mem_temp_lock, flags );
+
+	// Is the page into the temporary memory range?!		//
+	if ( (((u32int)p >= (VIRTUAL_KERNEL_TMP_MEMORY_START))) && ((u32int)p < VIRTUAL_KERNEL_TMP_MEMORY_END) ) {
+		delete_page( (u32int)p );
+	}
+
+	spin_unlock_irqrestore( &mem_temp_lock, flags );
 }
-*/
-/**************************************************************************
+/******************************************************************************
 *	---------- Page fault handler ----------
-*	This function is hardcoded in the IDT and called on a page fault exception.
-*	returns - A error code in case of failure.
-**************************************************************************/
+*	This function is hard coded in the IDT and called on a page fault exception.
+*	When ever the running code is running and tries to access a virtual address
+*	that is not mapped by the current page directory, the CPU generates a exception
+*	which has the address to this function listed.
+*	-> err_code
+*	-> cr2 - the unmapped virtual address where access was attempted
+*	<- returns - FALSE.
+*	<error> out of resources - notifies, returns TRUE
+******************************************************************************/
 s32int page_fault_handler(u32int err_code, u32int cr2) {
 	u32int phys_addr;
 
@@ -271,9 +297,10 @@ s32int page_fault_handler(u32int err_code, u32int cr2) {
 
 	return FALSE;
 }
-
 /******************************************************************************
-*	Sets up everything we need for paging
+ *	--------- PAGING INITIALIZATION ----------
+ *	- Should be called one time by initialization routine before any
+ *	thing that needs it
 ******************************************************************************/
 void initialize_paging() {
 
@@ -328,7 +355,9 @@ void initialize_paging() {
 	reload_CR3();
 }
 
-// ---------- Debug functions ----------
+/******************************************************************************
+ *	--------- PAGING DEBUGING ----------
+******************************************************************************/
 // Show all the dirty pages
 void dump_dirty_pages() {
 	u32int vir_addr;
@@ -349,6 +378,7 @@ void dump_dirty_pages() {
 	}
 	kprintf("\n");
 }
+// iterates and prints free frame stack.
 void dump_free_frames() {
 	u32int *f = free_frames;
 	u32int display=1;

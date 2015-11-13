@@ -24,7 +24,7 @@ typedef unsigned char  		u08int;			//also byte
 typedef          char  		s08int;
 typedef unsigned short 		u16int;			//also word
 typedef          short 		s16int;
-typedef unsigned int   		u32int;			//also dword
+typedef unsigned int   		u32int;			//also dword,size_t
 typedef          int   		s32int;			//also bool
 typedef unsigned long long  u64int;
 typedef          long long  s64int;

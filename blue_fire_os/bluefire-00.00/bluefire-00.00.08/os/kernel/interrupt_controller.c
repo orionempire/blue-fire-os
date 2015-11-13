@@ -162,7 +162,7 @@ void initialize_IDT() {
 	// Load info into IDTR register.
 	__asm__ __volatile__ ("lidtl (%0)" : : "r"((u32int)&idt_ptr));
 
-	// install spurious interrupt handlers
+	// install spurious interrupt
 	register_interrupt_handler(SPURIOUS_IRQ, &spurious_interrupt);
 	register_interrupt_handler(SPURIOUS_IRQ_B, &spurious_interrupt);
 
