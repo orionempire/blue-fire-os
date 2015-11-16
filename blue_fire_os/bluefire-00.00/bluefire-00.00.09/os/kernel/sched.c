@@ -28,7 +28,7 @@ task_t *idle_task = NULL;
 // Spinlock to enable/disable scheduling.
 DECLARE_SPINLOCK( sched_enabled );
 
-s32int sched_is_disabled( void ) {
+int sched_is_disabled( void ) {
 	return( spin_is_locked(&sched_enabled) );
 }
 

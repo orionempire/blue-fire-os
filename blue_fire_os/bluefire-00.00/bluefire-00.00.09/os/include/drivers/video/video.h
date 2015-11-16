@@ -17,9 +17,6 @@
 // byte the attribute
 #define BLANK	(0x20 | (0x0F << 8))
 
-// The physical address of the video memory buffer.
-#define VIDEO_MEM_ADDRESS	PHYSICAL(0xB8000)
-
 // Public Function declarations
 void initialize_video();
 void video_clrscr( console_t *console );

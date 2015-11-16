@@ -22,10 +22,11 @@
 
 #define HZ		200	// Clock Frequency (User set-able, default=200Hz)
 
-#define TIMER_COUNT (unsigned) (TIMER_FREQ/HZ) // Value to initialize timer
+#define TIMER_COUNT (unsigned) (TIMER_FREQ/HZ) // Value to initialize timer (5,965)
 
-
-// Public Function declarations
+/******************************************************************************
+ *			--------- PUBLIC FUNCTION DECLARATIONS ----------
+******************************************************************************/
 void delay(u32int millisec);
 void initialize_clock();
 void stop_clock();

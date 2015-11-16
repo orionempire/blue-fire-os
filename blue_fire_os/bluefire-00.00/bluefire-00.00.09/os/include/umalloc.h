@@ -27,6 +27,4 @@ typedef struct UMEM_BLOCK {
  *		--------- Public function decelerations ----------
 ******************************************************************************/
 void umalloc_init(task_t *t, size_t heap_start, size_t heap_size);
-void *umalloc(size_t size);
-void ufree(void *ptr);
 #endif /* UMALLOC_H_ */

@@ -59,6 +59,9 @@ static u08int control_flag = 0;
 // Alt key flag.
 static u08int alt_flag = 0;
 
+/******************************************************************************
+ *	---------  ----------
+******************************************************************************/
 void keyboard_wait_controller() {
 	s32int retries = 500000;
 
@@ -67,6 +70,9 @@ void keyboard_wait_controller() {
 	}
 }
 
+/******************************************************************************
+ *	---------  ----------
+******************************************************************************/
 void update_leds() {
 	s32int leds;
 	console_t *curr_cons = get_console_addr( get_curr_console() );
@@ -86,6 +92,9 @@ void update_leds() {
 
 }
 
+/******************************************************************************
+ *	---------  ----------
+******************************************************************************/
 u16int scan_key() {
 	static s32int code, val;
 
@@ -101,8 +110,11 @@ u16int scan_key() {
 	return( code );
 }
 
-// Keyboard interrupt handler routine. It is invoked every time a key is
-// pressed or released on the keyboard.
+/******************************************************************************
+ *	---------  ----------
+ *	Keyboard interrupt handler routine. It is invoked every time a key is
+ *	pressed or released on the keyboard.
+******************************************************************************/
 void keyboard_handler(irq_context_t *context) {
 
 	console_t *curr_cons;
@@ -219,7 +231,10 @@ void keyboard_handler(irq_context_t *context) {
 
 }
 
-// Wait for key pressed and return the selected character
+/******************************************************************************
+ *	---------  ----------
+ *	Wait for key pressed and return the selected character
+******************************************************************************/
 s32int kgetchar() {
 	u16int key;
 	u32int flags;
@@ -252,7 +267,9 @@ s32int kgetchar() {
 
 	return key;
 }
-
+/******************************************************************************
+ *	---------  ----------
+******************************************************************************/
 void initialize_keyboard() {
 
 	update_leds();

@@ -11,6 +11,23 @@
 #ifndef INTERRUPT_HANDLER_H_
 #define INTERRUPT_HANDLER_H_
 
+
+/******************************************************************************
+ *				--------- EFLAGS  ----------
+******************************************************************************/
+// Interrupt enable flag in EFLAGS register.
+#define EFLAGS_IF		0x200
+// I/O privilege level 3 (minimum privilege).
+// Everyone can perform I/O operation.
+#define EFLAGS_IOPL3	0x3000
+// I/O privilege level 2.
+#define EFLAGS_IOPL2	0x2000
+// I/O privilege level 1.
+#define EFLAGS_IOPL1	0x1000
+// I/O privilege level 0 (maximum privilege).
+// Only the kernel can perform I/O operation.
+#define EFLAGS_IOPL0	0x0000
+
 // Context after an interrupt.
 typedef struct irq_context {
 
