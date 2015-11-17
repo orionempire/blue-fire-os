@@ -11,6 +11,8 @@
 #ifndef EXCEPTION_HANDLER_H_
 #define EXCEPTION_HANDLER_H_
 
+#define EFLAGS_VM	0x20000
+
 // Context pushed by assembly/exception_top.asm
 typedef struct exception_context {
 	// General purpose register.
@@ -24,23 +26,6 @@ typedef struct exception_context {
 } exception_context_t;
 
 // helper functions
-
-/*
-static __inline__ void dump_stack( exc_context_t *c ) {
-	u32int *esp = (u32int *)curr_task->pl0_stack;
-	s32int i = 0;
-
-	while (esp < (uint32_t *)c) {
-		if ((*esp >= K_VIR_START) && (*esp < K_HEAP_START)) {
-			printk(KERN_WARNING "[ %p ] = %p\n", esp, *esp);
-			if (++i >= 12)
-				break;
-		}
-		esp++;
-	}
-}*/
-
-
 static __inline__ void dump_registers( exception_context_t *c ) {
 	//register u16int ss, fs, gs;
 	//register u32int cr0, cr2, cr3, cr4;

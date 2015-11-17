@@ -16,7 +16,7 @@ typedef struct CMD {
 	s08int *help;
 } CMD;
 
-static CMD commands[ ] = {
+static CMD commands[22] = {
 { SH_EXEC, "bg", "Execute a 32-bit program in background"},
 { SH_CAT, "cat", "Concatenate FILE to standard output"},
 { SH_CD, "cd", "Change the current directory"},
@@ -36,40 +36,17 @@ static CMD commands[ ] = {
 { SH_REBOOT, "reboot", "Reboot the system"},
 { SH_TEST, "test", "Create some auto-killing tasks"},
 { SH_UNAME, "uname", "Print kernel informations"},
-{ SH_V86EXEC, "v86", "Execute a virtual 8086 mode program in background"},
+{ SH_V86EXEC, "v86", "v86 mode unsupported"},
 { SH_WRITE, "write", "Write a block from the buffer to the floppy"},
 { SH_PWD, "pwd", "Print the current working directory"},
-{ SH_EXIT, "exit", "Exit the system"},
 };
 
 
 /**************************************************************************
 * Used for multitasking debugging.
 ***************************************************************************/
-void task_test() {
-	register u32int cr3;
-
-	u32int *temp = kmalloc(sizeof(temp));
-
-	__asm__ __volatile__ ("movl %%cr3, %0" : "=r"(cr3) : );
-	kprintf("\nWelcome from task %u!!!My kmalloc was %X. Here is my PDBR %X", get_pid(),temp, cr3);
-	kfree(temp);
-	auto_kill();
-}
-
-void sh_test() {
-
-	#define TOT_TASK_TEST	128
-	u32int i;
-
-	kprintf("\nCreating %u tasks. Please wait... ", TOT_TASK_TEST);
-	for(i = 0; i < TOT_TASK_TEST; i++) {
-		create_process(&task_test, &task_test, "sh_task_test");
-	}
-}
-
-
 void shell( s32int argc, char **argv){
+
 	// Shell command buffer
 	s08int cmd[256];
 	s32int i;
@@ -79,7 +56,7 @@ void shell( s32int argc, char **argv){
 
 	// Command line
 	while(TRUE) {
-		kprintf(SHELL_PROMPT, pwd());
+		kprintf(SHELL_PROMPT);
 
 		scanf("%s", cmd);
 
@@ -118,7 +95,6 @@ void shell( s32int argc, char **argv){
 
 					case SH_CLEAR:
 						kclrscr();
-						kprintf("%s command not yet Implemented.\n",cmd);
 						break;
 
 					case SH_REBOOT:
@@ -142,7 +118,7 @@ void shell( s32int argc, char **argv){
 						break;
 
 					case SH_CHECKMEM:
-						create_process(&check_free_frames_integrity, &check_free_frames_integrity, "frames_check");
+						kprintf("%s command not yet Implemented.\n",cmd);
 						break;
 
 					case SH_FRAMES:
@@ -158,7 +134,7 @@ void shell( s32int argc, char **argv){
 						break;
 
 					case SH_TEST:
-						sh_test();
+						kprintf("%s command not yet Implemented.\n",cmd);
 						break;
 
 					case SH_CPUID:
@@ -166,7 +142,7 @@ void shell( s32int argc, char **argv){
 						break;
 
 					case SH_MOUNT:
-						mount_floppy();
+						kprintf("%s command not yet Implemented.\n",cmd);
 						break;
 
 					case SH_LS:
@@ -190,12 +166,7 @@ void shell( s32int argc, char **argv){
 						break;
 
 					case SH_PWD:
-						kprintf("/%s\n", pwd());
-						break;
-
-					case SH_EXIT:
-						kprintf("Halted. Safe to power off. ");
-						halt();
+						kprintf("%s command not yet Implemented.\n",cmd);
 						break;
 
 				}

@@ -14,7 +14,7 @@ s32int pf_panic;
 
 
 
-// From: <INTEL Software Developer’s Manual 2011>
+// From: <INTEL Software Developer's Manual 2011>
 //
 // Identifier   Description
 //
@@ -41,7 +41,7 @@ s32int pf_panic;
 // 20-31        (reserved)
 // 32-255       Available for external interrupts via INTR pin
 /**************************************************************************
-* Exceptions are hard coded as they dont change.
+* Exceptions are hard coded as they don't change.
 * Note: For a Interrupt control will return to the next instruction.
 * 	for exceptions control will return to the original instruction so
 * 	if it can't be fixed then a panic is the only option.
@@ -113,8 +113,7 @@ void exception_handler_middle(exception_context_t *context) {
 
 		case 0x0D:
 			if ((context->eflags & EFLAGS_VM) == EFLAGS_VM) {
-				//v86_monitor();
-				PANIC("v86_monitor not yet implemented");
+				PANIC("v86_mode not supported by this OS!");
 				return;
 			} else {
 				kprintf("\nException 0D: GENERAL PROTECTION FAULT\n");
@@ -125,7 +124,6 @@ void exception_handler_middle(exception_context_t *context) {
 			__asm__ __volatile__ ("movl %%cr2, %0" : "=r"(cr2) : );
 
 			if ((context->err_code & P_PRESENT) != P_PRESENT) {
-				//page_fault_handler(context->err_code, cr2, &pf_panic);
 				if (!page_fault_handler(context->err_code, cr2)) {
 					return;
 				} else {

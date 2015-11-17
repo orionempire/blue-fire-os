@@ -7,7 +7,7 @@
  *	Purpose:
  *  Usage:
 ***************************************************************************/
-#include <common_include.h>
+#include "../../../../../bluefire-00.00.10_bak/os/include/common_include.h"
 
 //The current path
 s08int path[256];

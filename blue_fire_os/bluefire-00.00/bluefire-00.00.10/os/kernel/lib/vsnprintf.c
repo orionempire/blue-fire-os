@@ -333,11 +333,7 @@ s32int vsnprintf(s08int *buf, u32int size, const s08int *fmt, va_list args) {
 				if (str <= end){ *str = '%'; }
 				++str;
 				continue;
-			// Catch a escape code which must be escaped in the source code for the compilers benifit.
-			case '\\':
-				if (str <= end){ *str = '\\'; }
-				++str;
-				continue;
+
 			//any thing else is a number, set up the flags and break to qualifier then process by number below.
 			case 'o':
 				base = 8;

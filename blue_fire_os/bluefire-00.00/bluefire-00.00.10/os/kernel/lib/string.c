@@ -53,7 +53,7 @@ void strtoupper(s08int *s) {
 }
 
 // Compare two strings for n bytes
-s32int strncmp(const s08int *s1, const s08int *s2, size_t n) {
+s32int strncmp(const s08int *s1, const s08int *s2, u32int n) {
 	if (n == 0)
 		return 0;
 	do {

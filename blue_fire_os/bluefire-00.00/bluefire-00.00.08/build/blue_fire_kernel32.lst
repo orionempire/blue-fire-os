@@ -7367,7 +7367,7 @@ c0004ec2:	8d 4a 08             	lea    0x8(%edx),%ecx
 c0004ec5:	0f b7 55 f6          	movzwl -0xa(%ebp),%edx
 c0004ec9:	66 89 14 48          	mov    %dx,(%eax,%ecx,2)
 c0004ecd:	eb 27                	jmp    c0004ef6 <keyboard_handler+0x340>
-c0004ecf:	c7 44 24 0c d5 00 00 	movl   $0xd5,0xc(%esp)
+c0004ecf:	c7 44 24 0c e1 00 00 	movl   $0xe1,0xc(%esp)
 c0004ed6:	00 
 c0004ed7:	c7 44 24 08 88 6a 00 	movl   $0xc0006a88,0x8(%esp)
 c0004ede:	c0 

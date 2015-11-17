@@ -11,7 +11,7 @@
 #ifndef BLUESHELL_H_
 #define BLUESHELL_H_
 
-#define SHELL_PROMPT	"\n[root@localhost /%s]# "
+#define SHELL_PROMPT	"\r[root@localhost \\]# "
 #define CMD_ARG		(cmd+strlen(commands[i].name)+1)
 
 #define SHELL_COMMANDS	( sizeof(commands)/sizeof(CMD) )
@@ -39,7 +39,6 @@
 #define SH_PS		19
 #define SH_KILL		20
 #define SH_PWD		21
-#define SH_EXIT		22
 
 
 // Public Function declarations

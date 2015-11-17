@@ -58,8 +58,7 @@ void disable_IRQ(u08int irq) {
 }
 
 /**************************************************************************
-* The PIC will now respond to specified IRQ wire.
-* It is the handlers responsibility to re-enable the IRQ line
+* The PIC will now respond to specified IRQ wire
 ***************************************************************************/
 void enable_IRQ(u08int irq) {
 	static u08int mask;

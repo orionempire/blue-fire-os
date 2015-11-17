@@ -1,6 +1,6 @@
 /**************************************************************************
  *	bluefire-os
- *	Version: 00.00.00
+ *	Version: 00.00.08
  *	Author: David Davidson
  *	Name: kernel.c
  *	Created: Feb 14, 2012
@@ -25,7 +25,6 @@ void error(const char *msg) {
 		halt();
 	}
 }
-
 void reboot() {
 	// Disable all interrupts
 	disable_interrupts();

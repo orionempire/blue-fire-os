@@ -7,7 +7,7 @@
  *	Purpose:
  *  Usage:
 ***************************************************************************/
-#include <common_include.h>
+#include "../../../bluefire-00.00.10_bak/os/include/common_include.h"
 
 // Return the next element in the queue
 void *pick_queue(queue_t **q) {

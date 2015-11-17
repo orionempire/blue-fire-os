@@ -21,8 +21,7 @@ extern task_t  *current_task;	// Current running task
 // Function Declarations
 void print_ok();
 void print_failed();
-// temporary debug helpers
-void task_test();
+
 
 /******************************************************************************
  *	---------  ----------
@@ -92,7 +91,6 @@ void k_main() {
 	print_ok();
 
 	// Create the shell task
-	//create_thread(&shell, 0, NULL, "BlueShell");
 	create_thread(&shell, 0, NULL, "BlueShell");
 
 	// Well done!!!
@@ -127,17 +125,3 @@ void  print_failed() {
 	kprintf( " ]\n" );
 }
 
-/**************************************************************************
-* Used for multitasking debugging. These will be moved to the shell
-* when it exists.
-***************************************************************************/
-void task_test() {
-	register u32int cr3;
-
-	u32int *temp = kmalloc(sizeof(temp),GFP_KERNEL);
-
-	__asm__ __volatile__ ("movl %%cr3, %0" : "=r"(cr3) : );
-	kprintf("\nWelcome from task %u!!! My kmalloc was %X. Here is my PDBR %X", get_pid(), temp, cr3);
-	kfree(temp);
-	do_idle();
-}

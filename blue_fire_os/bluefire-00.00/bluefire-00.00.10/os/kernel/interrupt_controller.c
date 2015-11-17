@@ -37,7 +37,6 @@ void reprogram_PIC_8259() {
 	// you just reset them. As part of the reset routine you need to specify what IRQ you want that specific
 	// chip to start at. You send it a reset command and then 4 ICWS specifying what features and configurations you want.
 
-
 	// ICW1 (interrupt control word)
 	// Write the reset command (0x11) to PIC1's command port (0x20).
 	outport08(MASTER_8259_COMMAND_PORT, 0x11);
@@ -133,9 +132,8 @@ void initialize_IDT() {
 	// Interrupts 0x10 through 0x1f Remain pointing to exc_unhandled.
 
 	// Install default IRQ handlers 0x20..0xFF
-	for(i=0x20;i<=0xFF;i++) {
+	for(i=0x20;i<=0xFF;i++)
 		set_IDT_gate(i, (u32int)&irq_unhandled, KERNEL_CODE, INTERRUPT_GATE);
-	}
 
 	// Setup the IDT entries for IRQs.
 	set_IDT_gate( 0x20, (u32int)&irq_00, KERNEL_CODE, INTERRUPT_GATE);
@@ -164,7 +162,7 @@ void initialize_IDT() {
 	// Load info into IDTR register.
 	__asm__ __volatile__ ("lidtl (%0)" : : "r"((u32int)&idt_ptr));
 
-	// install spurious interrupt handlers
+	// install spurious interrupt
 	register_interrupt_handler(SPURIOUS_IRQ, &spurious_interrupt);
 	register_interrupt_handler(SPURIOUS_IRQ_B, &spurious_interrupt);
 

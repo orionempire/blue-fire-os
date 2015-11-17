@@ -10,11 +10,11 @@
 #ifndef I386_H_
 #define I386_H_
 
-// Record whether interrupts where off and then disable them regardless.
+// Turn off interrupts: save flags and disable IRQs.
 #define disable_and_save_interrupts( flags ) \
 	__asm__ __volatile__ ("pushfl ; popl %0 ; cli" : "=g"(flags) : : "memory")
 
-// Record whether interrupts were turned off
+// Save but don't modify interrupt state.
 #define save_interrupts( flags ) \
 	__asm__ __volatile__ ("pushfl ; popl %0" : "=g"(flags) : : "memory")
 
@@ -46,33 +46,28 @@ static __inline__ void outport08(u16int port, u08int val) {
         __asm__ __volatile__ ("outb %%al, %%dx" : : "d" (port), "a" (val));
 }
 
-/**************************************************************************
-* ---------- Atomic operators ----------
-* Uses the lock opcode
-* Older CPUs would lock the memory bus now they lock the CPU cache.
-* Structure precludes casting to int.
-* volatile key word ensures compiler does not move around.
-* **************************************************************************/
-typedef struct {
-	volatile s32int counter;
-} atomic_t;
-
-// Initialize an atomic variable.
-#define atomic_init(i)		{ (i) }
-
-// Set the atomic value of v to i
-#define atomic_set(v, i)	(((v)->counter) = (i))
-// Read the atomic value of v
-#define atomic_read(v)		((v)->counter)
-
-// Perform an atomic increment
-static __inline__ void atomic_inc(atomic_t *v) {
-	__asm__ __volatile__ (	"lock; incl %0" : "=m"(v->counter) : "m"(v->counter));
+/******************************************************************************
+ *	Prefetch data into cache. Because it is didatic this os is hard coded to
+ *	Bochs which defaults to the Pentium IV hence the prefetchnta instruction.
+ *	other wise replace with a null operation ...
+ *	static __inline__ void prefetch_cpu_cache( const void *p ) { ; }
+******************************************************************************/
+static __inline__ void prefetch_cpu_cache( const void *p ) {
+	__asm__ __volatile__ ("prefetchnta (%0)" : : "r"(p));
 }
 
-// Perform an atomic decrement
-static __inline__ void atomic_dec(atomic_t *v) {
-	__asm__ __volatile__ (	"lock; decl %0" : "=m"(v->counter) : "m"(v->counter));
+//TODO
+static __inline__ void jmp_to_tss(u16int tss_sel) {
+	static struct {
+	unsigned eip : 32; // 32 bit
+	unsigned cs  : 16; // 16 bit
+	} __attribute__ ((packed)) tss_link = {0, 0};
+
+	// Set the TSS link						//
+	tss_link.cs = tss_sel;
+
+	// Jump to the task						//
+	__asm__ __volatile__ ("ljmp *(%0)" : : "m" (tss_link));
 }
 
 #endif /* I386_H_ */

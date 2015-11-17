@@ -12,19 +12,10 @@
 // Real time ticks
 volatile u32int ticks = 0;
 
-void stop_clock() {
-	u32int flags;
-	disable_and_save_interrupts(flags);
-
-	// Reset the clock for rebooting
-	outport08(TIMER_MODE, SQUARE_WAVE);	// set timer on
-	outport08(TIMER0, 0);				// timer low byte
-	outport08(TIMER0, 0);				// timer high byte
-
-	restore_interrupts(flags);
-}
-
-
+/******************************************************************************
+ *	--------- DELAY (RETAIN CONTROLL) ----------
+ *	<TODO>
+******************************************************************************/
 // Delay some milliseconds
 void delay(u32int millisec) {
 	u32int flags;
@@ -49,21 +40,29 @@ void delay(u32int millisec) {
 	restore_interrupts(flags);
 }
 
+/******************************************************************************
+ *	--------- CLOCK INTERRUPT HANDLER ----------
+ *	Called every time the realtime clock fires the relevant interrupt.
+ *	<TODO>
+******************************************************************************/
 void clock_handler(irq_context_t *context) {
 	// Update ticks
 	ticks++;
 
 	// Put here every periodical task...
-	floppy_thread();
+	// ex: floppy_thread();
 
 	// Call the scheduler.
-	scheduler();
+	schedule();
 
 	enable_IRQ(context->IRQ);
 }
 
 
-//Must be called after multitasking is enabled as clock_handler(..) calls scheduler(..)
+/******************************************************************************
+ *	--------- SETUP/RESET REALTIME CLOCK ----------
+ *	<TODO>
+******************************************************************************/
 void initialize_clock() {
 	u32int flags;
 	disable_and_save_interrupts(flags);
@@ -79,5 +78,16 @@ void initialize_clock() {
 	register_interrupt_handler(TIMER_IRQ, &clock_handler);
 
 	restore_interrupts(flags);
+}
 
+void stop_clock() {
+	u32int flags;
+	disable_and_save_interrupts(flags);
+
+	// Reset the clock for rebooting
+	outport08(TIMER_MODE, SQUARE_WAVE);	// set timer on
+	outport08(TIMER0, 0);				// timer low byte
+	outport08(TIMER0, 0);				// timer high byte
+
+	restore_interrupts(flags);
 }

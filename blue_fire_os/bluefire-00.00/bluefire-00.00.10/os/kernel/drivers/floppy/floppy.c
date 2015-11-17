@@ -337,24 +337,24 @@ void floppy_thread() {
 
 // Initialize the floppy driver
 void initialize_floppy() {
-	s32int v;
+	//s32int v;
 
 	// Install the interrupt handler routine
-	register_interrupt_handler( FLOPPY_IRQ, (void *)floppy_handler );
+	//register_interrupt_handler( FLOPPY_IRQ, (void *)floppy_handler );
 
 	// Create the FDC buffer
-	fdc_buffer = (u08int *)PHYSICAL( dma_pop_frame() * PAGE_SIZE );
+	//fdc_buffer = (u08int *)PHYSICAL( dma_pop_frame() * PAGE_SIZE );
 
 	// Reset the controller
-	fdc_reset();
+	//fdc_reset();
 
 	// Get floppy controller version
-	fdc_sendbyte(FLOPPY_COMMAND_VERSION);
-	v = fdc_getbyte();
+	//fdc_sendbyte(FLOPPY_COMMAND_VERSION);
+	//v = fdc_getbyte();
 
-	if (v==0x90) {
-		kprintf("Enhanced");
-	} else {
+	//if (v==0x90) {
+	//	kprintf("Enhanced");
+	//} else {
 		kprintf("8272A/765A");
-	}
+	//}
 }
