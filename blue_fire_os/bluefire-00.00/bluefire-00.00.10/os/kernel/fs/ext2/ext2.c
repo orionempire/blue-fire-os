@@ -7,7 +7,7 @@
  *	Purpose:
  *  Usage:
 ***************************************************************************/
-#include "../../../../../bluefire-00.00.10_bak/os/include/common_include.h"
+#include <common_include.h>
 
 //The current path
 s08int path[256];
@@ -116,7 +116,7 @@ s32int read_inode_block(u32int i_node_number){
 	}
 
 	if(!current_inode_block) {
-		current_inode_block = kmalloc(formated_block_size);
+		current_inode_block = kmalloc(formated_block_size, GFP_KERNEL);
 	}
 
 	memset08(current_inode_block, 0, formated_block_size);
@@ -182,12 +182,12 @@ s32int open_directory(struct i_node* current_i_node) {
 		kfree(ext2_file_name);
 	}
 
-	if (!(open_file(current_i_node , current_i_node->i_mode & MODE_MASK))) {
-		return FALSE;
-	}
+	//if (!(open_file(current_i_node , current_i_node->i_mode & MODE_MASK))) {
+	//	return FALSE;
+	//}
 
 	if(current_directory) { kfree(current_directory); }
-	current_directory = (u32int *)kmalloc(current_i_node->i_size);
+	current_directory = (u32int *)kmalloc(current_i_node->i_size, GFP_KERNEL);
 	current_location_pointer = current_directory;
 
 	for( x = 0; x < number_blocks_loaded; x++ ) {
@@ -242,7 +242,7 @@ void load_group_descriptor() {
 	u32int sentinal = FALSE;
 
 	if (group_descriptor_table) { kfree(group_descriptor_table); }
-	group_descriptor_table = kmalloc(block_to_bytes(DIMENSION_GROUP_DESCRIPTOR));
+	group_descriptor_table = kmalloc(block_to_bytes(DIMENSION_GROUP_DESCRIPTOR), GFP_KERNEL);
 	memset08(group_descriptor_table, 0, block_to_bytes(DIMENSION_GROUP_DESCRIPTOR));
 
 	sentinal = fdc_read(block_to_LBA(START_GROUP_DESCRIPTER),(u08int *)group_descriptor_table, block_to_LBA(DIMENSION_GROUP_DESCRIPTOR));
@@ -264,7 +264,7 @@ void load_super_block() {
 		kfree(superblock);
 	}
 
-	superblock = kmalloc(DIMENSION_SUPER_BLOCK);
+	superblock = kmalloc(DIMENSION_SUPER_BLOCK, GFP_KERNEL);
 	memset08(superblock, 0, DIMENSION_SUPER_BLOCK);
 
 	sentinal = fdc_read((START_SUPER_BLOCK/FDC_SECTOR_SIZE),(u08int *)superblock,(DIMENSION_SUPER_BLOCK / FDC_SECTOR_SIZE));
@@ -316,7 +316,7 @@ void mount_floppy() {
 	kprintf("\nLoaded Group Descriptor...");
 
 	load_root_directory();
-	printf("\nLoaded Root Directory...");
+	kprintf("\nLoaded Root Directory...");
 }
 
 void debug_dump_descriptortable() {

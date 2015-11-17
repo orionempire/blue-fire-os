@@ -37,6 +37,7 @@
 #include <drivers/floppy/floppy.h>
 #include <drivers/keyboard/keyboard.h>
 #include <drivers/video/video.h>
+#include <fs/ext2/ext2.h>
 #include <lib/ctype.h>
 #include <lib/scanf.h>
 #include <lib/string.h>

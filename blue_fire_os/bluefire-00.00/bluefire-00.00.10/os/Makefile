@@ -21,7 +21,7 @@ SOURCES+=$(shell ls kernel/*.c assembly/*.asm |grep -vi "start.asm")
 
 # add all locations other than primary to list of source files. 
 SOURCES+=$(shell ls kernel/lib/*.c kernel/drivers/video/*.c kernel/drivers/dma/*.c kernel/drivers/keyboard/*.c )	
-SOURCES+=$(shell ls kernel/shell/*.c kernel/drivers/floppy/*.c)
+SOURCES+=$(shell ls kernel/shell/*.c kernel/drivers/floppy/*.c kernel/fs/ext2/*.c)
 
 # Build a list of every object that is going to be created.
 # Iterate throught the list of source files and convert them all to .o files
@@ -51,9 +51,9 @@ blue_fire_kernel32.elf: $(OBJECTS)
 %.o: %.c
 	$(GCC) -o $@ $<
 
-# Every file used by SOURCES must be accounted for here.
+# remove any objects as per sources
 clean:
-	rm -f kernel/*.o assembly/*.o kernel/lib/*.o kernel/drivers/video/*.o kernel/drivers/dma/*.o  kernel/drivers/keyboard/*.o kernel/shell/*.o kernel/drivers/floppy/*.o 
+	rm -f $(OBJECTS)
 	
 # A clean up that wont be called from our build script
 scrub: clean

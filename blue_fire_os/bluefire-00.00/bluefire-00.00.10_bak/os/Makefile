@@ -53,7 +53,7 @@ bf_kernel32.elf: $(OBJECTS)
 
 # Every file used by SOURCES must be accounted for here.
 clean:
-	rm -f  kernel/*.o assembly/*.o kernel/lib/*.o kernel/drivers/video/*.o kernel/drivers/dma/*.o kernel/drivers/keyboard/*.o kernel/shell/*.o 
+	rm -f  kernel/*.o assembly/*.o kernel/lib/*.o kernel/drivers/video/*.o kernel/drivers/dma/*.o kernel/drivers/keyboard/*.o kernel/shell/*.o kernel/drivers/floppy/*.o kernel/fs/ext2/*.o
 	
 # A clean up that wont be called from our build script
 scrub: clean
