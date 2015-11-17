@@ -336,25 +336,47 @@ void floppy_thread() {
 
 
 // Initialize the floppy driver
-void initialize_floppy() {
-	//s32int v;
+s32int initialize_floppy() {
+	s32int v;
 
+	//TODO DOWN( &fdc_mutex );
 	// Install the interrupt handler routine
-	//register_interrupt_handler( FLOPPY_IRQ, (void *)floppy_handler );
-
-	// Create the FDC buffer
-	//fdc_buffer = (u08int *)PHYSICAL( dma_pop_frame() * PAGE_SIZE );
+	register_interrupt_handler( FLOPPY_IRQ, (void *)floppy_handler );
 
 	// Reset the controller
-	//fdc_reset();
+	fdc_reset();
 
 	// Get floppy controller version
-	//fdc_sendbyte(FLOPPY_COMMAND_VERSION);
-	//v = fdc_getbyte();
+	fdc_sendbyte(FLOPPY_COMMAND_VERSION);
+	v = fdc_getbyte();
 
-	//if (v==0x90) {
-	//	kprintf("Enhanced");
-	//} else {
-		kprintf("8272A/765A");
-	//}
+	if (v==0xFF) {
+		kprintf("%s(): No floppy controller [%#04x].\n", __FUNCTION__, v );
+		//TODO UP( &fdc_mutex );
+		return( FALSE );
+	}
+
+	if (v == 0x90) {
+		kprintf("Enhanced");
+	} else {
+		kprintf("%s(): unknown controller [%#04x].\n", __FUNCTION__, v );
+	}
+	//TODO DOWN( &fdc_mutex );
+
+	// Create the floppy buffer for low-level read/write
+	// operations.
+	fdc_buffer = PHYSICAL( dma_phys_alloc(FDC_BUFFER_SIZE) );
+	if( fdc_buffer == NULL ) {
+		//TODO UP( &fdc_mutex );
+
+		kprintf("%s(): out of dma memory!\n", __FUNCTION__ );
+
+		return( FALSE );
+	}
+
+	//TODO UP( &fdc_mutex );
+
+	//kprintf("%s(): floppy buffer at [%p]->[%p]\n",__FUNCTION__,fdc_buffer, (size_t)fdc_buffer + PAGE_SIZE );
+
+	return( TRUE );
 }

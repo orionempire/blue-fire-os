@@ -28,7 +28,7 @@
  *			--------- PUBLIC FUNCTION DECLARATIONS ----------
 ******************************************************************************/
 void initialize_DMA();
-u32int dma_pop_frame();
+void *dma_phys_alloc( size_t len );
 void dma_xfer(unsigned channel, u32int physaddr, s32int length, s32int read);
 
 #endif /* DMA_H_ */

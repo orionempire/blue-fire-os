@@ -313,10 +313,10 @@ void mount_floppy() {
 	inodes_per_indirect = formated_block_size / sizeof(u32int);
 
 	load_group_descriptor();
-	kprintf("\nLoaded Group Descriptor...");
+	kprintf("\nLoaded Group Descriptor...\n");
 
-	load_root_directory();
-	kprintf("\nLoaded Root Directory...");
+	//load_root_directory();
+	//kprintf("\nLoaded Root Directory...");
 }
 
 void debug_dump_descriptortable() {

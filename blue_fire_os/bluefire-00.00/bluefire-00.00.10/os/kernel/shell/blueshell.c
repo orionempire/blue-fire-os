@@ -142,7 +142,7 @@ void shell( s32int argc, char **argv){
 						break;
 
 					case SH_MOUNT:
-						kprintf("%s command not yet Implemented.\n",cmd);
+						mount_floppy();
 						break;
 
 					case SH_LS:

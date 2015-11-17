@@ -61,6 +61,14 @@
 // ADDR_TO_PAGE(1000000) -> 0x1000
 #define P_ADDR_16MB		0x1000
 
+//! Access to an address into the mapped physical memory area.
+#define PHYSICAL(addr)		((addr) + VIRTUAL_LOWER_MEMORY_START)
+
+//! Convert a virtual address of the low memory area (DMA-memory) into
+//! the equivalent physical address.
+#define VIRTUAL(addr)		((addr) - VIRTUAL_LOWER_MEMORY_START)
+
+
 // TODO
 //! Determine the page size.
 #define PAGE_SHIFT	12

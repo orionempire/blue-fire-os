@@ -76,24 +76,64 @@ void dma_xfer(unsigned channel, u32int physaddr, s32int length, s32int read) {
 	restore_interrupts(flags);
 }
 
-u32int dma_pop_frame() {
-	u32int ret;
 
-	u32int flags;
-	disable_and_save_interrupts(flags);
+void *dma_phys_alloc( size_t len ){
+	size_t i, j, ret;
+	int flag = 0;
 
-	if (dma_pointer < (DMA_MEMORY_DIMINSION / PAGE_SIZE)) {
-		ret = dma_free_frames[dma_pointer];
-		dma_pointer++;
-		restore_interrupts(flags);
-		return(ret);
+	// len must be not null!
+	if( !len ) { return( NULL ); }
+
+	// Round up len to frames boundary.
+	len = PAGE_ALIGN_UP( len );
+
+	//TODO DOWN( &dma_mutex );
+
+	// Search for a free dma page.
+	i = 0;
+	do{
+		if( dma_free_frames[ i ] == DMA_FREE_FRAME ) {
+			flag = 0;
+			// Found a free frame!
+			// OK, now I require (len/PAGE_SIZE-1)
+			// others free frames.
+			for( j = 1; j < (len / PAGE_SIZE); j++ ) {
+				if( dma_free_frames[ i + j ] == DMA_BUSY_FRAME ){
+					// Nooo! Found a busy frame!
+					flag = 1;
+					break;
+				}
+			}
+			if( flag == 1 ) {
+				// Not a valid contiguous free space.
+				// Continue after j position...
+				i += j;
+				continue;
+			} else {
+				// Found a valid contiguous free
+				// space, so mark it as busy.
+				for( j = 0; j < len / PAGE_SIZE; j++ ) {
+					dma_free_frames[ i + j ] = DMA_BUSY_FRAME;
+				}
+				break;
+			}
+		}
+	} while( ++i < DMA_MEMORY_DIMINSION / PAGE_SIZE );
+
+	//TODO UP( &dma_mutex );
+
+	// Check if we have found the free DMA location.
+	if( flag == 0 ) {
+		// We found it.
+		ret = (i * PAGE_SIZE + PHYSICAL_DMA_MEMORY_START);
+	} else {
+		// Not found!
+		ret = NULL;
 	}
 
-	// Out of DMA memory
-	restore_interrupts(flags);
-	return (NULL);
-
+	return( (void *)ret );
 }
+
 /******************************************************************************
  *	--------- DMA FRAME STACK INIALIZATION  ----------
  *  <TODO> Convert to bit set.

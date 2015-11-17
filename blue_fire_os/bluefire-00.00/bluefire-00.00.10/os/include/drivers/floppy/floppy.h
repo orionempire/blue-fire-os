@@ -57,8 +57,11 @@ typedef struct floppy_struct {
 	s08int	*name;	// format name
 } floppy_struct;
 
+#define FDC_BUFFER_SIZE \
+	( PAGE_ALIGN_UP(floppy_type[ fdc_geometry ].spt * FDC_SECTOR_SIZE) )
+
 // Public Function declarations
-void initialize_floppy();
+s32int initialize_floppy();
 void floppy_thread();
 void floppy_handler(irq_context_t *context);
 s32int fdc_read(s32int block, u08int *buffer, u32int count);

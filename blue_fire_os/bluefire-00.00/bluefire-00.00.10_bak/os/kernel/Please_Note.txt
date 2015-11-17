@@ -1,4 +1,0 @@
-To add a c file create the c file, create the header, and add the header to common_include.h
-To add a folder hierarchy here you must also add it to the default make file. C files are then automatically included. 
-
-EX: to to add a folder goo to the folder drivers you would have to add drivers/goo/c.* to SOURCES+=$( 
